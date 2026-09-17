@@ -81,8 +81,10 @@ def summarize(directory,calibration_margin_ns=None):
     correct=[r for r in valid if r['correctness_status']=='PASS']
     subset=[r for r in correct if r['control_status']==ACCEPTED and r['derived_ordering']=='after_rm_under_calibration_model'
             and r['gpu_overlap']=='lifetime_overlap' and r['bg_done_before_interaction']=='0'
-            and r['bg_done_before_control_observed']=='0' and r['trial_state']=='complete']
+            and r['bg_done_before_control_observed']=='0' and r.get('bg_done_at_owner_check')!='1' and r['trial_state']=='complete']
     dimensions={k:dict(Counter(r[k] for r in rows)) for k in ('trial_state','application_valid','control_status','gpu_overlap','derived_ordering','correctness_status','control_target_running','bg_done_before_interaction','bg_done_before_control_observed')}
+    for key in ('bg_done_at_owner_check','setup_status'):
+        if any(key in r for r in rows):dimensions[key]=dict(Counter(r.get(key,'unknown') for r in rows))
     stats={'schema_version':2,'rows':len(rows),'application_valid':len(valid),'correct_application_rows':len(correct),'timing_eligible_subset':len(subset),
            'preemption_confirmed':0,'dimensions':dimensions,'calibration_model':None if model is None else {
                'name':'affine offset between minimum-RTT endpoint brackets plus explicit margin','margin_ns':calibration_margin_ns,
@@ -94,7 +96,10 @@ def summarize(directory,calibration_margin_ns=None):
            'All valid application observations include RM failures and ambiguous/before-RM ordering. Correctness and control outcomes are reported independently. No hardware preemption is confirmed by this summary.','']
     for key,value in dimensions.items():lines.append(f'- {key}: {value}')
     lines+=[f"- timeout_rows: {stats['timeout_rows']}",f"- missing_entry_or_done_observation: {stats['missing_entry_or_done_observation']}",f"- failure_messages: {stats['failure_messages']}"]
-    lines+=['','| Metric (μs) | n | p50 | p95 | p99 | max |','|---|---:|---:|---:|---:|---:|']
+    single=len(rows)==1
+    lines+=['','One-trial smoke: raw values only; no distribution or performance ranking.','',
+            '| Metric (μs) | n | raw value |','|---|---:|---:|'] if single else [
+            '','| Metric (μs) | n | p50 | p95 | p99 | max |','|---|---:|---:|---:|---:|---:|']
     metrics=[('Interaction → graph entry observed, all application-valid',valid,'T_int_graph_entry_observed','T_cpu_trigger'),
              ('Interaction → graph entry, correct application rows',correct,'T_int_graph_entry_observed','T_cpu_trigger'),
              ('Interaction → graph entry, timing-eligible subset',subset,'T_int_graph_entry_observed','T_cpu_trigger'),
@@ -106,15 +111,20 @@ def summarize(directory,calibration_margin_ns=None):
              ('GPU graph marker interval',valid,'T_int_graph_done_gpu_ns','T_int_graph_entry_gpu_ns')]
     for title,source,end,begin in metrics:
         values=[v for r in source if (v:=delta(r,end,begin)) is not None];q=quantiles(values)
-        lines.append(f'| {title} | {len(values)} | '+(' | '.join(f'{x:.3f}' for x in q) if q else 'N/A | N/A | N/A | N/A')+' |')
+        if single:
+            stats.setdefault('raw_values_us',{})[title]=values[0] if values else None
+            rendered=f'{values[0]:.3f}' if values else 'N/A'
+        else:rendered=' | '.join(f'{x:.3f}' for x in q) if q else 'N/A | N/A | N/A | N/A'
+        lines.append(f'| {title} | {len(values)} | {rendered} |')
     lines+=['','Exact BG preempt completion, context-save duration, and BG resume latency: **unmeasured**.',
             '', 'Graph entry is K0 block0/thread0; main entry is the main arithmetic node. Neither is an exact first-warp timestamp. Lifetime overlap and an after-RM ordering hypothesis do not establish causation. Target residency stays unknown without another backend.',
             '', 'Ordering model: '+('none; observations at/after RM are ambiguous' if model is None else f'explicit affine-offset assumption with {calibration_margin_ns} ns margin; not a guaranteed bound'),
-            '', 'Decisive paired comparisons: preempt-wait vs none; realtime-restart vs realtime-only. Compare identical fixed work/configurations and separate diagnostic runs.']
+            '', 'Paired comparisons: group-preempt-wait / preempt-wait vs none; realtime-restart vs realtime-only. Compare identical fixed work/configurations and separate diagnostic runs. One pair cannot establish a causal or stable latency benefit.']
     for path in sorted(directory.glob('*_calibration_*.csv')):
         with path.open() as f: samples=list(csv.DictReader(f))
         rtt=[(int(s['cpu_observed_ns'])-int(s['cpu_send_ns']))/1000 for s in samples]
-        lines+=['',f'{path.name}: ping RTT p50/p95/p99/max μs {quantiles(rtt)}. Minimum RTT is not a full-run hard error bound.']
+        description=f'ping samples={len(rtt)}, min/max RTT μs {min(rtt) if rtt else None}/{max(rtt) if rtt else None}' if single else f'ping RTT p50/p95/p99/max μs {quantiles(rtt)}'
+        lines+=['',f'{path.name}: {description}. Minimum RTT is not a full-run hard error bound.']
     (directory/'analysis.json').write_text(json.dumps(stats,indent=2)+'\n')
     output=directory/'summary.md';output.write_text('\n'.join(lines)+'\n');return output
 

@@ -1,6 +1,6 @@
-# Active preemption prototype — phase 4 group binding
+# Active preemption prototype — phase 5 group PREEMPT
 
-保留 generation/原 FD、旧严格 channel 身份、对照模式、Graph markers、schema 2 与恢复日志。**本次 A100/595.58.03 的独立 group binding 已接受一次 GET_INFO（ioctl=0 / NV_OK，TSG ID=6）；项目 active controls=0，benchmark trials=0。** 该 group 捕获到 8 个 compute channel，仍未选择具体 launch channel；旧路径继续拒绝。见 [本轮结果](../docs/phase4_group_binding.md) 和 [阶段三历史](../docs/phase3_bringup.md)。
+**阶段五已完成一次获授权的同步 group PREEMPT smoke。** A100/595.58.03：BG/INT 各自重新绑定并 GET_INFO 成功（当前 ID 6/10），BG owner 唯一一次 PREEMPT 返回 ioctl=0、errno=0、NV_OK；两者输出、BG 同一 context/stream 后续计算及 cleanup 通过。M0/M1/M3 各 1 trial；M3 ordering 仍为 ambiguous，不能据此宣称因果抢占或性能 winner。完整原始证据与限制见 [phase5_group_preempt](../docs/phase5_group_preempt.md)。[阶段四 GET_INFO 记录](../docs/phase4_group_binding.md) 保持为历史证据。
 
 ## 构建与离线检查
 
@@ -15,7 +15,7 @@ ctest --test-dir active-preempt/build --output-on-failure
 
 默认仍依赖同级 NVIDIA submodule 的 550.120 commit `5e52edb2034de7db4d8ae368dbc7c26b416bfa16`、CUDA Toolkit、C++17、CMake 3.22、Linux x86-64。控制 ABI 使用所选 profile 的官方头文件。工作量针对 A100/sm_80；其他 GPU 的 CUDA probe 可独立尝试，主调度 workload 仍限制 A100。
 
-7 个 CTest：原 ABI/errno/空身份、注册表与 mode/恢复/async gate、profile/transport/授权门槛、新 group 生命周期与一次 GET_INFO 的 mock、Python 分析、runner admission/进程树、实际 C++ CSV/journal 与 Python parser 集成。所有 synthetic 数据只在临时目录，测试结果不是 GPU measurements。
+8 个 CTest：保留原 ABI/errno、注册表/mode/恢复、profile/transport、group 生命周期/GET_INFO、Python 分析/runner/schema；新增 group PREEMPT 的精确绑定凭据、阶段/授权/owner/FD/scope/失效拒绝、一次同步请求、错误/超时 journal 和双进程命令测试。550/595 独立构建均通过。所有 synthetic 数据只在临时目录，不是 GPU measurements。
 
 595 使用独立构建；`NVIDIA_595_SOURCE` 应指向已检出的、未修改的 **db0c4e65c8e34c678d745ddb1317f53f90d1072b**。不能将 550 submodule 切到该 tag，也不能复用同一个 build 混入不同头文件：
 
@@ -29,7 +29,7 @@ ctest --test-dir active-preempt/build-595 --output-on-failure
 
 实验 adapter 将 `static_abi_reviewed / observation_enabled / binding_observed / readonly_verified / active_experiment_authorized / active_result_measured` 分开记录。build profile 在编译时固定；运行阶段在第一次 CUDA 调用前显式选择。未知版本不解码 payload，FINN/未知布局阻止绑定。静态通过不授权 active；首次 active 不要求已有 active 成功结果，但仍要求本次有效对象、GET_INFO、workload GPU 范围与操作者确认。
 
-新增 group 证据使用 `group_binding_observed / group_binding_valid / group_get_info_verified`。旧 `binding_observed/readonly_verified` 只代表严格 channel 路径，并以 `channel_binding_observed/channel_binding_verified` 明确输出。group 查询不会解锁旧路径；现有 benchmark runner 仍要求其严格 channel identity，不能直接用本轮结果启动 B/C。
+group 证据使用 `group_binding_observed / group_binding_valid / group_get_info_verified`。旧 `binding_observed/readonly_verified` 仍只代表严格 channel 路径。新 `GroupActive` 阶段只供 `group-preempt-wait`，并将 GET_INFO 成功凭据绑定到完整当前快照/UUID，不能仅凭状态布尔值放行。`GroupInfo` 仍只读；group 不能转换成 channel identity，也不会授权旧 B/C 路径。
 
 ## 分阶段探测
 
@@ -59,7 +59,7 @@ LD_PRELOAD="$PWD/active-preempt/build-595/librm_control.so" \
   active-preempt/build-595/int_worker --probe-rm-readonly --run-dir results/readonly-new
 ```
 
-上述 observe/identity/readonly 都保留单 compute-channel 约束，当前真实拓扑会拒绝。本轮只使用下面的独立 group probe，未运行上述 readonly 或下述 benchmark 矩阵。
+上述 observe/identity/readonly 保留单 compute-channel 约束，当前多-channel 拓扑仍拒绝。group 查询和新 B 模式使用独立入口；没有强制读 channel-specific getter。
 
 ### 仅查询 group（多 channel 可用）
 
@@ -82,12 +82,39 @@ LD_PRELOAD="$PWD/active-preempt/build-595/librm_control.so" \
 
 ## 最小对照矩阵
 
+### 阶段五：一次 group B，独立于旧 channel 模式
+
+`preempt_group_wait(const GroupIdentity&, timeout_us)` 只接受当前本进程的已查询绑定，不接收外部 handle。固定 `bWait=true / bManualTimeout=true`，本轮 timeout=SDK 上限 **1,000,000 μs**。校验与 syscall 同处 capture 锁；每个 BG owner 进程最多一次。PREEMPT 没有 hold/resume 或清空队列语义。
+
+普通对照先运行；`TARGET_GPU_UUID` 必须是当前核对的完整 UUID，输出目录必须全新：
+
+```bash
+CUDA_VISIBLE_DEVICES="$TARGET_GPU_UUID" \
+python3 active-preempt/scripts/run_matrix.py --build active-preempt/build-595 \
+  --output results/phase5-baselines-new --trials 1 --modes int-only none
+
+# 仅在操作者明确确认此 GPU 的隔离/使用条件并授权一次主动测试之后：
+CUDA_VISIBLE_DEVICES="$TARGET_GPU_UUID" \
+python3 active-preempt/scripts/run_matrix.py --build active-preempt/build-595 \
+  --output results/phase5-group-new --trials 1 --modes group-preempt-wait \
+  --paired-none results/phase5-baselines-new/none-f0-b0 --test-host-confirmed
+```
+
+`--paired-none` 核对完成/正确性/后续可用性、当前 GPU、grid/block/shared-memory、instrumentation 和二进制指纹，继承原 BG/INT iterations。只导入工作量配置，**不导入 FD、身份或授权**。该模式拒绝多 trial、Graph、diagnostic、force/bypass 和 extended。首次实测结果已保存，本轮不自动扩大规模或重复请求。
+
+BG/INT 各自完成初始化/预热/分配后，保存独立 group identity，各追加一次 GET_INFO。按同 GPU UUID、不同 PID、匹配的已知 engine 和当前查询所得不同 TSG ID 验证配对；runlist 保持 unknown。BG 先 Prepare，再启动 observer，再 Launch；INT host enqueue 后通过 CPU 消息通知 BG。BG done 已可见则保留跳过事实，不发 PREEMPT、不重试。精确驻留仍 unknown。B 不执行 GET_TIMESLICE 或 GR_GET_CTXSW_MODES。
+
+对照与 B 共用 no-op/控制消息的 send/receipt/ack 字段，但 B 另有身份检查和 syscall 成本。control 返回先写预分配 journal，完整 trial 与之分离。排空后同一 BG context/stream 再做固定 256 iterations 的正确性检查；主 trial 数据已保存、observer 已停止，不把这次复用当成精确 resume 时刻。项目 GET_INFO、PREEMPT、其他 active controls 与 libcuda 正常 controls 分开计数。
+
+### 保留的原 channel 模式（本轮未扩展/运行）
+
 | 组 | mode | init / interaction |
 |---|---|---|
 | M0 | int-only | 无 BG process/work；同一 INT launch、observer、marker、correctness 路径 |
 | M1 | none | BG+INT，自然跨 context 调度；INT enqueue 后给 BG 一个 no-op CPU 消息 |
 | M2 | timeslice | BG request=1 μs、INT request=1,000,000 μs；无 reservation，非完整 GPreempt hint baseline |
 | M3 | preempt-wait | INT enqueue → BG owner PREEMPT(wait=true) |
+| M3-group | group-preempt-wait | 多-channel TSG；BG owner 同步 PREEMPT，当前仅一次 smoke |
 | M4 | realtime-only | init MAKE_REALTIME(INT)，interaction 不调用 restart |
 | M5 | realtime-restart | 同 M4 init；interaction 追加 RESTART_RUNLIST(INT channel) |
 
@@ -107,7 +134,7 @@ python3 active-preempt/scripts/run_matrix.py --output results/c-first \
   --trials 1 --modes realtime-only realtime-restart --test-host-confirmed
 ```
 
-`--test-host-confirmed` 表示操作者已确认是隔离测试主机、没有需要保护的任务，并核实 MPS/MIG/GSP/虚拟化等前提；不是授予权限。发现其他 compute processes 或任意 probe/试验错误，runner 保存证据并停止后续组。
+`--test-host-confirmed` 表示操作者已确认目标 GPU 可用于主动测试、没有需要保护的同卡任务，并核实 MPS/MIG/GSP/虚拟化等前提；不是授予权限。group 模式按所选 UUID 检查 compute processes（其他旧模式保留全机检查）；查询不可用也拒绝。空列表本身不等于隔离或授权。任何 probe/试验错误均保存并停止后续组。
 
 从 smoke 的 `*_identity.txt` 读取真实 iterations；跨 invocation 配对时使用同一数值，而不是把各自校准的不同工作量混为一组。一个矩阵内部会冻结已校准工作供后续配置使用。下面的变量应设置为上述实际记录值，不能随意填造：
 
@@ -142,6 +169,8 @@ Graph 入口在第一个真实计算节点，main 在中间节点；详见 [测�
 每组输出 `raw.csv`（schema 2）、`configuration.json`、identity/inventory、calibration、必要时 BG CTA/heartbeat、`*_control_events.jsonl` / `.bin`、recovery/CUDA cleanup/status 或 failure。没有 GPU 时 runner 停在 preflight，不生成 GPU raw.csv。
 
 控制返回先存入预分配 mmap 槽，再等待完整 trial。CTRL 接受、GPU 行为、延迟变化和正确性分开；CPU 在 RM 后看到 marker 默认 **ordering_ambiguous**。`summarize.py RUN` 输出全部有效应用样本和各维度数量；如需假设性的时钟映射，可显式 `--calibration-margin-ns N`，其 margin 不是测得的硬保证。
+
+只有 1 条 trial 时，summary 只列原始值，不列分位数。schema 2 追加 `T_bg_done_observed / bg_done_at_owner_check / setup_status`，旧字段语义不变；缺失新字段的旧数据不补造测量。精确 BG preempt/context-save/resume 时间仍为空。
 
 ```bash
 python3 active-preempt/scripts/summarize.py results/b-first/preempt-wait-f0-b0

@@ -1,0 +1,72 @@
+[
+  {
+    "configuration": "probe-cuda",
+    "command": [
+      "/usr/bin/python3",
+      "/home/quyifei/multimodal/workspace/Interception/active-preempt/scripts/preflight.py",
+      "--binary",
+      "/home/quyifei/multimodal/workspace/Interception/active-preempt/build-595/preflight_cuda",
+      "--output",
+      "/home/quyifei/multimodal/workspace/Interception/results/phase5/group_preempt_smoke_ready/preflight"
+    ],
+    "returncode": 0,
+    "timed_out": false,
+    "termination": [],
+    "recovery": "inspect_owner_recovery_logs"
+  },
+  {
+    "command": [
+      "/home/quyifei/multimodal/workspace/Interception/active-preempt/build-595/int_worker",
+      "--run-dir",
+      "/home/quyifei/multimodal/workspace/Interception/results/phase5/group_preempt_smoke_ready/group-preempt-wait-f0-b0",
+      "--mode",
+      "group-preempt-wait",
+      "--trials",
+      "1",
+      "--cta-waves",
+      "1",
+      "--heartbeat-ns",
+      "2000",
+      "--timeslice-us",
+      "1",
+      "--force",
+      "0",
+      "--bypass",
+      "0",
+      "--test-host-confirmed",
+      "--bg-iterations",
+      "1630976",
+      "--int-iterations",
+      "5888"
+    ],
+    "returncode": 0,
+    "timed_out": false,
+    "termination": [],
+    "recovery": "inspect_owner_recovery_logs",
+    "configuration": "group-preempt-wait-f0-b0",
+    "journal_recovery": [
+      {
+        "command": [
+          "/home/quyifei/multimodal/workspace/Interception/active-preempt/build-595/event_dump",
+          "/home/quyifei/multimodal/workspace/Interception/results/phase5/group_preempt_smoke_ready/group-preempt-wait-f0-b0/int_control_events.bin",
+          "/home/quyifei/multimodal/workspace/Interception/results/phase5/group_preempt_smoke_ready/group-preempt-wait-f0-b0/int_control_events.jsonl"
+        ],
+        "returncode": 0,
+        "timed_out": false,
+        "termination": [],
+        "recovery": "inspect_owner_recovery_logs"
+      },
+      {
+        "command": [
+          "/home/quyifei/multimodal/workspace/Interception/active-preempt/build-595/event_dump",
+          "/home/quyifei/multimodal/workspace/Interception/results/phase5/group_preempt_smoke_ready/group-preempt-wait-f0-b0/bg_control_events.bin",
+          "/home/quyifei/multimodal/workspace/Interception/results/phase5/group_preempt_smoke_ready/group-preempt-wait-f0-b0/bg_control_events.jsonl"
+        ],
+        "returncode": 0,
+        "timed_out": false,
+        "termination": [],
+        "recovery": "inspect_owner_recovery_logs"
+      }
+    ]
+  }
+]

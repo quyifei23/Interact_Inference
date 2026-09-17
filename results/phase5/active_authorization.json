@@ -1,0 +1,13 @@
+{
+  "authorized": true,
+  "source": "explicit user reply in current task",
+  "reply": "确认上述条件，授权这一次测试",
+  "recorded_utc": "2026-09-17T07:33:43.666338+00:00",
+  "gpu_uuid": "GPU-99e4e85f-1945-866c-9e00-130b51df7908",
+  "mode": "group-preempt-wait",
+  "trials": 1,
+  "bg_iterations": 1630976,
+  "int_iterations": 5888,
+  "manual_timeout_us": 1000000,
+  "scope": "Each owner captures current group and GET_INFO; at most one BG-owned synchronous PREEMPT; no other scheduling changes or retries"
+}

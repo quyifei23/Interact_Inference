@@ -10,17 +10,61 @@ import tempfile
 import time
 import unittest
 from unittest.mock import patch
-from run_matrix import canonical,run_process_group,validate_admission
+from run_matrix import (canonical,run_process_group,validate_admission,prerequisite_probes,
+                        validate_group_environment,check_compute_processes,binary_fingerprints)
 from preflight import command,collect
 from test_analysis import row,write_rows
 
 def options(**extra):
     r=dict(modes=['none'],trials=1,test_host_confirmed=False,allow_extended=False,force=0,bypass=0,
            diagnostic_progress=False,graph=False,graph_evidence_reviewed=False,primitive_evidence=None,smoke_evidence=None,
-           bg_iterations=0,int_iterations=0,cta_waves=1,heartbeat_ns=2000,timeslice_us=1)
+           bg_iterations=0,int_iterations=0,cta_waves=1,heartbeat_ns=2000,timeslice_us=1,paired_none=None)
     r.update(extra);return argparse.Namespace(**r)
 
 class RunnerTest(unittest.TestCase):
+    def test_group_uses_final_owner_bindings_without_channel_probes(self):
+        self.assertEqual(prerequisite_probes(['group-preempt-wait']),())
+        self.assertEqual(prerequisite_probes(['none','int-only']),())
+        self.assertEqual(prerequisite_probes(['preempt-wait']),('observe','identity','readonly'))
+        with self.assertRaises(ValueError):validate_admission(options(modes=['group-preempt-wait']))
+        with self.assertRaises(ValueError):validate_admission(options(modes=['group-preempt-wait'],test_host_confirmed=True))
+    def test_group_smoke_freezes_none_work_and_scope(self):
+        with tempfile.TemporaryDirectory(prefix='ap-synthetic-group-pair-') as d:
+            root=Path(d);p=root/'none-f0-b0';p.mkdir();build=root/'build';build.mkdir()
+            (p/'status.txt').write_text('COMPLETED: synthetic fixture, not GPU evidence\n')
+            for role in ('int','bg'):(p/f'{role}_recovery.txt').write_text('CONFIGURATION_RESTORED\n')
+            write_rows(p/'raw.csv',[row(mode='none',control_status='NOT_ISSUED')])
+            uuid='00112233445566778899aabbccddeeff';visible='GPU-00112233-4455-6677-8899-aabbccddeeff'
+            c=dict(schema_version=2,mode='none',graph=0,run_kind='performance',force=0,bypass=0,cta_waves=1,heartbeat_ns=2000,timeslice_us=1,
+                   bg_iterations=8192,int_iterations=256,threads_per_block=256,dynamic_shared_bytes=65536,bg_target_us=80000,int_target_us=300,
+                   gpu_uuid=uuid,build_profile='synthetic',nvidia_source_commit='synthetic',bg_blocks=216,int_blocks=216)
+            (p/'configuration.json').write_text(json.dumps(c))
+            (p/'bg_context_usability.json').write_text(json.dumps(dict(same_context=True,same_stream=True,reference_match=True)))
+            for binary in ('int_worker','bg_worker','librm_control.so','preflight_cuda'):(build/binary).write_text('synthetic binary fixture')
+            (root/'invocation.json').write_text(json.dumps(dict(binary_sha256=binary_fingerprints(build))))
+            common=dict(modes=['group-preempt-wait'],test_host_confirmed=True,paired_none=p)
+            a=options(**common);validate_admission(a);self.assertEqual((a.bg_iterations,a.int_iterations),(8192,256))
+            for changed in (dict(trials=2),dict(graph=True),dict(diagnostic_progress=True),dict(bg_iterations=4096),dict(cta_waves=2),dict(heartbeat_ns=0),dict(allow_extended=True)):
+                with self.assertRaises(ValueError):validate_admission(options(**common,**changed))
+            calls=dict(device_count='1',gpu_uuid=uuid,compute_capability_major='8',compute_capability_minor='0',multiprocessor_count='108')
+            readiness=dict(cuda_probe=dict(stdout='\n'.join(json.dumps(dict(call=k,detail=v,returncode=0)) for k,v in calls.items())))
+            # Real preflight emits API return descriptions before attribute
+            # values under the same call name; these are not extra devices/CCs.
+            readiness['cuda_probe']['stdout']+='\n'+'\n'.join(json.dumps(dict(call=k,returncode=0,detail='CUDA_SUCCESS: no error')) for k in ('compute_capability_major','compute_capability_minor','multiprocessor_count'))
+            c['_evidence']=str(p);validate_group_environment(readiness,visible,c,build)
+            duplicated=json.loads(json.dumps(readiness));duplicated['cuda_probe']['stdout']+='\n'+json.dumps(dict(call='compute_capability_major',returncode=0,detail='8'))
+            with self.assertRaises(ValueError):validate_group_environment(duplicated,visible,c,build)
+            for v in ('0','GPU-00112233','GPU-00112233-4455-6677-8899-aabbccddeefa'):
+                with self.assertRaises(ValueError):validate_group_environment(readiness,v,c,build)
+            (build/'bg_worker').write_text('changed synthetic build')
+            with self.assertRaises(ValueError):validate_group_environment(readiness,visible,c,build)
+    def test_active_process_check_is_target_scoped_and_unknown_fails(self):
+        def readiness(stdout='',rc=0):return dict(commands=[dict(call=['nvidia-smi','--query-compute-apps=pid,process_name,gpu_uuid'],stdout=stdout,returncode=rc)])
+        check_compute_processes(readiness('123, synthetic_other_gpu, GPU-other'),'GPU-selected')
+        check_compute_processes(readiness(),'GPU-selected')
+        for r in (readiness('123, synthetic_target_gpu, GPU-selected'),readiness(rc=1),dict(commands=[]),readiness('unknown'),readiness('123, name, N/A')):
+            with self.assertRaises(ValueError):check_compute_processes(r,'GPU-selected')
+        with self.assertRaises(ValueError):check_compute_processes(readiness('123, any_gpu, GPU-other'))
     def test_modes_and_admission(self):
         self.assertEqual(canonical('realtime'),'realtime-restart')
         for mode in ('none','int-only'):validate_admission(options(modes=[mode]))

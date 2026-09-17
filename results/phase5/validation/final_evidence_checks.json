@@ -1,0 +1,14 @@
+{
+  "json_files_parsed": 71,
+  "jsonl_files_parsed": 23,
+  "local_document_links_checked": 49,
+  "current_binaries_match_executed": true,
+  "ctest550": "8/8",
+  "ctest595": "8/8",
+  "gpu_trials": 3,
+  "project_get_info": 2,
+  "project_preempt": 1,
+  "other_active": 0,
+  "git_diff_check": "passed",
+  "new_gpu_or_rm_calls_in_this_check": 0
+}

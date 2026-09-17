@@ -39,12 +39,13 @@ struct alignas(4096) Telemetry {
     uint64_t heartbeat_gpu_ns[max_samples]{};
     uint64_t cta_start_gpu_ns[max_blocks]{}, cta_end_gpu_ns[max_blocks]{};
 };
-enum class Command:uint32_t { None, Launch, Drain, PreemptWait, PreemptAsync, Disable, DisableScheduling, Enable, ReadMode, Exit };
+enum class Command:uint32_t { None, Launch, Drain, PreemptWait, PreemptAsync, Disable, DisableScheduling, Enable, ReadMode, Exit, Prepare, GroupPreemptWait, CheckReuse };
 struct alignas(4096) HostState {
     uint32_t ready=0,error=0,command_seq=0,ack_seq=0,controller_pid=0;
     Command command=Command::None;
     uint32_t bg_correct=0,bg_pid=0,bg_tsg=0xffffffff,bg_client=0,bg_group=0,bg_engine=0;
     uint32_t bg_identity_valid=0,bg_blocks=0,bg_progress_correct=0;
+    uint32_t bg_group_identity_valid=0,bg_done_at_owner_check=2,bg_reuse_ok=0;
     uint32_t bg_mode_before=0xffffffff,bg_mode_after=0xffffffff;
     uint32_t bg_mode_status_before=0xffffffff,bg_mode_status_after=0xffffffff;
     uint64_t bg_context=0,bg_iterations=0,bg_submit_begin=0,bg_submit_end=0;
@@ -54,6 +55,12 @@ struct alignas(4096) HostState {
     ControlResult result{},preliminary_result{};
     char error_message[512]{},bg_uuid[64]{};
 };
+// TSG IDs are compared only for the same selected GPU and explicit matching
+// engine scope. Runlist ID remains unmeasured; RM handle numbers are irrelevant.
+inline bool distinct_group_scope(uint32_t bg_pid,uint32_t int_pid,const std::string& bg_uuid,const std::string& int_uuid,
+                                 uint32_t bg_engine,uint32_t int_engine,uint32_t bg_tsg,uint32_t int_tsg){
+    return bg_pid&&int_pid&&bg_pid!=int_pid&&!bg_uuid.empty()&&bg_uuid==int_uuid&&bg_engine&&bg_engine==int_engine&&bg_tsg!=int_tsg;
+}
 struct Shared { HostState host; Telemetry bg; Telemetry interactive; };
 static_assert(sizeof(Telemetry)%4096==0 && sizeof(HostState)%4096==0);
 static_assert(std::is_trivially_copyable<ControlResult>::value);

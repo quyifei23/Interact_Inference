@@ -27,13 +27,18 @@ void ProfileState::configure(const DriverProfile& p,const std::string& runtime,R
         (std::string(p.version)=="595.58.03"&&std::string(p.source_commit)=="db0c4e65c8e34c678d745ddb1317f53f90d1072b");
     runtime_matches=version_matches(runtime,p.version);
     observation_enabled=static_abi_reviewed&&runtime_matches&&stage!=RmStage::Disabled;
-    active_experiment_authorized=stage==RmStage::Active&&authorized;
+    active_experiment_authorized=(stage==RmStage::Active||stage==RmStage::GroupActive)&&authorized;
     if(!static_abi_reviewed||!runtime_matches)stop_reason="ABI_UNVERIFIED: runtime/build profile mismatch or unreviewed source";
 }
 bool ProfileState::may_readonly()const{return observation_enabled&&cuda_minimal_workload_passed&&binding_observed&&(stage==RmStage::Readonly||stage==RmStage::Active);}
 bool ProfileState::may_active()const{return may_readonly()&&readonly_verified&&workload_gpu_reviewed&&active_experiment_authorized&&stage==RmStage::Active;}
 bool ProfileState::may_group_info()const{
-    return stage==RmStage::GroupInfo&&observation_enabled&&cuda_minimal_workload_passed&&single_gpu_scope_verified&&group_binding_observed;
+    return (stage==RmStage::GroupInfo||stage==RmStage::GroupActive)&&observation_enabled&&cuda_minimal_workload_passed&&single_gpu_scope_verified&&group_binding_observed;
+}
+bool ProfileState::may_group_preempt()const{
+    return may_group_info()&&stage==RmStage::GroupActive&&active_experiment_authorized&&workload_gpu_reviewed&&
+        group_owner==GroupOwner::Background&&!authorized_visible_devices.empty()&&authorized_visible_devices==scope_visible_devices;
+    // Exact GET_INFO->binding association is additionally checked by the backend.
 }
 bool group_probe_visibility_matches(const std::string& visible,const std::string& uuid_hex,int count){
     if(count!=1||visible.size()!=40||visible.substr(0,4)!="GPU-"||uuid_hex.size()!=32)return false;

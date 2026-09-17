@@ -182,8 +182,8 @@ GroupBinding ObjectRegistry::discover_group()const{
     return result;
 }
 bool ObjectRegistry::valid_group(const GroupBinding& b)const{
-    // Probe path only, not the benchmark critical path. Re-discovery compares
-    // the entire current topology and detects a newly created second candidate.
+    // Compare the full current topology, including a new second candidate.
+    // Group PREEMPT also uses this scan before its measured syscall interval.
     try{return b==discover_group();}catch(const std::runtime_error&){return false;}
 }
 std::string ObjectRegistry::object_graph_json()const{

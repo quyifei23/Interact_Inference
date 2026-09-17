@@ -1,6 +1,18 @@
 # RM 对象绑定与生命周期
 
-## 阶段四：独立 group binding（当前）
+## 阶段五：绑定到查询凭据的同步 group PREEMPT（当前）
+
+研究基线 `4eb805569ed754bbdf7d65c81b181a75ff545480` 后的本地修改：`preempt_group_wait(const GroupIdentity&, timeout_us)` 不要求单 compute channel，不选择或伪造子 channel。旧 `Identity/RmControl` 与唯一 channel guard 保留。实测两进程各自捕获 8 个 compute channel 的唯一 TSG，各自 GET_INFO 成功；BG 唯一一次同步 PREEMPT 返回 ioctl=0 / errno=0 / NV_OK。完整事实与边界见 [phase5_group_preempt](phase5_group_preempt.md)。
+
+`GroupInfoOnce::query/verified_for` 私有保存成功查询所对应的完整 `GroupBinding`、UUID、可见设备 scope 和 optional hardware TSG ID。`GroupPreemptOnce::preempt` 逐次核对该凭据与当前 PID/registry/profile、原 retained FD、全部祖先/member generation 和唯一 compute 候选。旧对象查询成功的全局布尔值不能验证复用的 handle、新 registry 或其他绑定。ID=0 仍合法，ID 从不替代 hObject。
+
+`GroupActive` 与只读 `GroupInfo` 分离；需显式授权，且授权 UUID scope 与当前 scope 相同。`GroupOwner::Background` 是唯一可发请求的角色，INT owner 只查询自己的 group。每个 owner 最多一次 PREEMPT、仅 trial 0、固定 wait=true；完整初始化参数并限制 timeout 到当前 SDK 上限。无通用 command/target 入口，无 channel-specific getter，也不改变现有 stock RM ownership/rights。
+
+初始化完成所有预热/分配后才查询；trial 前检查双方快照，BG control 发出前在 capture 锁中重新验证，不在关键路径重查 GET_INFO 或修复对象。当前 `valid_group()` 仍通过扫描/构造完整当前快照比较，验证开销进入 IPC owner 时间、在记录的 syscall 区间外；尚未优化这部分 CPU 分配。捕获锁仅覆盖可见 ioctl，hidden/direct syscall 限制不变。
+
+本次两进程的 group handle 数字恰好相同，hardware TSG ID 分别为 6/10。配对依据当前 PID、GPU UUID、已知 engine=1 和当前 GET_INFO 输出，不以进程间 RM handle 数字作实体判断；runlist ID unknown。清理后两个绑定都失效，不能复用这些数值。GET_INFO / PREEMPT 被接受不证明完整 CUDA context 覆盖、持续暂停、INT-next、硬件粒度或请求导致的性能改善。
+
+## 阶段四：独立 group binding（历史）
 
 基于研究仓库 `4f4cd179965d08f547d36ddd2d0b68ce3ec7ae71` 的本轮修改。**595.58.03 / A100 的一次 group-target GET_INFO 已接受**：ioctl=0、errno=0、NV_STATUS=0，hardware TSG ID=6。该进程中唯一 compute TSG 有 8 个已识别 compute channel，另有 3 个 copy-only TSG。此为本次快照，不是固定拓扑；没有复用阶段三的身份。完整运行记录见 [phase4_group_binding](phase4_group_binding.md)。
 

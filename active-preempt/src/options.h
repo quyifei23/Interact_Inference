@@ -32,10 +32,11 @@ inline Options parse(int argc,char** argv){
         else if(key=="--help"){
             std::cout<<"int_worker --probe-cuda | --probe-rm-observe | --probe-rm-identity | --probe-rm-readonly | --probe-rm-group-info [--run-dir DIR]\n"
                      <<"Group-info requires CUDA_VISIBLE_DEVICES=<one full GPU UUID>; adds GET_INFO once, no other controls.\n"
-                     <<"int_worker --run-dir DIR --mode int-only|none|timeslice|preempt-wait|preempt-async|realtime-only|realtime-restart|realtime|disable|disable-split\n"
+                     <<"int_worker --run-dir DIR --mode int-only|none|timeslice|preempt-wait|group-preempt-wait|preempt-async|realtime-only|realtime-restart|realtime|disable|disable-split\n"
                      <<"[--trials 1] [--cta-waves 1..16] [--bg-iterations N] [--int-iterations N] [--bg-us 80000] [--int-us 300]\n"
                      <<"[--heartbeat-ns 2000] [--timeslice-us 1] [--force 0|1] [--bypass 0|1] [--diagnostic-progress]\n"
                      <<"Active modes require --test-host-confirmed. Async/force/bypass/D also require --allow-extended.\n"
+                     <<"group-preempt-wait: one plain trial, fixed BG/INT iterations, one explicit GPU UUID; BG owner only.\n"
                      <<"Graph requires --graph --graph-evidence-reviewed after independent plain-kernel evidence review. --probe aliases --probe-cuda.\n";
             std::exit(0);
         }else{
@@ -57,7 +58,9 @@ inline Options parse(int argc,char** argv){
         throw std::invalid_argument("Invalid workload/trial bounds");
     for(auto n:{o.bg_iterations,o.int_iterations})if(n&&(n%256||n>1000000000))throw std::invalid_argument("iterations must be multiples of 256 <= 1e9");
     if(o.probe==Probe::None){
-        if(p.identity&&!o.test_host)throw std::invalid_argument("Active mode requires --test-host-confirmed (isolated authorized GPU host)");
+        if((p.identity||p.group_identity)&&!o.test_host)throw std::invalid_argument("Active mode requires --test-host-confirmed (isolated authorized GPU host)");
+        if(p.group_identity&&(o.trials!=1||o.graph||o.force||o.bypass||o.extended||o.diagnostic||!o.bg_iterations||!o.int_iterations))
+            throw std::invalid_argument("group-preempt-wait requires one plain trial and frozen BG/INT iterations; no extended/diagnostic options");
         if((p.extended||o.force||o.bypass)&&!o.extended)throw std::invalid_argument("Extended modes require --allow-extended after recovery/wait-path validation");
         if(o.graph&&!o.graph_reviewed)throw std::invalid_argument("Graph requires --graph-evidence-reviewed; RM acceptance alone is insufficient");
     }

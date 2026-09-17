@@ -1,0 +1,58 @@
+{
+  "schema_version": 2,
+  "rows": 1,
+  "application_valid": 1,
+  "correct_application_rows": 1,
+  "timing_eligible_subset": 0,
+  "preemption_confirmed": 0,
+  "dimensions": {
+    "trial_state": {
+      "complete": 1
+    },
+    "application_valid": {
+      "1": 1
+    },
+    "control_status": {
+      "NOT_ISSUED": 1
+    },
+    "gpu_overlap": {
+      "not_applicable": 1
+    },
+    "derived_ordering": {
+      "not_applicable": 1
+    },
+    "correctness_status": {
+      "PASS": 1
+    },
+    "control_target_running": {
+      "unknown": 1
+    },
+    "bg_done_before_interaction": {
+      "": 1
+    },
+    "bg_done_before_control_observed": {
+      "": 1
+    },
+    "bg_done_at_owner_check": {
+      "": 1
+    },
+    "setup_status": {
+      "not_applicable": 1
+    }
+  },
+  "calibration_model": null,
+  "timeout_rows": 0,
+  "missing_entry_or_done_observation": 0,
+  "failure_messages": {},
+  "raw_values_us": {
+    "Interaction \u2192 graph entry observed, all application-valid": 22.748,
+    "Interaction \u2192 graph entry, correct application rows": 22.748,
+    "Interaction \u2192 graph entry, timing-eligible subset": null,
+    "Interaction \u2192 main entry observed": 29.136,
+    "Host submission": 18.332,
+    "IPC request \u2192 owner receipt": null,
+    "IPC round trip (includes owner control when present)": null,
+    "RM syscall wall time (including failures)": null,
+    "GPU graph marker interval": 377.856
+  }
+}

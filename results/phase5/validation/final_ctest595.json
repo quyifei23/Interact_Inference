@@ -1,0 +1,11 @@
+{
+  "command": [
+    "ctest",
+    "--test-dir",
+    "active-preempt/build-595",
+    "--output-on-failure"
+  ],
+  "started_utc": "2026-09-17T07:41:38.215964+00:00",
+  "ended_utc": "2026-09-17T07:41:40.157829+00:00",
+  "returncode": 0
+}

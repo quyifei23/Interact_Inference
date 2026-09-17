@@ -1,0 +1,56 @@
+{
+  "recorded_utc": "2026-09-17T07:41:19.647079+00:00",
+  "note": "Lossless archival after worker completion and matching event_dump roundtrip. No event filtering; baseline journals are empty of project controls.",
+  "files": [
+    {
+      "binary": "results/phase5/baselines/int-only-f0-b0/int_control_events.bin",
+      "archive": "results/phase5/baselines/int-only-f0-b0/int_control_events.bin.gz",
+      "raw_bytes": 22548480,
+      "compressed_bytes": 22102,
+      "raw_sha256": "896c5671ff453e4c8bdb00792de9a0f46a94f7c93b458e27553264ef87911f72",
+      "archive_sha256": "c3087223c8f5f8b42248cb667b5c5b903c899ece10be9aaf53110e26025f3081",
+      "roundtrip_identical": true,
+      "recovered_jsonl_identical": true
+    },
+    {
+      "binary": "results/phase5/baselines/none-f0-b0/bg_control_events.bin",
+      "archive": "results/phase5/baselines/none-f0-b0/bg_control_events.bin.gz",
+      "raw_bytes": 22548480,
+      "compressed_bytes": 22098,
+      "raw_sha256": "7004682b34bc229d0c5bbdf857254d380f51155e95b522993279d84d7949e986",
+      "archive_sha256": "0cb30b59a6eaa153d3b1fb55011edc1d69a1d5366214196b6e8fb2ef24629056",
+      "roundtrip_identical": true,
+      "recovered_jsonl_identical": true
+    },
+    {
+      "binary": "results/phase5/baselines/none-f0-b0/int_control_events.bin",
+      "archive": "results/phase5/baselines/none-f0-b0/int_control_events.bin.gz",
+      "raw_bytes": 22548480,
+      "compressed_bytes": 22098,
+      "raw_sha256": "ad58de52639631de912324734890c82d9f575a5933ae793d0ca09c14b289b2b9",
+      "archive_sha256": "cef8dc1ff998c1c05d88aaa26497acbdbec5ac8a8a329d93b7ac91e5a3abb2bc",
+      "roundtrip_identical": true,
+      "recovered_jsonl_identical": true
+    },
+    {
+      "binary": "results/phase5/group_preempt_smoke_ready/group-preempt-wait-f0-b0/bg_control_events.bin",
+      "archive": "results/phase5/group_preempt_smoke_ready/group-preempt-wait-f0-b0/bg_control_events.bin.gz",
+      "raw_bytes": 22548480,
+      "compressed_bytes": 22267,
+      "raw_sha256": "c28bf031b0fd53065866669171654d25abc4b9e7f9b57c33f18fc6d84b4721de",
+      "archive_sha256": "0d30dd6281c1139c339e3b0c147762da79bc8cca2a51a88eb16dcf532d52db6c",
+      "roundtrip_identical": true,
+      "recovered_jsonl_identical": true
+    },
+    {
+      "binary": "results/phase5/group_preempt_smoke_ready/group-preempt-wait-f0-b0/int_control_events.bin",
+      "archive": "results/phase5/group_preempt_smoke_ready/group-preempt-wait-f0-b0/int_control_events.bin.gz",
+      "raw_bytes": 22548480,
+      "compressed_bytes": 22225,
+      "raw_sha256": "23654a34a2126a9e2d5ad5c1538c14bcf43af07cf76f0bc2b7e34f3d5e69d1da",
+      "archive_sha256": "c63208408423f4926d7323dbfc685e2cd9342158cc4e6a8867dc01dabe5e5cb6",
+      "roundtrip_identical": true,
+      "recovered_jsonl_identical": true
+    }
+  ]
+}

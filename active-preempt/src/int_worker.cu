@@ -44,7 +44,7 @@ struct Child {
     }
     ~Child(){stop();}
 };
-struct Observation {uint64_t entry=0,main=0,done=0,max_poll_gap=0;std::vector<std::pair<uint64_t,uint64_t>> heartbeat;};
+struct Observation {uint64_t entry=0,main=0,done=0,bg_done=0,max_poll_gap=0;std::vector<std::pair<uint64_t,uint64_t>> heartbeat;};
 struct Observer {
     std::atomic<bool> stop{false},ready{false};Observation data;std::thread thread;
     explicit Observer(ap::Shared& s,bool bg){
@@ -56,6 +56,7 @@ struct Observer {
                 if(!data.entry&&ap::acquire(&s.interactive.entry_started))data.entry=ap::monotonic_ns();
                 if(!data.main&&ap::acquire(&s.interactive.started))data.main=ap::monotonic_ns();
                 if(!data.done&&ap::acquire(&s.interactive.done))data.done=ap::monotonic_ns();
+                if(bg&&!data.bg_done&&ap::acquire(&s.bg.done))data.bg_done=ap::monotonic_ns();
                 uint32_t available=bg?std::min(ap::acquire(&s.bg.heartbeat_count),ap::max_samples):0;
                 if(available>consumed){uint64_t observed=ap::monotonic_ns();for(;consumed<available;++consumed)data.heartbeat.emplace_back(s.bg.heartbeat_gpu_ns[consumed],observed);}
                 ap::relax();
@@ -66,7 +67,7 @@ struct Observer {
     ~Observer(){finish();}
 };
 void snapshot(ap::TrialRecord& r,const ap::Shared& s,const Observer* observer){
-    if(observer){r.entry_observed=observer->data.entry;r.main_observed=observer->data.main;r.done_observed=observer->data.done;r.poll_gap=observer->data.max_poll_gap;}
+    if(observer){r.entry_observed=observer->data.entry;r.main_observed=observer->data.main;r.done_observed=observer->data.done;r.bg_done_observed=observer->data.bg_done;r.poll_gap=observer->data.max_poll_gap;}
     if(ap::acquire(&s.interactive.entry_started)){r.entry_gpu=s.interactive.entry_gpu_ns;r.entry_node=s.interactive.entry_node;}
     if(ap::acquire(&s.interactive.started)){r.main_gpu=s.interactive.start_gpu_ns;r.main_node=s.interactive.main_node;}
     if(ap::acquire(&s.interactive.done))r.done_gpu=s.interactive.done_gpu_ns;
@@ -181,12 +182,15 @@ int probe_rm(const ap::Options& o){
 int main(int argc,char** argv){
     std::string shared_path,run_dir;
     std::unique_ptr<ap::Mapping> mapping;std::unique_ptr<Child> child;std::unique_ptr<ap::GpuWorker> gpu;std::unique_ptr<ap::RmControl> rm;
+    std::unique_ptr<ap::OwnedGroup> group;
+    std::string completed_trial_failure;
     ap::Recovery recovery;bool possibly_disabled=false,evidence_writable=false;
     auto cleanup=[&](){
         ap::save_control_journal();ap::stop_requested=0;
         std::ofstream f(run_dir+"/int_recovery.txt",std::ios::app);bool ok=true;
         if(possibly_disabled&&child&&child->pid>0){try{auto r=child->command(ap::Command::Enable);f<<"BG_ENABLE "<<r.describe()<<'\n';possibly_disabled=!r.ok();ok&=r.ok();}catch(const std::exception& e){f<<"RECOVERY_UNCONFIRMED "<<e.what()<<'\n';ok=false;}}
         if(rm)ok&=recovery.restore(*rm,f);
+        if(group)f<<"NO_PERSISTENT_SCHEDULING_CONFIGURATION_CHANGED; PREEMPT has no hold/resume API\n";
         f<<(ok?"CONFIGURATION_RESTORED":"RECOVERY_FAILED")<<std::endl;ap::save_control_journal();ap::save_rm_observation(run_dir,"int_");return ok;
     };
     try{
@@ -202,7 +206,7 @@ int main(int argc,char** argv){
         evidence_writable=true;
         if(o.probe==ap::Probe::GroupInfo)return probe_group_info(o);
         if(o.probe!=ap::Probe::None)return probe_rm(o);
-        ap::configure_rm(plan.identity?ap::RmStage::Active:ap::RmStage::Disabled,o.test_host);
+        ap::configure_rm(plan.group_identity?ap::RmStage::GroupActive:(plan.identity?ap::RmStage::Active:ap::RmStage::Disabled),o.test_host,ap::GroupOwner::Interactive);
         // Before any fork: verify CUDA availability in a separate probe process
         // through the runner. Workers still check cuInit directly below.
         std::signal(SIGTERM,ap::on_stop);std::signal(SIGINT,ap::on_stop);
@@ -225,9 +229,20 @@ int main(int argc,char** argv){
         gpu->calibrate_observation(run_dir+"/int_calibration_before.csv");
         std::ofstream(run_dir+"/int_capture.txt")<<ap::capture_inventory();
         if(plan.identity)rm=std::make_unique<ap::RmControl>(ap::discover_owned_compute_group());
+        if(plan.group_identity)group=std::make_unique<ap::OwnedGroup>(ap::bind_worker_group(*gpu,run_dir,"int"));
         if(child&&(s.host.bg_pid==uint32_t(getpid())||ap::uuid_string(gpu->prop.uuid)!=s.host.bg_uuid))throw std::runtime_error("Need distinct processes/contexts and same GPU UUID");
         if(plan.identity&&(!s.host.bg_identity_valid||s.host.bg_tsg==rm->identity().tsg_id))throw std::runtime_error("Need verified distinct hardware TSG IDs");
+        if(group){
+            if(!s.host.bg_group_identity_valid||!ap::distinct_group_scope(s.host.bg_pid,getpid(),s.host.bg_uuid,ap::uuid_string(gpu->prop.uuid),
+                s.host.bg_engine,group->identity.binding().group.engine,s.host.bg_tsg,*group->info.hardware_tsg_id))
+                throw std::runtime_error("OBJECT_BINDING_UNAVAILABLE: need distinct current hardware TSG IDs in same explicit GPU/engine scope; runlist unknown");
+            std::ofstream pair(run_dir+"/group_pair.json");
+            pair<<"{\"bg_pid\":"<<s.host.bg_pid<<",\"int_pid\":"<<getpid()<<",\"bg_hardware_tsg_id\":"<<s.host.bg_tsg<<",\"int_hardware_tsg_id\":"<<*group->info.hardware_tsg_id
+                <<",\"gpu_uuid\":"<<ap::json_string(ap::uuid_string(gpu->prop.uuid))<<",\"common_engine\":"<<s.host.bg_engine
+                <<",\"runlist_id\":null,\"distinct_in_current_gpu_engine_scope\":true,\"control_owner\":\"BG\",\"RM_handle_numbers_not_compared\":true}\n";
+        }
         std::ofstream identity(run_dir+"/int_identity.txt");ap::write_identity(identity,*gpu,rm.get());
+        if(group)ap::write_group_identity(identity,*group);
         identity<<"mode="<<o.mode<<" force="<<o.force<<" bypass="<<o.bypass<<" graph="<<o.graph<<" run_kind="<<(o.diagnostic?"diagnostic":"performance")<<" trials="<<o.trials<<"\n";
         bool realtime_accepted=false;
         if(plan.timeslice){
@@ -241,13 +256,15 @@ int main(int argc,char** argv){
         configuration<<"{\"schema_version\":2,\"mode\":"<<ap::json_string(o.mode)
             <<",\"run_kind\":"<<ap::json_string(o.diagnostic?"diagnostic":"performance")
             <<",\"gpu_uuid\":"<<ap::json_string(ap::uuid_string(gpu->prop.uuid))
-            <<",\"driver_profile\":"<<ap::json_string(plan.identity?ap::build_profile().version:"CUDA_BASELINE_NO_RM_PROFILE")
+            <<",\"driver_profile\":"<<ap::json_string(plan.identity||plan.group_identity?ap::build_profile().version:"CUDA_BASELINE_NO_RM_PROFILE")
+            <<",\"build_profile\":"<<ap::json_string(ap::build_profile().version)<<",\"nvidia_source_commit\":"<<ap::json_string(ap::build_profile().source_commit)
+            <<",\"group_preempt_timeout_us\":"<<(plan.group_identity?std::to_string(ap::group_preempt_timeout_limit_us()):"null")
             <<",\"graph\":"<<o.graph<<",\"force\":"<<o.force<<",\"bypass\":"<<o.bypass
             <<",\"cta_waves\":"<<o.waves<<",\"heartbeat_ns\":"<<o.heartbeat_ns<<",\"timeslice_us\":"<<o.timeslice_us
             <<",\"bg_target_us\":"<<o.bg_us<<",\"int_target_us\":"<<o.int_us
             <<",\"bg_iterations\":"<<(child?std::to_string(s.host.bg_iterations):"null")
             <<",\"int_iterations\":"<<gpu->iterations<<",\"bg_blocks\":"<<(child?std::to_string(s.host.bg_blocks):"null")
-            <<",\"int_blocks\":"<<gpu->blocks<<",\"threads_per_block\":256,\"runlist_policy\":\"unknown\"}\n";
+            <<",\"int_blocks\":"<<gpu->blocks<<",\"threads_per_block\":256,\"dynamic_shared_bytes\":65536,\"runlist_policy\":\"unknown\"}\n";
         configuration.flush();if(!configuration)throw std::runtime_error("Cannot save run configuration");
         std::ofstream raw(run_dir+"/raw.csv"),heartbeats,ctas;
         if(child){heartbeats.open(run_dir+"/heartbeats.csv");ctas.open(run_dir+"/bg_ctas.csv");}
@@ -259,30 +276,39 @@ int main(int argc,char** argv){
             std::unique_ptr<Observer> observer;
             try{
                 ap::record_trial(trial);gpu->reset();gpu->host->launch_id=trial;
+                if(group&&!ap::verified_group_current(group->identity))throw std::runtime_error("OBJECT_BINDING_UNAVAILABLE: stale INT group before trial");
+                if(child)child->command(ap::Command::Prepare,trial); // reset before observer, never concurrently
+                observer=std::make_unique<Observer>(s,plan.background);
                 if(child){child->command(ap::Command::Launch,trial);ap::wait_value(&s.bg.started,1,"BG main_entry");row.bg_main_observed=ap::monotonic_ns();
                     uint64_t trigger_at=ap::monotonic_ns()+(1000+rng()%4000)*1000ull;
                     while(ap::monotonic_ns()<trigger_at){ap::check_stop();ap::check_peer(s);ap::relax();}
                 }
-                observer=std::make_unique<Observer>(s,plan.background);
                 if(child)row.bg_done_before=ap::acquire(&s.bg.done)!=0;
                 row.trigger=ap::monotonic_ns();row.submit_begin=ap::monotonic_ns();gpu->launch();row.submit_end=ap::monotonic_ns();
-                auto trigger=plan.trigger(bool(rm),realtime_accepted);
+                auto trigger=plan.trigger(bool(rm)||bool(group),realtime_accepted);
                 if(child){
                     ap::Command cmd=ap::Command::None;
                     if(trigger==ap::Trigger::PreemptWait)cmd=ap::Command::PreemptWait;
+                    else if(trigger==ap::Trigger::GroupPreemptWait&&!row.bg_done_before)cmd=ap::Command::GroupPreemptWait;
                     else if(trigger==ap::Trigger::PreemptAsync)cmd=ap::Command::PreemptAsync;
                     else if(trigger==ap::Trigger::Disable){possibly_disabled=true;cmd=ap::Command::Disable;}
                     else if(trigger==ap::Trigger::DisableSplit){possibly_disabled=true;cmd=ap::Command::DisableScheduling;}
                     row.bg_done_before_control=ap::acquire(&s.bg.done)!=0;
+                    if(plan.group_identity&&row.bg_done_before_control)cmd=ap::Command::None;
                     row.control_pending=cmd!=ap::Command::None;
                     ap::ControlResult r;
                     try{r=child->command(cmd,trial);}catch(...){row.ipc_send=child->send_ns;throw;}
                     row.ipc_send=child->send_ns;row.ipc_received=s.host.command_received_ns;row.ipc_ack=child->ack_ns;
+                    row.bg_done_at_owner_check=s.host.bg_done_at_owner_check<2?int(s.host.bg_done_at_owner_check):-1;
                     if(cmd!=ap::Command::None)row.control=r;
+                    else if(plan.group_identity)row.control.rejection=ap::ControlResult::Rejection::TargetCompleted;
                     row.control_pending=false;
                 }
                 if(trigger==ap::Trigger::Restart){row.control_pending=true;row.control=rm->restart(o.force,o.bypass);row.control_pending=false;}
-                if(trigger!=ap::Trigger::None&&!row.control.ok())throw std::runtime_error(std::string("Trigger rejected: ")+row.control.describe());
+                if(trigger!=ap::Trigger::None&&!row.control.ok()){
+                    if(!plan.group_identity)throw std::runtime_error(std::string("Trigger rejected: ")+row.control.describe());
+                    row.failure="GROUP_TRIGGER_FAILED_OR_SKIPPED: "+row.control.describe(); // still collect finite-work completion if possible
+                }
                 ap::wait_value(&s.interactive.done,1,"INT graph_done");
                 if(possibly_disabled){auto r=child->command(ap::Command::Enable,trial);possibly_disabled=!r.ok();ap::require_ok(r,"BG ENABLE");}
                 row.int_correct=gpu->correct();if(o.diagnostic)row.progress_correct=gpu->progress_correct;
@@ -294,6 +320,13 @@ int main(int argc,char** argv){
                 if(child)for(unsigned b=0;b<s.host.bg_blocks;++b)ctas<<2<<','<<trial<<','<<b<<','<<s.bg.cta_start_gpu_ns[b]<<','<<s.bg.cta_end_gpu_ns[b]<<'\n';
                 ap::save_control_journal();
                 if(row.int_correct!=1||(child&&row.bg_correct!=1))throw std::runtime_error("CORRECTNESS_FAILURE: output/progress differs from reference");
+                if(!row.failure.empty())completed_trial_failure=row.failure;
+                // Main trial telemetry is persisted and observer joined before
+                // this diagnostic reuses buffers. No second PREEMPT is issued.
+                if(child&&(o.mode=="none"||plan.group_identity)&&!o.graph&&!o.diagnostic){
+                    child->command(ap::Command::CheckReuse,trial);
+                    if(!s.host.bg_reuse_ok)throw std::runtime_error("CORRECTNESS_FAILURE: BG context/stream short reuse check");
+                }
             }catch(const std::exception& e){
                 if(observer)observer->finish();snapshot(row,s,observer.get());row.failure=e.what();
                 if(!row.complete)row.write(raw); // known facts persist even without full trial
@@ -303,6 +336,8 @@ int main(int argc,char** argv){
         if(!cleanup())throw std::runtime_error("RECOVERY_FAILED: INT/BG configuration");
         gpu->calibrate_observation(run_dir+"/int_calibration_after.csv");if(child)child->finish();
         if(!gpu->shutdown())throw std::runtime_error("CUDA_CLEANUP_FAILURE");
+        ap::save_rm_observation(run_dir,"int_after_cleanup_");
+        if(!completed_trial_failure.empty())throw std::runtime_error(completed_trial_failure);
         std::ofstream(run_dir+"/status.txt")<<"COMPLETED: inspect schema 2 dimensions; CONTROL_ACCEPTED is not PREEMPTION_CONFIRMED\n";
         unlink(shared_path.c_str());shared_path.clear();return 0;
     }catch(const std::exception& e){
@@ -313,6 +348,8 @@ int main(int argc,char** argv){
             ap::record_rm_stop_reason(e.what());std::ofstream(run_dir+"/failure.txt")<<e.what()<<'\n';std::ofstream(run_dir+"/int_capture.txt")<<ap::capture_inventory();
             try{cleanup();}catch(const std::exception& r){std::ofstream(run_dir+"/recovery_failure.txt")<<r.what()<<'\n';}
         }
-        if(child)child->stop();if(!shared_path.empty())unlink(shared_path.c_str());return 1;
+        if(child)child->stop();
+        if(gpu&&gpu->context&&!gpu->error_drain(run_dir+"/int_error_drain.txt"))std::cerr<<"RECOVERY_UNCONFIRMED: INT work drain; stop subsequent experiments\n";
+        if(!shared_path.empty())unlink(shared_path.c_str());return 1;
     }
 }

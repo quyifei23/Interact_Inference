@@ -40,6 +40,7 @@ struct Capture {
     std::optional<ap::GroupBinding> observed_group;
     std::map<uint32_t,int> allocating_fds;
     ap::detail::GroupInfoOnce group_query;
+    ap::detail::GroupPreemptOnce group_preempt;
     std::vector<ap::IoctlObservation> observations;
     uint64_t early_ioctls=0;
     std::string journal_path;
@@ -127,6 +128,10 @@ const char* ControlResult::category()const{
     case Rejection::Readonly:return "READONLY_NOT_VERIFIED";
     case Rejection::GpuScope:return "WORKLOAD_GPU_UNREVIEWED";
     case Rejection::AlreadyQueried:return "GROUP_INFO_ALREADY_QUERIED";
+    case Rejection::AlreadyPreempted:return "GROUP_PREEMPT_ALREADY_REQUESTED";
+    case Rejection::TimeoutRange:return "INVALID_PREEMPT_TIMEOUT";
+    case Rejection::Owner:return "OWNER_ROLE_REJECTED";
+    case Rejection::TargetCompleted:return "BG_ALREADY_COMPLETED_NO_PREEMPT";
     default:break;
     }
     if(ok())return "CONTROL_ACCEPTED_EFFECT_UNVERIFIED";
@@ -149,10 +154,14 @@ std::string ControlResult::describe()const{std::ostringstream s;s<<category()<<"
 bool profile_matches(const std::string& s){return version_matches(s,build_profile().version);}
 std::string loaded_driver_version(){std::ifstream f("/proc/driver/nvidia/version");std::stringstream s;s<<f.rdbuf();return s.str();}
 bool baseline_driver_loaded(){return profile_matches(loaded_driver_version());}
-void configure_rm(RmStage stage,bool active_authorized){
+void configure_rm(RmStage stage,bool active_authorized,GroupOwner owner){
     auto& c=capture();std::lock_guard<std::recursive_mutex> lock(c.mutex);
     if(c.state.configured)throw std::runtime_error("RM observation stage already configured; create a fresh process");
     c.state.configure(build_profile(),loaded_driver_version(),stage,active_authorized);
+    c.state.group_owner=owner;
+    if(stage==RmStage::GroupActive&&active_authorized){
+        const char* visible=std::getenv("CUDA_VISIBLE_DEVICES");c.state.authorized_visible_devices=visible?visible:"";
+    }
     c.observations.reserve(65536);
     if(c.early_ioctls)c.objects.incomplete("RM ioctls occurred before explicit stage selection; incomplete capture");
     if(stage!=RmStage::Disabled&&!c.state.observation_enabled)throw std::runtime_error(c.state.stop_reason);
@@ -164,13 +173,13 @@ void note_cuda_ready(int major,int minor){
 void note_group_cuda_scope(const std::string& uuid,int count){
     auto& c=capture();std::lock_guard<std::recursive_mutex> lock(c.mutex);
     const char* env=std::getenv("CUDA_VISIBLE_DEVICES");std::string visible=env?env:"";
-    if(c.state.stage!=RmStage::GroupInfo||!group_probe_visibility_matches(visible,uuid,count))
+    if((c.state.stage!=RmStage::GroupInfo&&c.state.stage!=RmStage::GroupActive)||!group_probe_visibility_matches(visible,uuid,count))
         throw std::runtime_error("OBJECT_BINDING_UNAVAILABLE: group probe requires exactly one explicit full GPU UUID matching CUDA enumeration");
     c.state.scope_gpu_uuid=uuid;c.state.scope_visible_devices=visible;c.state.single_gpu_scope_verified=true;
 }
 void note_active_result_measured(){
     auto& c=capture();std::lock_guard<std::recursive_mutex> lock(c.mutex);
-    if(c.state.stage==RmStage::Active)c.state.active_result_measured=true;
+    if(c.state.stage==RmStage::Active||c.state.stage==RmStage::GroupActive)c.state.active_result_measured=true;
 }
 void record_rm_stop_reason(const std::string& reason){auto& c=capture();std::lock_guard<std::recursive_mutex> lock(c.mutex);c.state.stop_reason=reason;}
 namespace {bool group_environment_current(const Capture&);bool retained_control_fd_valid(int);}
@@ -187,9 +196,12 @@ std::string profile_state_json(){
         <<",\"group_binding_valid\":"<<(c.observed_group&&group_environment_current(c)&&retained_control_fd_valid(c.observed_group->fd)&&c.objects.valid_group(*c.observed_group))
         <<",\"group_get_info_verified\":"<<s.group_get_info_verified<<",\"single_gpu_scope_verified\":"<<s.single_gpu_scope_verified
         <<",\"scope_gpu_uuid\":"<<json_string(s.scope_gpu_uuid)
+        <<",\"authorized_visible_devices\":"<<json_string(s.authorized_visible_devices)<<",\"group_owner\":"<<int(s.group_owner)
         <<",\"readonly_verified\":"<<s.readonly_verified<<",\"active_experiment_authorized\":"<<s.active_experiment_authorized<<",\"active_result_measured\":"<<s.active_result_measured
         <<",\"application_rm_controls_observed\":"<<s.application_rm_controls_observed<<",\"project_controls_attempted\":"<<s.project_controls_attempted
         <<",\"project_readonly_controls_attempted\":"<<s.project_readonly_controls_attempted
+        <<",\"project_group_get_info_attempted\":"<<s.project_group_get_info_attempted<<",\"project_group_preempt_attempted\":"<<s.project_group_preempt_attempted
+        <<",\"project_other_active_controls_attempted\":"<<(s.project_active_controls_attempted-s.project_group_preempt_attempted)
         <<",\"project_active_controls_attempted\":"<<s.project_active_controls_attempted<<",\"early_unobserved_ioctls\":"<<c.early_ioctls
         <<",\"stop_reason\":"<<json_string(s.stop_reason)<<",\"cuda_visible_devices\":";
     const char* visible=std::getenv("CUDA_VISIBLE_DEVICES");out<<(visible?json_string(visible):"null");
@@ -234,7 +246,7 @@ bool retained_control_fd_valid(int fd){
 }
 GroupIdentity inspect_owned_tsg(){
     auto& c=capture();std::lock_guard<std::recursive_mutex> lock(c.mutex);
-    if(!group_environment_current(c)||!c.state.cuda_minimal_workload_passed||c.state.stage!=RmStage::GroupInfo)
+    if(!group_environment_current(c)||!c.state.cuda_minimal_workload_passed||(c.state.stage!=RmStage::GroupInfo&&c.state.stage!=RmStage::GroupActive))
         throw std::runtime_error("OBJECT_BINDING_UNAVAILABLE: current process/profile/CUDA scope not ready for group discovery");
     auto b=c.objects.discover_group();
     if(!detail::group_engine_reviewed(b)||!retained_control_fd_valid(b.fd)||!c.allocating_fds.count(b.client))
@@ -251,6 +263,20 @@ GroupInfoResult get_group_info(const GroupIdentity& id){
     if(!current){GroupInfoResult result;result.control.rejection=ControlResult::Rejection::Binding;return result;}
     return c.group_query.query(c.objects,c.state,id.binding_,retained_control_fd_valid(id.binding_.fd),c.journal,c.trial,
         [](int fd,unsigned long request,void* args,void*){return static_cast<int>(syscall(SYS_ioctl,fd,request,args));});
+}
+bool verified_group_current(const GroupIdentity& id){
+    auto& c=capture();std::lock_guard<std::recursive_mutex> lock(c.mutex);
+    return group_environment_current(c)&&id.gpu_uuid_==c.state.scope_gpu_uuid&&id.visible_devices_==c.state.scope_visible_devices&&
+        retained_control_fd_valid(id.binding_.fd)&&c.objects.valid_group(id.binding_)&&c.group_query.verified_for(id.binding_,c.state);
+}
+uint32_t group_preempt_timeout_limit_us(){return NVA06C_CTRL_CMD_PREEMPT_MAX_MANUAL_TIMEOUT_US;}
+ControlResult preempt_group_wait(const GroupIdentity& id,uint32_t timeout_us){
+    auto& c=capture();std::lock_guard<std::recursive_mutex> lock(c.mutex);
+    // Full registry validation and the single ioctl remain in this critical
+    // section, serialized with observed alloc/free/bind. No GET_INFO here.
+    bool current=group_environment_current(c)&&id.gpu_uuid_==c.state.scope_gpu_uuid&&id.visible_devices_==c.state.scope_visible_devices;
+    return c.group_preempt.preempt(c.objects,c.state,id.binding_,c.group_query,retained_control_fd_valid(id.binding_.fd),c.journal,c.trial,timeout_us,
+        [](int fd,unsigned long request,void* args,void*){return static_cast<int>(syscall(SYS_ioctl,fd,request,args));},nullptr,current);
 }
 std::string GroupIdentity::json()const{
     const auto& b=binding_;std::ostringstream s;

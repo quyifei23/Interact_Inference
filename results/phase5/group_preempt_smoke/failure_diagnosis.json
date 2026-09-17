@@ -1,0 +1,12 @@
+{
+  "stage": "runner preflight attribute parsing before worker startup",
+  "original_stop": "WORKLOAD_GPU_UNREVIEWED",
+  "actual_cause": "API success text and attribute output shared the same call name; original parser treated both as numeric property outputs",
+  "cuda_passed": true,
+  "actual_compute_capability": "8.0",
+  "experiment_workers_started": 0,
+  "project_get_info_attempts": 0,
+  "project_preempt_attempts": 0,
+  "fix": "Filter numeric attribute detail values; duplicate numeric values still reject. Regression fixture matches real JSONL shape.",
+  "historical_preflight_reparsed": "PASS; read-only offline parsing, no controls"
+}

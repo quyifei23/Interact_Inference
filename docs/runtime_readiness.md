@@ -1,5 +1,7 @@
 # 分阶段运行准备与版本边界
 
+**当前阶段五：** 本次重新 preflight 为 CUDA_SUCCESS、count=1、A100-PCIE-40GB / 595.58.03。获得操作者对明确 UUID 的一次主动授权后，M0/M1/M3 各完成 1 trial；两个当前 group GET_INFO 成功，BG 同步 PREEMPT 一次返回 ioctl=0 / errno=0 / NV_OK，输出/后续可用性/cleanup 通过。ordering ambiguous，未证明硬件抢占时刻或因果时延收益。见 [phase5_group_preempt](phase5_group_preempt.md)。以下“当前阶段四”等文字属于历史时点。
+
 **当前阶段四：** 单 GPU CUDA preflight 成功；595/A100 的独立 group-info probe 已追加一次 GET_INFO，ioctl=0、errno=0、NV_OK，返回 TSG ID=6；清理全部成功。active controls=0、benchmark trials=0。channel 身份仍未验证；不继承主动授权。当前证据见 [phase4_group_binding](phase4_group_binding.md)，以下保留历史时点。
 
 **阶段三更新：** 本次新 preflight 已能访问 8 张 A100，CUDA 最小 workload 成功。独立 experimental 595 adapter 已编译并执行 observe-only，但真实对象图含 8 个 compute channel / 同一 graphics TSG，故未进入 GET_INFO。项目 RM controls=0，benchmark trials=0。阶段三记录及交接命令见 [phase3_bringup](phase3_bringup.md)。下列设备不可访问结果保留为阶段二的历史时点，不代表当前会话。

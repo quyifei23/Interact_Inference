@@ -1,0 +1,12 @@
+{
+  "command": [
+    "cmake",
+    "--build",
+    "active-preempt/build",
+    "-j",
+    "4"
+  ],
+  "started_utc": "2026-09-17T07:40:43.783309+00:00",
+  "ended_utc": "2026-09-17T07:40:48.229962+00:00",
+  "returncode": 0
+}

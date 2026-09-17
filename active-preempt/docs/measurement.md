@@ -1,5 +1,17 @@
 # 阶段二测量契约（CSV schema_version=2）
 
+## 阶段五增量：一次 group PREEMPT
+
+`group-preempt-wait` 与 `none` 共用有限单 kernel、相同固定 iterations/grid/block/shared-memory/instrumentation 和一次 owner CPU 消息；独立进程重新初始化，B 另外承担快照校验和真实 syscall，不能称 CPU 路径完全相同。runner 的 `--paired-none` 核对相同 GPU 和二进制，原始配置/二进制指纹保存在 invocation/configuration 中。单次 smoke summary 只报告原始值，不生成 trial 分位数或 winner。
+
+schema 2 在尾部追加 `T_bg_done_observed`（独立 observer 首次看到 BG completion）、`bg_done_at_owner_check`（owner 执行 no-op/PREEMPT 前看到的 done，未知为空）、`setup_status`。旧列含义不变。BG 已完成的设置事实不会丢样本；新 B 在 controller 或 owner 已看到 done 时不发 PREEMPT、不自动重试。没有看到 done **不证明 BG 此刻驻留**，`control_target_running` 仍 unknown。
+
+新增 Prepare 命令在 observer 启动前 reset BG telemetry，避免并发清零；observer 在 BG launch 前已经运行，INT 同步通知 BG 发 RM control 时继续独立观测。GET_INFO 在最终初始化阶段，各 owner 一次；本轮 BG PREEMPT 最多一次，bWait/bManualTimeout=true、timeout=1 s。GET_INFO 和 PREEMPT 的 call begin/end 都只表示各自 control 的 host wall time，不是硬件切换事件。
+
+主 trial 输出和 telemetry 持久化、observer join、BG drain 后，才可在同一 BG context/stream 上执行 256 iterations 的短复用检查；检查 reference 在初始化/绑定前已准备。复用结果独立保存，不覆盖 raw/CTA/heartbeat，不是第二次抢占或精确 resume 观测。普通失败先保存 journal，再进行最长 2 s 的 event drain 检查；driver API 本身卡住仍靠 runner 有界终止本实验进程组，记录恢复未确认，不 reset。`CONFIGURATION_RESTORED` 仅表示本模式没有遗留调度配置，不等于恢复/正确性证据。
+
+本次 [实机结果](../../docs/phase5_group_preempt.md) 中 RM 返回 NV_OK、INT/BG 输出一致且正常排空；INT entry 在 RM call 结束前已被 CPU 看到，但相对 call begin 仍为 ordering_ambiguous。没有将校准最小 RTT 当硬保证；精确 BG preempt completion、context-save duration、resume latency 仍 unmeasured。最终输出一致不能排除确定性重放。
+
 旧版（仓库 `9d578f24fdaa102ad94e6db2093ec14386416138`）的 `T_int_gpu_start_observed` / `T_int_gpu_start_ns` 指主节点 K1。新版使用新字段，不能把旧字段默认为 Graph 首次执行；统计器明确拒绝 schema 1、混合 schema 和混合 diagnostic/performance。
 
 ## 入口、时间域和发布顺序

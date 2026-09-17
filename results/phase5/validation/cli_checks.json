@@ -1,0 +1,118 @@
+[
+  {
+    "profile": "550.120",
+    "command": [
+      "active-preempt/build/int_worker",
+      "--help"
+    ],
+    "expected": 0,
+    "returncode": 0,
+    "stdout": "int_worker --probe-cuda | --probe-rm-observe | --probe-rm-identity | --probe-rm-readonly | --probe-rm-group-info [--run-dir DIR]\nGroup-info requires CUDA_VISIBLE_DEVICES=<one full GPU UUID>; adds GET_INFO once, no other controls.\nint_worker --run-dir DIR --mode int-only|none|timeslice|preempt-wait|group-preempt-wait|preempt-async|realtime-only|realtime-restart|realtime|disable|disable-split\n[--trials 1] [--cta-waves 1..16] [--bg-iterations N] [--int-iterations N] [--bg-us 80000] [--int-us 300]\n[--heartbeat-ns 2000] [--timeslice-us 1] [--force 0|1] [--bypass 0|1] [--diagnostic-progress]\nActive modes require --test-host-confirmed. Async/force/bypass/D also require --allow-extended.\ngroup-preempt-wait: one plain trial, fixed BG/INT iterations, one explicit GPU UUID; BG owner only.\nGraph requires --graph --graph-evidence-reviewed after independent plain-kernel evidence review. --probe aliases --probe-cuda.\n",
+    "stderr": ""
+  },
+  {
+    "profile": "550.120",
+    "command": [
+      "active-preempt/build/int_worker",
+      "--mode",
+      "group-preempt-wait",
+      "--bg-iterations",
+      "8192",
+      "--int-iterations",
+      "256"
+    ],
+    "expected": 1,
+    "returncode": 1,
+    "stdout": "",
+    "stderr": "Error: Active mode requires --test-host-confirmed (isolated authorized GPU host)\n"
+  },
+  {
+    "profile": "550.120",
+    "command": [
+      "active-preempt/build/int_worker",
+      "--mode",
+      "group-preempt-wait",
+      "--test-host-confirmed",
+      "--bg-iterations",
+      "8192",
+      "--int-iterations",
+      "256",
+      "--trials",
+      "2"
+    ],
+    "expected": 1,
+    "returncode": 1,
+    "stdout": "",
+    "stderr": "Error: group-preempt-wait requires one plain trial and frozen BG/INT iterations; no extended/diagnostic options\n"
+  },
+  {
+    "profile": "550.120",
+    "command": [
+      "active-preempt/build/int_worker",
+      "--probe-rm-group-info",
+      "--test-host-confirmed"
+    ],
+    "expected": 1,
+    "returncode": 1,
+    "stdout": "",
+    "stderr": "Error: Group-info is a single readonly probe; benchmark/active options are not applicable\n"
+  },
+  {
+    "profile": "595.58.03",
+    "command": [
+      "active-preempt/build-595/int_worker",
+      "--help"
+    ],
+    "expected": 0,
+    "returncode": 0,
+    "stdout": "int_worker --probe-cuda | --probe-rm-observe | --probe-rm-identity | --probe-rm-readonly | --probe-rm-group-info [--run-dir DIR]\nGroup-info requires CUDA_VISIBLE_DEVICES=<one full GPU UUID>; adds GET_INFO once, no other controls.\nint_worker --run-dir DIR --mode int-only|none|timeslice|preempt-wait|group-preempt-wait|preempt-async|realtime-only|realtime-restart|realtime|disable|disable-split\n[--trials 1] [--cta-waves 1..16] [--bg-iterations N] [--int-iterations N] [--bg-us 80000] [--int-us 300]\n[--heartbeat-ns 2000] [--timeslice-us 1] [--force 0|1] [--bypass 0|1] [--diagnostic-progress]\nActive modes require --test-host-confirmed. Async/force/bypass/D also require --allow-extended.\ngroup-preempt-wait: one plain trial, fixed BG/INT iterations, one explicit GPU UUID; BG owner only.\nGraph requires --graph --graph-evidence-reviewed after independent plain-kernel evidence review. --probe aliases --probe-cuda.\n",
+    "stderr": ""
+  },
+  {
+    "profile": "595.58.03",
+    "command": [
+      "active-preempt/build-595/int_worker",
+      "--mode",
+      "group-preempt-wait",
+      "--bg-iterations",
+      "8192",
+      "--int-iterations",
+      "256"
+    ],
+    "expected": 1,
+    "returncode": 1,
+    "stdout": "",
+    "stderr": "Error: Active mode requires --test-host-confirmed (isolated authorized GPU host)\n"
+  },
+  {
+    "profile": "595.58.03",
+    "command": [
+      "active-preempt/build-595/int_worker",
+      "--mode",
+      "group-preempt-wait",
+      "--test-host-confirmed",
+      "--bg-iterations",
+      "8192",
+      "--int-iterations",
+      "256",
+      "--trials",
+      "2"
+    ],
+    "expected": 1,
+    "returncode": 1,
+    "stdout": "",
+    "stderr": "Error: group-preempt-wait requires one plain trial and frozen BG/INT iterations; no extended/diagnostic options\n"
+  },
+  {
+    "profile": "595.58.03",
+    "command": [
+      "active-preempt/build-595/int_worker",
+      "--probe-rm-group-info",
+      "--test-host-confirmed"
+    ],
+    "expected": 1,
+    "returncode": 1,
+    "stdout": "",
+    "stderr": "Error: Group-info is a single readonly probe; benchmark/active options are not applicable\n"
+  }
+]

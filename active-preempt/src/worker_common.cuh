@@ -1,6 +1,7 @@
 #pragma once
 #include "protocol.h"
 #include "options.h"
+#include "json_log.h"
 #include <cuda.h>
 #include <cuda_runtime.h>
 #include <algorithm>
@@ -74,6 +75,7 @@ public:
     int active_blocks_per_sm=0;cudaFuncAttributes attributes{};bool diagnostic=false,probe_only=false,progress_correct=false;
     bool use_graph;double solo_us=0,uninstrumented_us=0;std::string cleanup_log;
     std::vector<uint32_t> expected;
+    std::vector<uint32_t> short_expected;
     GpuWorker(Telemetry& telemetry,uint64_t target_us,unsigned waves,uint64_t heartbeat_ns,bool graph_mode,uint64_t fixed_iterations=0,bool diagnostic_progress=false,bool minimal_probe=false)
       :host(&telemetry),heartbeat(heartbeat_ns),diagnostic(diagnostic_progress),probe_only(minimal_probe),use_graph(graph_mode){
         CU_OK(cuInit(0));CUdevice dev;CU_OK(cuDeviceGet(&dev,0));
@@ -134,6 +136,22 @@ public:
         uint64_t deadline=monotonic_ns()+host_timeout_ns;
         while(true){check_stop();auto e=cudaEventQuery(end_event);if(e==cudaSuccess)break;if(e!=cudaErrorNotReady)cuda_check(e,"cudaEventQuery");if(monotonic_ns()>deadline)throw std::runtime_error("GPU event deadline expired");relax();}
     }
+    bool error_drain(const std::string& path)noexcept{
+        // Evidence is written before entering CUDA. The runner still bounds
+        // the whole owner process if a driver call itself does not return.
+        try{
+            std::ofstream f(path,std::ios::app);f<<"RECOVERY_UNCONFIRMED: checking finite work event before ordinary cleanup"<<std::endl;
+            uint64_t deadline=monotonic_ns()+2000000000ull;
+            while(end_event){auto e=cudaEventQuery(end_event);
+                if(e==cudaSuccess){f<<"WORK_EVENT_DRAINED; correctness not implied"<<std::endl;return true;}
+                if(e!=cudaErrorNotReady){f<<"RECOVERY_UNCONFIRMED: cudaEventQuery code="<<int(e)<<' '<<cudaGetErrorName(e)<<std::endl;return false;}
+                if(monotonic_ns()>deadline){f<<"RECOVERY_UNCONFIRMED: bounded drain expired"<<std::endl;return false;}
+                relax();
+            }
+            f<<"WORK_EVENT_UNAVAILABLE"<<std::endl;
+        }catch(...){}
+        return false;
+    }
     bool correct(){
         drain();std::vector<uint32_t> actual(output_count());
         CUDA_OK(cudaMemcpy(actual.data(),output,actual.size()*sizeof(uint32_t),cudaMemcpyDeviceToHost));
@@ -147,6 +165,18 @@ public:
             }
         }
         return actual==expected&&progress_correct;
+    }
+    void prepare_short_reference(){
+        if(use_graph||diagnostic)throw std::runtime_error("Short reuse check is plain-kernel only");
+        auto saved=iterations;iterations=256;measure(false);short_expected.resize(output_count());
+        CUDA_OK(cudaMemcpy(short_expected.data(),output,short_expected.size()*sizeof(uint32_t),cudaMemcpyDeviceToHost));
+        iterations=saved;reset();
+    }
+    bool check_short_reuse(){
+        if(short_expected.empty())throw std::runtime_error("Short reference was not prepared before binding");
+        auto saved=iterations;iterations=256;reset();launch();drain();
+        std::vector<uint32_t> actual(output_count());CUDA_OK(cudaMemcpy(actual.data(),output,actual.size()*sizeof(uint32_t),cudaMemcpyDeviceToHost));
+        iterations=saved;return actual==short_expected;
     }
     double measure(bool instrument){
         reset();CUDA_OK(cudaEventRecord(begin_event,stream));enqueue(instrument);CUDA_OK(cudaGetLastError());CUDA_OK(cudaEventRecord(end_event,stream));drain();
@@ -189,9 +219,35 @@ inline void write_identity(std::ostream& out,const GpuWorker& w,const RmControl*
     out<<"pid="<<getpid()<<" context="<<reinterpret_cast<uintptr_t>(w.context)<<" gpu_uuid="<<uuid_string(w.prop.uuid)<<" device="<<w.prop.name<<"\n";
     if(rm){auto& i=rm->identity();out<<"client_generation="<<i.binding.client_generation<<" group_generation="<<i.binding.group.generation<<" hDevice="<<i.device<<"\n";
     out<<"hClient="<<i.client<<" hTSG="<<i.group<<" tsgID="<<i.tsg_id<<" engine="<<i.engine<<" subdevice="<<i.subdevice<<" compute_channel="<<i.compute_channel<<" channels=";
-    for(auto ch:i.channels)out<<ch<<',';out<<"\n";}else out<<"rm_identity=not_bound (baseline or observe-only)\n";
+    for(auto ch:i.channels)out<<ch<<',';out<<"\n";}else out<<"strict_channel_identity=not_bound; group identity, if present, is recorded separately\n";
     out<<"hardware_channel_id=unknown runlist=unknown scheduling_policy=unknown MPS_MIG_virtualization=see_preflight\n";
     out<<"block=256 shared_dynamic=65536 registers="<<w.attributes.numRegs<<" shared_static="<<w.attributes.sharedSizeBytes<<" active_blocks_per_sm_estimate="<<w.active_blocks_per_sm<<" occupancy_is_estimate=1 diagnostic_progress="<<w.diagnostic<<"\n";
     out<<"iterations="<<w.iterations<<" blocks="<<w.blocks<<" solo_us="<<w.solo_us<<" uninstrumented_us="<<w.uninstrumented_us<<"\n";
+}
+struct OwnedGroup {GroupIdentity identity;GroupInfoResult info;};
+inline OwnedGroup bind_worker_group(const GpuWorker& gpu,const std::string& directory,const std::string& owner){
+    int count=0;CUDA_OK(cudaGetDeviceCount(&count));note_group_cuda_scope(uuid_string(gpu.prop.uuid),count);
+    save_rm_observation(directory,owner+"_before_binding_");
+    auto id=inspect_owned_tsg();
+    std::ofstream identity(directory+"/"+owner+"_group_identity.json");identity<<id.json()<<'\n';identity.close();
+    if(!identity)throw std::runtime_error("Cannot save current group identity");
+    auto info=get_group_info(id);save_control_journal();
+    const auto& r=info.control;
+    std::ofstream result(directory+"/"+owner+"_group_get_info.json");
+    result<<std::boolalpha<<"{\"pid\":"<<getpid()<<",\"hClient\":"<<id.binding().client<<",\"hObject\":"<<id.binding().group.token.handle
+          <<",\"attempted\":"<<r.attempted<<",\"syscall_return\":"<<(r.attempted?std::to_string(r.syscall_result):"null")
+          <<",\"errno\":"<<(r.attempted?std::to_string(r.syscall_errno):"null")<<",\"NV_STATUS_raw\":"<<r.rm_status<<",\"operation_seq\":"<<r.operation_seq<<",\"verified\":"<<r.ok()
+          <<",\"call_begin_ns\":"<<(r.begin_ns?std::to_string(r.begin_ns):"null")<<",\"call_end_ns\":"<<(r.end_ns?std::to_string(r.end_ns):"null")
+          <<",\"hardware_tsg_id\":"<<(info.hardware_tsg_id?std::to_string(*info.hardware_tsg_id):"null")<<",\"result\":"<<json_string(r.describe())<<"}\n";
+    result.close();save_rm_observation(directory,owner+"_after_binding_");
+    require_ok(r,"group GET_INFO");if(!result)throw std::runtime_error("Cannot save group GET_INFO result");
+    if(!verified_group_current(id))throw std::runtime_error("OBJECT_BINDING_UNAVAILABLE: group changed after GET_INFO");
+    return {std::move(id),info};
+}
+inline void write_group_identity(std::ostream& out,const OwnedGroup& group){
+    const auto& b=group.identity.binding();
+    out<<"group_identity=verified hClient="<<b.client<<" hTSG="<<b.group.token.handle<<" group_generation="<<b.group.token.generation
+       <<" hardware_tsg_id="<<*group.info.hardware_tsg_id<<" engine="<<b.group.engine<<" captured_channels="<<b.members.size()<<'\n'
+       <<"channel_preemption_mode=NOT_MEASURED:CHANNEL_BINDING_UNAVAILABLE runlist_id=unknown\n";
 }
 }

@@ -1,0 +1,11 @@
+{
+  "final_build_sha256": {
+    "int_worker": "21e8e44643559b8f3a60d35f5d9527f4259d10a351ccc01a41d405b700a19b3b",
+    "bg_worker": "32a7fabb00ad67a7534e0c45bc55c5c0dc1e13812cabe83614c2896a9d5d3cb4",
+    "librm_control.so": "e7a1f897a2797f56cc41cb09375b19aa39d433df56e627deefd16b7aa8616988",
+    "preflight_cuda": "4e69c20f2095f15e5e3c14bc85d6fb0059efb2d31c2be11c777523466ef326c7"
+  },
+  "execution_binaries_identical": true,
+  "differences": {},
+  "source_updates_since_execution": "object_registry.cpp comment only (same line count), and stronger offline journal assertion in group_preempt_test.cpp; no workload/control behavior changed after actual trials"
+}

@@ -1,4 +1,8 @@
-# 验证状态：没有 GPU benchmark
+# 验证状态与历史记录
+
+**最新阶段五：** M0 INT-only、M1 none、M3 group-preempt-wait 各完成 **1 个真实 GPU trial**。两个当前 group GET_INFO 成功；唯一一次获授权的同步 PREEMPT 返回 ioctl=0 / errno=0 / NV_OK；输出、BG 后续可用性及 cleanup 通过。其他项目 active controls=0。M3 ordering ambiguous，不能宣称因果抢占或性能 winner。见 [phase5 原始证据汇总](phase5/evidence_summary.json) 和 [阶段五记录](../docs/phase5_group_preempt.md)。下面保留各历史阶段的原始结论。
+
+## 阶段一：当时没有 GPU benchmark
 
 2026-09-17，本地完成源码考古、候选设计、用户态 prototype 和离线检查。**GPU trials = 0**。没有创建 `results/raw.csv`，也没有给出任何 GPU latency 分位数。
 

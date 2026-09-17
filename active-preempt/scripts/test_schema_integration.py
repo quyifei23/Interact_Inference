@@ -20,6 +20,7 @@ with tempfile.TemporaryDirectory(prefix='ap-synthetic-schema-') as directory:
     assert rows[2]['bg_present']=='0' and rows[2]['bg_correct']=='' and rows[2]['heartbeat_overflow']==''
     assert rows[2]['T_bg_done_gpu_ns']=='' and rows[2]['T_bg_main_observed']==''
     assert rows[2]['bg_done_before_control_observed']==''
+    assert rows[2]['T_bg_done_observed']=='' and rows[2]['bg_done_at_owner_check']=='' and rows[2]['setup_status']=='not_applicable'
     events=[json.loads(line) for line in (p/'events.jsonl').read_text().splitlines()]
     assert events[0]['syscall_return']==0 and events[0]['rm_status_valid'] is True
     assert events[1]['operation_state']=='IN_FLIGHT' and events[1]['rm_status'] is None and events[1]['call_end_ns'] is None

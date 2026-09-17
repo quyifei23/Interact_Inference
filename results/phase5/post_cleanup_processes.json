@@ -1,0 +1,11 @@
+{
+  "command": [
+    "nvidia-smi",
+    "--query-compute-apps=pid,process_name,gpu_uuid",
+    "--format=csv,noheader"
+  ],
+  "returncode": 0,
+  "stdout": "2235325, VLLM::EngineCore, GPU-fb294fda-c72e-d6f4-1686-9c46ca6e3173\n",
+  "stderr": "",
+  "utc": "2026-09-17T07:36:58.624950+00:00"
+}

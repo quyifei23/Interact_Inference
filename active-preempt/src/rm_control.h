@@ -21,7 +21,7 @@ struct ControlResult {
     uint32_t rm_status = 0xffffffff;
     uint64_t begin_ns = 0, end_ns = 0;
     uint64_t operation_seq = 0;
-    enum class Rejection:uint32_t {None,Device,Abi,Binding,Incomplete,PendingAsync,LogFull,Stage,Authorization,Readonly,GpuScope,AlreadyQueried} rejection=Rejection::None;
+    enum class Rejection:uint32_t {None,Device,Abi,Binding,Incomplete,PendingAsync,LogFull,Stage,Authorization,Readonly,GpuScope,AlreadyQueried,AlreadyPreempted,TimeoutRange,Owner,TargetCompleted} rejection=Rejection::None;
     bool ok() const { return attempted && syscall_result == 0 && rm_status == 0; }
     std::string describe() const;
     const char* category() const;
@@ -49,11 +49,16 @@ private:
         :binding_(std::move(b)),allocating_fd_(fd),gpu_uuid_(std::move(uuid)),visible_devices_(std::move(visible)){}
     friend GroupIdentity inspect_owned_tsg();
     friend GroupInfoResult get_group_info(const GroupIdentity&);
+    friend ControlResult preempt_group_wait(const GroupIdentity&,uint32_t);
+    friend bool verified_group_current(const GroupIdentity&);
 };
 // Observation only, followed by a separate one-shot, group-only GET_INFO.
 // No conversion to Identity, no selected compute_channel and no arbitrary cmd.
 GroupIdentity inspect_owned_tsg();
 GroupInfoResult get_group_info(const GroupIdentity& identity);
+bool verified_group_current(const GroupIdentity& identity); // no project RM control
+uint32_t group_preempt_timeout_limit_us();
+ControlResult preempt_group_wait(const GroupIdentity& identity,uint32_t timeout_us);
 
 // Discovery accepts only allocations observed in this process. No externally
 // supplied hClient/hObject, QUERY_GROUP, global enumeration, or privilege bypass.

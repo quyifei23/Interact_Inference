@@ -1,0 +1,43 @@
+-- Configuring done
+-- Generating done
+-- Build files have been written to: /home/quyifei/multimodal/workspace/Interception/active-preempt/build
+Consolidate compiler generated dependencies of target preflight_cuda
+Consolidate compiler generated dependencies of target rm_control
+[  8%] Built target preflight_cuda
+[ 12%] Building CXX object CMakeFiles/rm_control.dir/src/rm_control.cpp.o
+[ 16%] Building CXX object CMakeFiles/rm_control.dir/src/control_events.cpp.o
+[ 20%] Building CXX object CMakeFiles/rm_control.dir/src/driver_profile.cpp.o
+[ 24%] Building CXX object CMakeFiles/rm_control.dir/src/group_query_internal.cpp.o
+[ 28%] Linking CXX shared library librm_control.so
+[ 36%] Built target rm_control
+Consolidate compiler generated dependencies of target phase2_contract_test
+Consolidate compiler generated dependencies of target event_dump
+Consolidate compiler generated dependencies of target int_worker
+Consolidate compiler generated dependencies of target bg_worker
+[ 40%] Building CXX object CMakeFiles/event_dump.dir/src/event_dump.cpp.o
+[ 48%] Building CUDA object CMakeFiles/bg_worker.dir/src/bg_worker.cu.o
+[ 52%] Building CUDA object CMakeFiles/int_worker.dir/src/int_worker.cu.o
+[ 52%] Building CXX object CMakeFiles/phase2_contract_test.dir/src/phase2_contract_test.cpp.o
+[ 56%] Linking CXX executable event_dump
+[ 56%] Built target event_dump
+Consolidate compiler generated dependencies of target rm_contract_test
+[ 60%] Building CXX object CMakeFiles/rm_contract_test.dir/src/rm_contract_test.cpp.o
+[ 64%] Linking CXX executable rm_contract_test
+[ 64%] Built target rm_contract_test
+Consolidate compiler generated dependencies of target phase3_profile_test
+[ 68%] Building CXX object CMakeFiles/phase3_profile_test.dir/src/phase3_profile_test.cpp.o
+[ 72%] Linking CXX executable phase3_profile_test
+[ 76%] Linking CXX executable phase2_contract_test
+[ 76%] Built target phase3_profile_test
+Consolidate compiler generated dependencies of target group_binding_test
+[ 80%] Building CXX object CMakeFiles/group_binding_test.dir/src/group_binding_test.cpp.o
+[ 80%] Built target phase2_contract_test
+[ 84%] Building CXX object CMakeFiles/group_preempt_test.dir/src/group_preempt_test.cpp.o
+[ 88%] Linking CXX executable group_binding_test
+[ 88%] Built target group_binding_test
+[ 92%] Linking CUDA executable bg_worker
+[ 92%] Built target bg_worker
+[ 96%] Linking CXX executable group_preempt_test
+[ 96%] Built target group_preempt_test
+[100%] Linking CUDA executable int_worker
+[100%] Built target int_worker

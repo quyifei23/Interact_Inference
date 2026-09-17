@@ -1,0 +1,29 @@
+{
+  "utc": "2026-09-17T07:34:57.687544+00:00",
+  "argv": [
+    "active-preempt/scripts/run_matrix.py",
+    "--build",
+    "active-preempt/build-595",
+    "--output",
+    "results/phase5/group_preempt_smoke_ready",
+    "--trials",
+    "1",
+    "--modes",
+    "group-preempt-wait",
+    "--paired-none",
+    "results/phase5/baselines/none-f0-b0",
+    "--test-host-confirmed"
+  ],
+  "canonical_modes": [
+    "group-preempt-wait"
+  ],
+  "run_kind": "performance",
+  "repo_commit": "4eb805569ed754bbdf7d65c81b181a75ff545480",
+  "worktree_status": " M active-preempt/CMakeLists.txt\n M active-preempt/scripts/run_matrix.py\n M active-preempt/scripts/summarize.py\n M active-preempt/scripts/test_analysis.py\n M active-preempt/scripts/test_runner.py\n M active-preempt/scripts/test_schema_integration.py\n M active-preempt/src/bg_worker.cu\n M active-preempt/src/driver_profile.cpp\n M active-preempt/src/driver_profile.h\n M active-preempt/src/group_query_internal.cpp\n M active-preempt/src/group_query_internal.h\n M active-preempt/src/int_worker.cu\n M active-preempt/src/mode_plan.h\n M active-preempt/src/options.h\n M active-preempt/src/protocol.h\n M active-preempt/src/rm_control.cpp\n M active-preempt/src/rm_control.h\n M active-preempt/src/trial_record.h\n M active-preempt/src/worker_common.cuh\n?? active-preempt/src/group_preempt_test.cpp\n?? results/phase5/\n",
+  "binary_sha256": {
+    "int_worker": "21e8e44643559b8f3a60d35f5d9527f4259d10a351ccc01a41d405b700a19b3b",
+    "bg_worker": "32a7fabb00ad67a7534e0c45bc55c5c0dc1e13812cabe83614c2896a9d5d3cb4",
+    "librm_control.so": "e7a1f897a2797f56cc41cb09375b19aa39d433df56e627deefd16b7aa8616988",
+    "preflight_cuda": "4e69c20f2095f15e5e3c14bc85d6fb0059efb2d31c2be11c777523466ef326c7"
+  }
+}

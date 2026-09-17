@@ -2,13 +2,14 @@
 #include <stdexcept>
 #include <string>
 namespace ap {
-enum class Trigger { None, PreemptWait, PreemptAsync, Restart, Disable, DisableSplit };
+enum class Trigger { None, PreemptWait, PreemptAsync, Restart, Disable, DisableSplit, GroupPreemptWait };
 struct ModePlan {
     std::string name;
     bool background=true,identity=false,timeslice=false,realtime=false,extended=false;
+    bool group_identity=false;
     Trigger operation=Trigger::None;
     Trigger trigger(bool identity_valid,bool realtime_configured)const{
-        if(identity&&!identity_valid)throw std::runtime_error("OBJECT_BINDING_UNAVAILABLE: active mode requires owned identity");
+        if((identity||group_identity)&&!identity_valid)throw std::runtime_error("OBJECT_BINDING_UNAVAILABLE: active mode requires owned identity");
         if(realtime&&!realtime_configured)throw std::runtime_error("INVALID_OBJECT_OR_STATE: realtime configuration not accepted");
         return operation;
     }
@@ -22,6 +23,7 @@ inline ModePlan mode_plan(std::string name){
     else if(name=="realtime-only"||name=="realtime-restart"){
         p.identity=p.realtime=true;if(name=="realtime-restart")p.operation=Trigger::Restart;
     }else if(name=="preempt-wait"){p.identity=true;p.operation=Trigger::PreemptWait;}
+    else if(name=="group-preempt-wait"){p.group_identity=true;p.operation=Trigger::GroupPreemptWait;}
     else if(name=="preempt-async"){p.identity=p.extended=true;p.operation=Trigger::PreemptAsync;}
     else if(name=="disable"||name=="disable-split"){
         p.identity=p.extended=true;p.operation=name=="disable"?Trigger::Disable:Trigger::DisableSplit;

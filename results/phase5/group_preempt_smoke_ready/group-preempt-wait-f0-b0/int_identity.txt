@@ -1,0 +1,8 @@
+pid=2294413 context=94140721306736 gpu_uuid=99e4e85f1945866c9e00130b51df7908 device=NVIDIA A100-PCIE-40GB
+strict_channel_identity=not_bound; group identity, if present, is recorded separately
+hardware_channel_id=unknown runlist=unknown scheduling_policy=unknown MPS_MIG_virtualization=see_preflight
+block=256 shared_dynamic=65536 registers=25 shared_static=0 active_blocks_per_sm_estimate=2 occupancy_is_estimate=1 diagnostic_progress=0
+iterations=5888 blocks=216 solo_us=323.584 uninstrumented_us=293.888
+group_identity=verified hClient=3252373401 hTSG=1543503948 group_generation=76 hardware_tsg_id=10 engine=1 captured_channels=8
+channel_preemption_mode=NOT_MEASURED:CHANNEL_BINDING_UNAVAILABLE runlist_id=unknown
+mode=group-preempt-wait force=0 bypass=0 graph=0 run_kind=performance trials=1

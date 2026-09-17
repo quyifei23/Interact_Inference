@@ -1,0 +1,30 @@
+Consolidate compiler generated dependencies of target rm_control
+[  8%] Built target preflight_cuda
+[ 12%] Building CXX object CMakeFiles/rm_control.dir/src/object_registry.cpp.o
+[ 16%] Linking CXX shared library librm_control.so
+[ 36%] Built target rm_control
+Consolidate compiler generated dependencies of target event_dump
+Consolidate compiler generated dependencies of target int_worker
+Consolidate compiler generated dependencies of target bg_worker
+Consolidate compiler generated dependencies of target phase2_contract_test
+[ 40%] Linking CXX executable event_dump
+[ 44%] Linking CUDA executable int_worker
+[ 48%] Linking CUDA executable bg_worker
+[ 52%] Linking CXX executable phase2_contract_test
+[ 56%] Built target event_dump
+Consolidate compiler generated dependencies of target rm_contract_test
+[ 60%] Built target phase2_contract_test
+[ 64%] Built target bg_worker
+[ 68%] Linking CXX executable rm_contract_test
+Consolidate compiler generated dependencies of target phase3_profile_test
+[ 72%] Built target int_worker
+Consolidate compiler generated dependencies of target group_binding_test
+[ 76%] Linking CXX executable phase3_profile_test
+Consolidate compiler generated dependencies of target group_preempt_test
+[ 80%] Linking CXX executable group_binding_test
+[ 84%] Building CXX object CMakeFiles/group_preempt_test.dir/src/group_preempt_test.cpp.o
+[ 88%] Built target rm_contract_test
+[ 92%] Built target phase3_profile_test
+[ 96%] Built target group_binding_test
+[100%] Linking CXX executable group_preempt_test
+[100%] Built target group_preempt_test

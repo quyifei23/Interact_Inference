@@ -22,6 +22,16 @@ def write_rows(path,rows):
     with path.open('w') as f:w=csv.DictWriter(f,fieldnames=list(rows[0]));w.writeheader();w.writerows(rows)
 
 class AnalysisTest(unittest.TestCase):
+    def test_single_smoke_reports_raw_no_percentiles_and_keeps_late_bg(self):
+        with tempfile.TemporaryDirectory(prefix='ap-synthetic-single-') as d:
+            p=Path(d);write_rows(p/'raw.csv',[row(mode='group-preempt-wait',bg_done_at_owner_check='1',setup_status='BG_COMPLETED_BEFORE_CONTROL_CHECK')])
+            (p/'int_calibration_before.csv').write_text('cpu_send_ns,gpu_ns,cpu_observed_ns\n1,100,11\n')
+            text=summarize(p).read_text();stats=json.loads((p/'analysis.json').read_text())
+            for percentile in ('p50','p95','p99'):self.assertNotIn(percentile,text)
+            self.assertEqual(stats['application_valid'],1);self.assertEqual(stats['timing_eligible_subset'],0)
+            self.assertEqual(stats['dimensions']['bg_done_at_owner_check'],{'1':1})
+            self.assertEqual(stats['dimensions']['derived_ordering'],{'ordering_ambiguous':1})
+            self.assertEqual(stats['raw_values_us']['RM syscall wall time (including failures)'],2)
     def test_percentiles(self):
         self.assertIsNone(quantiles([]));self.assertEqual(quantiles([7]),[7,7,7,7]);self.assertEqual(quantiles([0,100])[0],50)
     def test_delayed_observer_is_ambiguous(self):

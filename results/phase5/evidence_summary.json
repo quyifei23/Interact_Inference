@@ -1,0 +1,670 @@
+{
+  "evidence_kind": "real GPU execution; no synthetic rows",
+  "repo_base_commit": "4eb805569ed754bbdf7d65c81b181a75ff545480",
+  "recorded_utc": "2026-09-17T07:36:58.522314+00:00",
+  "modes": {
+    "int-only": {
+      "T_cpu_trigger": 3808915602235433,
+      "T_int_submit_begin": 3808915602235485,
+      "T_int_submit_end": 3808915602253817,
+      "T_ipc_send": null,
+      "T_ipc_received": null,
+      "T_ipc_ack": null,
+      "T_rm_call_begin": null,
+      "T_rm_call_end": null,
+      "T_int_graph_entry_observed": 3808915602258181,
+      "T_int_graph_done_observed": 3808915602635905,
+      "T_bg_done_observed": null,
+      "T_int_graph_entry_gpu_ns": 1789630299548047360,
+      "T_int_graph_done_gpu_ns": 1789630299548425216,
+      "T_bg_main_gpu_ns": null,
+      "T_bg_done_gpu_ns": null,
+      "application_valid": 1,
+      "control_status": "NOT_ISSUED",
+      "ordering_relative_to_rm": "not_applicable",
+      "gpu_overlap": "not_applicable",
+      "bg_correct": null,
+      "int_correct": 1,
+      "control_target_running": "unknown",
+      "interaction_to_entry_observed_us": 22.748,
+      "gpu_int_marker_interval_us": 377.856,
+      "configuration": {
+        "schema_version": 2,
+        "mode": "int-only",
+        "run_kind": "performance",
+        "gpu_uuid": "99e4e85f1945866c9e00130b51df7908",
+        "driver_profile": "CUDA_BASELINE_NO_RM_PROFILE",
+        "build_profile": "595.58.03",
+        "nvidia_source_commit": "db0c4e65c8e34c678d745ddb1317f53f90d1072b",
+        "group_preempt_timeout_us": null,
+        "graph": 0,
+        "force": 0,
+        "bypass": 0,
+        "cta_waves": 1,
+        "heartbeat_ns": 2000,
+        "timeslice_us": 1,
+        "bg_target_us": 80000,
+        "int_target_us": 300,
+        "bg_iterations": null,
+        "int_iterations": 5888,
+        "bg_blocks": null,
+        "int_blocks": 216,
+        "threads_per_block": 256,
+        "dynamic_shared_bytes": 65536,
+        "runlist_policy": "unknown"
+      },
+      "workers": {
+        "int": {
+          "pid": 2291546,
+          "application_rm_controls_observed": 724,
+          "cleanup_all_recorded_calls_zero": true,
+          "project_controls_attempted": 0,
+          "project_get_info_attempts": 0,
+          "project_preempt_attempts": 0,
+          "other_project_active_controls": 0
+        }
+      }
+    },
+    "none": {
+      "T_cpu_trigger": 3808916986929493,
+      "T_int_submit_begin": 3808916986929524,
+      "T_int_submit_end": 3808916986949113,
+      "T_ipc_send": 3808916986949310,
+      "T_ipc_received": 3808916986949604,
+      "T_ipc_ack": 3808916986950360,
+      "T_rm_call_begin": null,
+      "T_rm_call_end": null,
+      "T_int_graph_entry_observed": 3808916989194307,
+      "T_int_graph_done_observed": 3808916989451484,
+      "T_bg_done_observed": 3808917051622483,
+      "T_int_graph_entry_gpu_ns": 1789630300934960128,
+      "T_int_graph_done_gpu_ns": 1789630300935218176,
+      "T_bg_main_gpu_ns": 1789630300930569216,
+      "T_bg_done_gpu_ns": 1789630300997387264,
+      "application_valid": 1,
+      "control_status": "NOT_ISSUED",
+      "ordering_relative_to_rm": "not_applicable",
+      "gpu_overlap": "lifetime_overlap",
+      "bg_correct": 1,
+      "int_correct": 1,
+      "control_target_running": "unknown",
+      "interaction_to_entry_observed_us": 2264.814,
+      "gpu_int_marker_interval_us": 258.048,
+      "configuration": {
+        "schema_version": 2,
+        "mode": "none",
+        "run_kind": "performance",
+        "gpu_uuid": "99e4e85f1945866c9e00130b51df7908",
+        "driver_profile": "CUDA_BASELINE_NO_RM_PROFILE",
+        "build_profile": "595.58.03",
+        "nvidia_source_commit": "db0c4e65c8e34c678d745ddb1317f53f90d1072b",
+        "group_preempt_timeout_us": null,
+        "graph": 0,
+        "force": 0,
+        "bypass": 0,
+        "cta_waves": 1,
+        "heartbeat_ns": 2000,
+        "timeslice_us": 1,
+        "bg_target_us": 80000,
+        "int_target_us": 300,
+        "bg_iterations": 1630976,
+        "int_iterations": 5888,
+        "bg_blocks": 216,
+        "int_blocks": 216,
+        "threads_per_block": 256,
+        "dynamic_shared_bytes": 65536,
+        "runlist_policy": "unknown"
+      },
+      "workers": {
+        "int": {
+          "pid": 2291560,
+          "application_rm_controls_observed": 724,
+          "cleanup_all_recorded_calls_zero": true,
+          "project_controls_attempted": 0,
+          "project_get_info_attempts": 0,
+          "project_preempt_attempts": 0,
+          "other_project_active_controls": 0
+        },
+        "bg": {
+          "pid": 2291561,
+          "application_rm_controls_observed": 724,
+          "cleanup_all_recorded_calls_zero": true,
+          "project_controls_attempted": 0,
+          "project_get_info_attempts": 0,
+          "project_preempt_attempts": 0,
+          "other_project_active_controls": 0
+        }
+      },
+      "context_usability": {
+        "fixed_iterations": 256,
+        "same_context": true,
+        "same_stream": true,
+        "reference_match": true,
+        "extra_preempt_requests": 0
+      }
+    },
+    "group-preempt-wait": {
+      "T_cpu_trigger": 3809097694767975,
+      "T_int_submit_begin": 3809097694768006,
+      "T_int_submit_end": 3809097694810022,
+      "T_ipc_send": 3809097694810300,
+      "T_ipc_received": 3809097694810662,
+      "T_ipc_ack": 3809097695425168,
+      "T_rm_call_begin": 3809097694867499,
+      "T_rm_call_end": 3809097695424479,
+      "T_int_graph_entry_observed": 3809097695253444,
+      "T_int_graph_done_observed": 3809097695563388,
+      "T_bg_done_observed": 3809097773268423,
+      "T_int_graph_entry_gpu_ns": 1789630481637726208,
+      "T_int_graph_done_gpu_ns": 1789630481638036480,
+      "T_bg_main_gpu_ns": 1789630481635113984,
+      "T_bg_done_gpu_ns": 1789630481715739648,
+      "application_valid": 1,
+      "control_status": "CONTROL_ACCEPTED_EFFECT_UNVERIFIED",
+      "ordering_relative_to_rm": "ordering_ambiguous",
+      "gpu_overlap": "lifetime_overlap",
+      "bg_correct": 1,
+      "int_correct": 1,
+      "control_target_running": "unknown",
+      "interaction_to_entry_observed_us": 485.469,
+      "gpu_int_marker_interval_us": 310.272,
+      "configuration": {
+        "schema_version": 2,
+        "mode": "group-preempt-wait",
+        "run_kind": "performance",
+        "gpu_uuid": "99e4e85f1945866c9e00130b51df7908",
+        "driver_profile": "595.58.03",
+        "build_profile": "595.58.03",
+        "nvidia_source_commit": "db0c4e65c8e34c678d745ddb1317f53f90d1072b",
+        "group_preempt_timeout_us": 1000000,
+        "graph": 0,
+        "force": 0,
+        "bypass": 0,
+        "cta_waves": 1,
+        "heartbeat_ns": 2000,
+        "timeslice_us": 1,
+        "bg_target_us": 80000,
+        "int_target_us": 300,
+        "bg_iterations": 1630976,
+        "int_iterations": 5888,
+        "bg_blocks": 216,
+        "int_blocks": 216,
+        "threads_per_block": 256,
+        "dynamic_shared_bytes": 65536,
+        "runlist_policy": "unknown"
+      },
+      "workers": {
+        "int": {
+          "pid": 2294413,
+          "application_rm_controls_observed": 724,
+          "cleanup_all_recorded_calls_zero": true,
+          "project_controls_attempted": 1,
+          "project_get_info_attempts": 1,
+          "project_preempt_attempts": 0,
+          "other_project_active_controls": 0,
+          "group_identity": {
+            "scope": "one captured compute TSG; not entire CUDA context",
+            "owner_pid": 2294413,
+            "registry_instance": 1,
+            "profile": "595.58.03",
+            "source_commit": "db0c4e65c8e34c678d745ddb1317f53f90d1072b",
+            "gpu_uuid_hex": "99e4e85f1945866c9e00130b51df7908",
+            "cuda_visible_devices": "GPU-99e4e85f-1945-866c-9e00-130b51df7908",
+            "hClient": 3252373401,
+            "client_generation": 3,
+            "allocating_fd_at_capture": 10,
+            "retained_fd": 11,
+            "membership_revision": 24,
+            "compute_candidates_revision": 23,
+            "fd_source": "F_DUPFD_CLOEXEC of original allocating nvidiactl open file",
+            "device": {
+              "handle": 1543503874,
+              "generation": 6,
+              "parent": 3252373401,
+              "parent_generation": 4,
+              "class": 128,
+              "observed_engine": null
+            },
+            "subdevice": {
+              "handle": 1543503875,
+              "generation": 7,
+              "parent": 1543503874,
+              "parent_generation": 6,
+              "class": 8320,
+              "observed_engine": null
+            },
+            "group": {
+              "handle": 1543503948,
+              "generation": 76,
+              "parent": 1543503874,
+              "parent_generation": 6,
+              "class": 41068,
+              "observed_engine": 1
+            },
+            "members": [
+              {
+                "channel": {
+                  "handle": 1543503955,
+                  "generation": 81,
+                  "parent": 1543503948,
+                  "parent_generation": 76,
+                  "class": 50543,
+                  "observed_engine": null
+                },
+                "compute_children": [
+                  {
+                    "handle": 1543503956,
+                    "generation": 82,
+                    "parent": 1543503955,
+                    "parent_generation": 81,
+                    "class": 50880,
+                    "observed_engine": null
+                  }
+                ]
+              },
+              {
+                "channel": {
+                  "handle": 1543503961,
+                  "generation": 86,
+                  "parent": 1543503948,
+                  "parent_generation": 76,
+                  "class": 50543,
+                  "observed_engine": null
+                },
+                "compute_children": [
+                  {
+                    "handle": 1543503962,
+                    "generation": 87,
+                    "parent": 1543503961,
+                    "parent_generation": 86,
+                    "class": 50880,
+                    "observed_engine": null
+                  }
+                ]
+              },
+              {
+                "channel": {
+                  "handle": 1543503965,
+                  "generation": 90,
+                  "parent": 1543503948,
+                  "parent_generation": 76,
+                  "class": 50543,
+                  "observed_engine": null
+                },
+                "compute_children": [
+                  {
+                    "handle": 1543503966,
+                    "generation": 91,
+                    "parent": 1543503965,
+                    "parent_generation": 90,
+                    "class": 50880,
+                    "observed_engine": null
+                  }
+                ]
+              },
+              {
+                "channel": {
+                  "handle": 1543503969,
+                  "generation": 94,
+                  "parent": 1543503948,
+                  "parent_generation": 76,
+                  "class": 50543,
+                  "observed_engine": null
+                },
+                "compute_children": [
+                  {
+                    "handle": 1543503970,
+                    "generation": 95,
+                    "parent": 1543503969,
+                    "parent_generation": 94,
+                    "class": 50880,
+                    "observed_engine": null
+                  }
+                ]
+              },
+              {
+                "channel": {
+                  "handle": 1543503973,
+                  "generation": 98,
+                  "parent": 1543503948,
+                  "parent_generation": 76,
+                  "class": 50543,
+                  "observed_engine": null
+                },
+                "compute_children": [
+                  {
+                    "handle": 1543503974,
+                    "generation": 99,
+                    "parent": 1543503973,
+                    "parent_generation": 98,
+                    "class": 50880,
+                    "observed_engine": null
+                  }
+                ]
+              },
+              {
+                "channel": {
+                  "handle": 1543503977,
+                  "generation": 102,
+                  "parent": 1543503948,
+                  "parent_generation": 76,
+                  "class": 50543,
+                  "observed_engine": null
+                },
+                "compute_children": [
+                  {
+                    "handle": 1543503978,
+                    "generation": 103,
+                    "parent": 1543503977,
+                    "parent_generation": 102,
+                    "class": 50880,
+                    "observed_engine": null
+                  }
+                ]
+              },
+              {
+                "channel": {
+                  "handle": 1543503981,
+                  "generation": 106,
+                  "parent": 1543503948,
+                  "parent_generation": 76,
+                  "class": 50543,
+                  "observed_engine": null
+                },
+                "compute_children": [
+                  {
+                    "handle": 1543503982,
+                    "generation": 107,
+                    "parent": 1543503981,
+                    "parent_generation": 106,
+                    "class": 50880,
+                    "observed_engine": null
+                  }
+                ]
+              },
+              {
+                "channel": {
+                  "handle": 1543503985,
+                  "generation": 110,
+                  "parent": 1543503948,
+                  "parent_generation": 76,
+                  "class": 50543,
+                  "observed_engine": null
+                },
+                "compute_children": [
+                  {
+                    "handle": 1543503986,
+                    "generation": 111,
+                    "parent": 1543503985,
+                    "parent_generation": 110,
+                    "class": 50880,
+                    "observed_engine": null
+                  }
+                ]
+              }
+            ]
+          },
+          "get_info": {
+            "pid": 2294413,
+            "hClient": 3252373401,
+            "hObject": 1543503948,
+            "attempted": true,
+            "syscall_return": 0,
+            "errno": 0,
+            "NV_STATUS_raw": 0,
+            "operation_seq": 1,
+            "verified": true,
+            "call_begin_ns": 3809097686379054,
+            "call_end_ns": 3809097688818814,
+            "hardware_tsg_id": 10,
+            "result": "CONTROL_ACCEPTED_EFFECT_UNVERIFIED attempted=1 ioctl=0 errno=0 rm_status=0x0"
+          },
+          "group_valid_before_trial": true,
+          "group_valid_after_context_cleanup": false
+        },
+        "bg": {
+          "pid": 2294414,
+          "application_rm_controls_observed": 724,
+          "cleanup_all_recorded_calls_zero": true,
+          "project_controls_attempted": 2,
+          "project_get_info_attempts": 1,
+          "project_preempt_attempts": 1,
+          "other_project_active_controls": 0,
+          "group_identity": {
+            "scope": "one captured compute TSG; not entire CUDA context",
+            "owner_pid": 2294414,
+            "registry_instance": 1,
+            "profile": "595.58.03",
+            "source_commit": "db0c4e65c8e34c678d745ddb1317f53f90d1072b",
+            "gpu_uuid_hex": "99e4e85f1945866c9e00130b51df7908",
+            "cuda_visible_devices": "GPU-99e4e85f-1945-866c-9e00-130b51df7908",
+            "hClient": 3252373396,
+            "client_generation": 3,
+            "allocating_fd_at_capture": 11,
+            "retained_fd": 12,
+            "membership_revision": 24,
+            "compute_candidates_revision": 23,
+            "fd_source": "F_DUPFD_CLOEXEC of original allocating nvidiactl open file",
+            "device": {
+              "handle": 1543503874,
+              "generation": 6,
+              "parent": 3252373396,
+              "parent_generation": 4,
+              "class": 128,
+              "observed_engine": null
+            },
+            "subdevice": {
+              "handle": 1543503875,
+              "generation": 7,
+              "parent": 1543503874,
+              "parent_generation": 6,
+              "class": 8320,
+              "observed_engine": null
+            },
+            "group": {
+              "handle": 1543503948,
+              "generation": 76,
+              "parent": 1543503874,
+              "parent_generation": 6,
+              "class": 41068,
+              "observed_engine": 1
+            },
+            "members": [
+              {
+                "channel": {
+                  "handle": 1543503955,
+                  "generation": 81,
+                  "parent": 1543503948,
+                  "parent_generation": 76,
+                  "class": 50543,
+                  "observed_engine": null
+                },
+                "compute_children": [
+                  {
+                    "handle": 1543503956,
+                    "generation": 82,
+                    "parent": 1543503955,
+                    "parent_generation": 81,
+                    "class": 50880,
+                    "observed_engine": null
+                  }
+                ]
+              },
+              {
+                "channel": {
+                  "handle": 1543503961,
+                  "generation": 86,
+                  "parent": 1543503948,
+                  "parent_generation": 76,
+                  "class": 50543,
+                  "observed_engine": null
+                },
+                "compute_children": [
+                  {
+                    "handle": 1543503962,
+                    "generation": 87,
+                    "parent": 1543503961,
+                    "parent_generation": 86,
+                    "class": 50880,
+                    "observed_engine": null
+                  }
+                ]
+              },
+              {
+                "channel": {
+                  "handle": 1543503965,
+                  "generation": 90,
+                  "parent": 1543503948,
+                  "parent_generation": 76,
+                  "class": 50543,
+                  "observed_engine": null
+                },
+                "compute_children": [
+                  {
+                    "handle": 1543503966,
+                    "generation": 91,
+                    "parent": 1543503965,
+                    "parent_generation": 90,
+                    "class": 50880,
+                    "observed_engine": null
+                  }
+                ]
+              },
+              {
+                "channel": {
+                  "handle": 1543503969,
+                  "generation": 94,
+                  "parent": 1543503948,
+                  "parent_generation": 76,
+                  "class": 50543,
+                  "observed_engine": null
+                },
+                "compute_children": [
+                  {
+                    "handle": 1543503970,
+                    "generation": 95,
+                    "parent": 1543503969,
+                    "parent_generation": 94,
+                    "class": 50880,
+                    "observed_engine": null
+                  }
+                ]
+              },
+              {
+                "channel": {
+                  "handle": 1543503973,
+                  "generation": 98,
+                  "parent": 1543503948,
+                  "parent_generation": 76,
+                  "class": 50543,
+                  "observed_engine": null
+                },
+                "compute_children": [
+                  {
+                    "handle": 1543503974,
+                    "generation": 99,
+                    "parent": 1543503973,
+                    "parent_generation": 98,
+                    "class": 50880,
+                    "observed_engine": null
+                  }
+                ]
+              },
+              {
+                "channel": {
+                  "handle": 1543503977,
+                  "generation": 102,
+                  "parent": 1543503948,
+                  "parent_generation": 76,
+                  "class": 50543,
+                  "observed_engine": null
+                },
+                "compute_children": [
+                  {
+                    "handle": 1543503978,
+                    "generation": 103,
+                    "parent": 1543503977,
+                    "parent_generation": 102,
+                    "class": 50880,
+                    "observed_engine": null
+                  }
+                ]
+              },
+              {
+                "channel": {
+                  "handle": 1543503981,
+                  "generation": 106,
+                  "parent": 1543503948,
+                  "parent_generation": 76,
+                  "class": 50543,
+                  "observed_engine": null
+                },
+                "compute_children": [
+                  {
+                    "handle": 1543503982,
+                    "generation": 107,
+                    "parent": 1543503981,
+                    "parent_generation": 106,
+                    "class": 50880,
+                    "observed_engine": null
+                  }
+                ]
+              },
+              {
+                "channel": {
+                  "handle": 1543503985,
+                  "generation": 110,
+                  "parent": 1543503948,
+                  "parent_generation": 76,
+                  "class": 50543,
+                  "observed_engine": null
+                },
+                "compute_children": [
+                  {
+                    "handle": 1543503986,
+                    "generation": 111,
+                    "parent": 1543503985,
+                    "parent_generation": 110,
+                    "class": 50880,
+                    "observed_engine": null
+                  }
+                ]
+              }
+            ]
+          },
+          "get_info": {
+            "pid": 2294414,
+            "hClient": 3252373396,
+            "hObject": 1543503948,
+            "attempted": true,
+            "syscall_return": 0,
+            "errno": 0,
+            "NV_STATUS_raw": 0,
+            "operation_seq": 1,
+            "verified": true,
+            "call_begin_ns": 3809097286117876,
+            "call_end_ns": 3809097286300418,
+            "hardware_tsg_id": 6,
+            "result": "CONTROL_ACCEPTED_EFFECT_UNVERIFIED attempted=1 ioctl=0 errno=0 rm_status=0x0"
+          },
+          "group_valid_before_trial": true,
+          "group_valid_after_context_cleanup": false
+        }
+      },
+      "context_usability": {
+        "fixed_iterations": 256,
+        "same_context": true,
+        "same_stream": true,
+        "reference_match": true,
+        "extra_preempt_requests": 0
+      }
+    }
+  },
+  "project_get_info_attempts": 2,
+  "project_preempt_attempts": 1,
+  "other_project_active_controls": 0,
+  "preempt_host_wall_time_us": 556.98,
+  "control_preemption_effect_confirmed": false,
+  "physical_context_save_or_resume_timestamps": "unmeasured",
+  "early_runner_stop": "group_preempt_smoke: corrected attribute parser; no experiment worker or project control had run; retained separately"
+}

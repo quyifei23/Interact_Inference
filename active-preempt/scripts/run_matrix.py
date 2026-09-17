@@ -2,6 +2,7 @@
 """Staged CUDA/RM experiments. Never install drivers, grant rights, reset GPUs, or infer causation."""
 import argparse
 import datetime
+import hashlib
 import json
 import os
 from pathlib import Path
@@ -13,10 +14,59 @@ import time
 from summarize import read_rows,summarize,ACCEPTED
 
 BASELINES={'int-only','none'}
-MODES=BASELINES|{'timeslice','preempt-wait','preempt-async','realtime-only','realtime-restart','disable','disable-split'}
+MODES=BASELINES|{'timeslice','preempt-wait','group-preempt-wait','preempt-async','realtime-only','realtime-restart','disable','disable-split'}
 EXTENDED={'preempt-async','disable','disable-split'}
 
 def canonical(mode):return 'realtime-restart' if mode=='realtime' else mode
+
+def prerequisite_probes(modes):
+    # The group owners each GET_INFO on their final current binding. Separate
+    # strict-channel probes cannot authorize them and reject real multi-channel TSGs.
+    return () if set(modes)<=BASELINES|{'group-preempt-wait'} else ('observe','identity','readonly')
+
+def validate_paired_none(args):
+    evidence=getattr(args,'paired_none',None)
+    if not evidence:raise ValueError('group-preempt-wait requires --paired-none from one completed current-build baseline')
+    rows=validate_smoke(evidence,'none',1,'performance',False,args)
+    if len(rows)!=1:raise ValueError('First group smoke pairs with exactly one none trial')
+    c=json.loads((evidence/'configuration.json').read_text())
+    if any(c.get(k)!=v for k,v in dict(threads_per_block=256,dynamic_shared_bytes=65536,bg_target_us=80000,int_target_us=300).items()):
+        raise ValueError('Paired none resource/workload configuration missing or different')
+    reuse=json.loads((evidence/'bg_context_usability.json').read_text())
+    if not all(reuse.get(k) is True for k in ('same_context','same_stream','reference_match')):raise ValueError('Paired BG context reuse unverified')
+    if not c.get('gpu_uuid') or not c.get('build_profile') or not c.get('nvidia_source_commit'):raise ValueError('Paired scope/build profile missing')
+    return c
+
+def validate_group_environment(readiness,visible,paired,build):
+    if not re.fullmatch(r'GPU-[0-9a-fA-F]{8}(?:-[0-9a-fA-F]{4}){3}-[0-9a-fA-F]{12}',visible):raise ValueError('Group smoke needs one full CUDA_VISIBLE_DEVICES GPU UUID')
+    calls=[json.loads(line) for line in readiness['cuda_probe']['stdout'].splitlines() if line.startswith('{')]
+    details=lambda call:[r['detail'] for r in calls if r['call']==call and r['returncode']==0]
+    # Attribute API status and its numeric output intentionally share a call
+    # name in preflight JSONL. Parse the output, never the CUDA return code or
+    # the success-description string. Ambiguous numeric outputs still reject.
+    values=lambda call:[v for v in details(call) if isinstance(v,str) and v.isdecimal()]
+    uuid=visible[4:].replace('-','').lower()
+    if details('device_count')!=['1'] or details('gpu_uuid')!=[uuid] or paired['gpu_uuid']!=uuid:raise ValueError('Current CUDA UUID/visibility differs from paired none')
+    if values('compute_capability_major')!=['8'] or values('compute_capability_minor')!=['0']:raise ValueError('WORKLOAD_GPU_UNREVIEWED')
+    sm=values('multiprocessor_count')
+    if len(sm)!=1 or paired.get('int_blocks')!=int(sm[0])*2 or paired.get('bg_blocks')!=int(sm[0])*2*paired['cta_waves']:raise ValueError('Paired grid differs from current device')
+    # No handles or authorization are imported. Verify only reproducibility of
+    # the workload/executables; each new owner captures its own current identity.
+    old=json.loads((Path(paired['_evidence']).parent/'invocation.json').read_text()).get('binary_sha256',{})
+    now=binary_fingerprints(build)
+    if not old or old!=now:raise ValueError('Build changed since paired none; rerun ordinary baseline with this build')
+
+def check_compute_processes(readiness,visible=None):
+    r=next((r for r in readiness['commands'] if r['call'][0]=='nvidia-smi' and '--query-compute-apps=pid,process_name,gpu_uuid' in r['call']),None)
+    if not r or r.get('returncode')!=0:raise ValueError('Current compute-process visibility unavailable; active test skipped')
+    for line in r.get('stdout','').splitlines():
+        fields=[x.strip() for x in line.split(',')]
+        if len(fields)!=3 or not fields[2].startswith('GPU-'):raise ValueError('Unknown compute-process output; active test skipped')
+        if visible is None or fields[2].lower()==visible.lower():raise ValueError('Other compute process reported on target GPU; active test skipped')
+    # Absence in this snapshot does not grant authorization or prove isolation.
+
+def binary_fingerprints(build):
+    return {name:hashlib.sha256((build/name).read_bytes()).hexdigest() for name in ('int_worker','bg_worker','librm_control.so','preflight_cuda')}
 
 def run_process_group(cmd,env,log,timeout,grace=8):
     """Own session; reap/terminate its entire group on timeout or orphaned children."""
@@ -82,6 +132,10 @@ def validate_admission(args):
     if not set(args.modes)<=MODES:raise ValueError('unknown mode')
     if not 1<=args.trials<=100000:raise ValueError('trials must be 1..100000')
     if set(args.modes)-BASELINES and not args.test_host_confirmed:raise ValueError('Active modes require --test-host-confirmed; no privilege changes are performed')
+    if 'group-preempt-wait' in args.modes:
+        if args.modes!=['group-preempt-wait'] or args.trials!=1 or args.graph or args.diagnostic_progress or args.force or args.bypass or args.allow_extended:
+            raise ValueError('Group PREEMPT is one plain synchronous smoke only; no other modes/options')
+        validate_paired_none(args)
     if (set(args.modes)&EXTENDED or args.force or args.bypass) and not args.allow_extended:raise ValueError('Async/force/bypass/D need --allow-extended after synchronous/recovery validation')
     kind='diagnostic' if args.diagnostic_progress else 'performance'
     if args.trials>10 and (not args.bg_iterations and args.modes[0]!='int-only' or not args.int_iterations):
@@ -107,12 +161,17 @@ def main():
     p.add_argument('--timeslice-us',type=int,default=1)
     for flag in ('graph','diagnostic-progress','test-host-confirmed','allow-extended','graph-evidence-reviewed'):p.add_argument('--'+flag,action='store_true')
     p.add_argument('--smoke-evidence',type=Path);p.add_argument('--primitive-evidence',type=Path)
+    p.add_argument('--paired-none',type=Path,help='For one group-preempt-wait smoke: completed none directory; freeze its iterations and compare scope/build')
     a=p.parse_args()
     try:validate_admission(a)
     except (ValueError,OSError,KeyError) as e:p.error(str(e))
     a.output.mkdir(parents=True,exist_ok=False);a.output=a.output.resolve();a.build=a.build.resolve()
+    repo=Path(__file__).resolve().parents[2]
+    head=subprocess.run(['git','-C',str(repo),'rev-parse','HEAD'],capture_output=True,text=True)
+    status=subprocess.run(['git','-C',str(repo),'status','--short'],capture_output=True,text=True)
     (a.output/'invocation.json').write_text(json.dumps({'utc':datetime.datetime.now(datetime.timezone.utc).isoformat(),'argv':sys.argv,
-        'canonical_modes':a.modes,'run_kind':'diagnostic' if a.diagnostic_progress else 'performance'},indent=2)+'\n')
+        'canonical_modes':a.modes,'run_kind':'diagnostic' if a.diagnostic_progress else 'performance',
+        'repo_commit':head.stdout.strip(),'worktree_status':status.stdout,'binary_sha256':binary_fingerprints(a.build)},indent=2)+'\n')
     env=os.environ.copy();env['LD_PRELOAD']=str(a.build/'librm_control.so')+(':'+env['LD_PRELOAD'] if env.get('LD_PRELOAD') else '')
     attempts=[]
     def run(name,cmd,timeout):
@@ -137,10 +196,16 @@ def main():
     out_env=env
     if set(a.modes)-BASELINES:
         readiness=json.loads((a.output/'preflight/preflight.json').read_text())
-        processes=next((r for r in readiness['commands'] if r['call'][0]=='nvidia-smi' and '--query-compute-apps=pid,process_name,gpu_uuid' in r['call']),None)
-        if processes and processes.get('returncode')==0 and processes.get('stdout','').strip():
-            (a.output/'summary.md').write_text('Active tests skipped: other GPU compute processes reported. GPU trials = 0.\n');return 77
-        for stage in ('observe','identity','readonly'):
+        try:
+            visible=None
+            if a.modes==['group-preempt-wait']:
+                visible=env.get('CUDA_VISIBLE_DEVICES','');paired=validate_paired_none(a);paired['_evidence']=str(a.paired_none.resolve())
+                validate_group_environment(readiness,visible,paired,a.build)
+                (a.output/'paired_none.json').write_text(json.dumps(paired,indent=2)+'\n')
+            check_compute_processes(readiness,visible)
+        except (ValueError,KeyError,OSError) as e:
+            (a.output/'summary.md').write_text(f'Active tests skipped: {e}. GPU trials = 0.\n');return 77
+        for stage in prerequisite_probes(a.modes):
             name='probe-rm-'+stage;out=a.output/name
             r=run(name,[str(a.build/'int_worker'),'--probe-rm-'+stage,'--run-dir',str(out)],45)
             if r['returncode']:
