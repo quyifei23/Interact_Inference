@@ -1,0 +1,5 @@
+active-preempt/build/
+__pycache__/
+*.pyc
+/.agents/
+/.codex/

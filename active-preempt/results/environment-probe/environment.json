@@ -1,0 +1,24 @@
+{
+  "utc": "2026-09-17T03:08:04.151046+00:00",
+  "binary": "/home/quyifei/multimodal/workspace/Interception/active-preempt/build/int_worker",
+  "trials": 1,
+  "cta_waves": 1,
+  "graph": false,
+  "heartbeat_ns": 2000,
+  "primitive_evidence": null,
+  "uname": {
+    "returncode": 0,
+    "stdout": "Linux JY-R308-E03-8 5.15.0-186-generic #196-Ubuntu SMP Sat Jun 20 16:09:34 UTC 2026 x86_64 x86_64 x86_64 GNU/Linux\n",
+    "stderr": ""
+  },
+  "nvidia_smi": {
+    "returncode": 9,
+    "stdout": "NVIDIA-SMI has failed because it couldn't communicate with the NVIDIA driver. Make sure that the latest NVIDIA driver is installed and running.\n\n",
+    "stderr": ""
+  },
+  "driver": {
+    "returncode": 0,
+    "stdout": "NVRM version: NVIDIA UNIX x86_64 Kernel Module  595.58.03  Tue Mar 17 19:54:55 UTC 2026\nGCC version:  gcc version 11.4.0 (Ubuntu 11.4.0-1ubuntu1~22.04.3) \n",
+    "stderr": ""
+  }
+}

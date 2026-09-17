@@ -1,0 +1,26 @@
+GPreempt/src/cuda-clients/gpreemptclient.cpp:173:            NVRMCHECK(NvRmQuery(&nvctx));
+GPreempt/src/cuda-clients/gpreemptclient.cpp:174:            if(set_priority(nvctx, priority)){
+GPreempt/src/cuda-clients/gpreemptclient_wo.cpp:81:            NVRMCHECK(NvRmQuery(&nvctx));
+GPreempt/src/cuda-clients/gpreemptclient_wo.cpp:82:            if(set_priority(nvctx, priority)){
+GPreempt/src/tests/test-basic.cpp:14:    NVRMCHECK(NvRmQuery(&nvctx));
+GPreempt/src/tests/test-basic.cpp:15:    if(set_priority(nvctx, 1)){
+GPreempt/src/gpreempt.cpp:33:NV_STATUS NvRmQuery(
+GPreempt/src/gpreempt.cpp:52:NV_STATUS NvRmModifyTS(
+GPreempt/src/gpreempt.cpp:61:int set_priority(NvContext ctx, int priority) {
+GPreempt/src/gpreempt.cpp:64:        status = NvRmModifyTS(ctx, 1000000);
+GPreempt/src/gpreempt.cpp:66:        status = NvRmModifyTS(ctx, 1);
+GPreempt/src/gpreempt.cpp:74:NV_STATUS NvRmPreempt(
+GPreempt/src/gpreempt.cpp:84:NV_STATUS NvRmGPFIFOSch(
+GPreempt/src/gpreempt.cpp:94:NV_STATUS NvRmRestartRunlist(
+GPreempt/src/gpreempt.cpp:103:NV_STATUS NvRmDisableCh(
+GPreempt/src/gpreempt.cpp:124:NV_STATUS NvRmSetPolicy(
+GPreempt/src/gpreempt.cpp:132:NV_STATUS NvRmSetLevel(
+GPreempt/include/gpreempt.h:133:NV_STATUS NvRmQuery(
+GPreempt/include/gpreempt.h:137:NV_STATUS NvRmModifyTS(
+GPreempt/include/gpreempt.h:142:NV_STATUS NvRmPreempt(
+GPreempt/include/gpreempt.h:146:NV_STATUS NvRmGPFIFOSch(
+GPreempt/include/gpreempt.h:151:NV_STATUS NvRmRestartRunlist(
+GPreempt/include/gpreempt.h:155:NV_STATUS NvRmDisableCh(
+GPreempt/include/gpreempt.h:160:NV_STATUS NvRmSetPolicy(
+GPreempt/include/gpreempt.h:164:NV_STATUS NvRmSetLevel(
+GPreempt/include/gpreempt.h:173:int set_priority(NvContext ctx, int priority);

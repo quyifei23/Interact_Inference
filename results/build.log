@@ -1,0 +1,14 @@
+Consolidate compiler generated dependencies of target rm_control
+[ 12%] Building CXX object CMakeFiles/rm_control.dir/src/rm_control.cpp.o
+[ 25%] Linking CXX shared library librm_control.so
+[ 25%] Built target rm_control
+Consolidate compiler generated dependencies of target bg_worker
+Consolidate compiler generated dependencies of target int_worker
+[ 37%] Linking CXX executable rm_contract_test
+[ 50%] Building CUDA object CMakeFiles/bg_worker.dir/src/bg_worker.cu.o
+[ 62%] Building CUDA object CMakeFiles/int_worker.dir/src/int_worker.cu.o
+[ 75%] Built target rm_contract_test
+[ 87%] Linking CUDA executable bg_worker
+[ 87%] Built target bg_worker
+[100%] Linking CUDA executable int_worker
+[100%] Built target int_worker

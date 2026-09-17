@@ -1,0 +1,417 @@
+diff --git a/src/common/sdk/nvidia/inc/ctrl/ctrla06c.h b/src/common/sdk/nvidia/inc/ctrl/ctrla06c.h
+index 7526b214..0dc6cc94 100644
+--- a/src/common/sdk/nvidia/inc/ctrl/ctrla06c.h
++++ b/src/common/sdk/nvidia/inc/ctrl/ctrla06c.h
+@@ -53,7 +53,7 @@
+  */
+ 
+ #include "ctrl/ctrlxxxx.h"
+-#include "ctrl/ctrla06f.h"          /* A06C is partially derived from A06F */
++#include "ctrl/ctrla06f/ctrla06fgpfifo.h"   /* A06C is partially derived from A06F */
+ 
+ #include "ctrl/ctrl2080/ctrl2080internal.h" /* For NV2080_CTRL_INTERNAL_MEMDESC_INFO */
+ #include "ctrl/ctrlc36f.h"                  /* For NVC36F_CTRL_CMD_GPFIFO_FAULT_METHOD_BUFFER_MAX_RUNQUEUES */
+@@ -402,6 +402,8 @@ typedef struct NVA06C_CTRL_MAKE_REALTIME_PARAMS {
+ 
+ 
+ 
++
++
+ /*
+  * NVA06C_CTRL_CMD_INTERNAL_GPFIFO_SCHEDULE
+  *
+diff --git a/src/common/sdk/nvidia/inc/ctrl/ctrla06f/ctrla06fgpfifo.h b/src/common/sdk/nvidia/inc/ctrl/ctrla06f/ctrla06fgpfifo.h
+index 41a5b4f1..65b82d51 100644
+--- a/src/common/sdk/nvidia/inc/ctrl/ctrla06f/ctrla06fgpfifo.h
++++ b/src/common/sdk/nvidia/inc/ctrl/ctrla06f/ctrla06fgpfifo.h
+@@ -1,17 +1,17 @@
+ /*
+- * SPDX-FileCopyrightText: Copyright (c) 2007-2022 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
++ * SPDX-FileCopyrightText: Copyright (c) 2007-2025 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+  * SPDX-License-Identifier: MIT
+- * 
++ *
+  * Permission is hereby granted, free of charge, to any person obtaining a
+  * copy of this software and associated documentation files (the "Software"),
+  * to deal in the Software without restriction, including without limitation
+  * the rights to use, copy, modify, merge, publish, distribute, sublicense,
+  * and/or sell copies of the Software, and to permit persons to whom the
+  * Software is furnished to do so, subject to the following conditions:
+- * 
++ *
+  * The above copyright notice and this permission notice shall be included in
+  * all copies or substantial portions of the Software.
+- * 
++ *
+  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+  * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+  * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL
+@@ -32,29 +32,6 @@
+ 
+ #include "ctrl/ctrla06f/ctrla06fbase.h"
+ 
+-/*
+- * NVA06F_CTRL_GET_CLASS_ENGINEID
+- *
+- * Please see description of NV906F_CTRL_GET_CLASS_ENGINEID for more information.
+- *
+- */
+-#define NVA06F_CTRL_GET_CLASS_ENGINEID (0xa06f0101) /* finn: Evaluated from "(FINN_KEPLER_CHANNEL_GPFIFO_A_GPFIFO_INTERFACE_ID << 8) | NVA06F_CTRL_GET_CLASS_ENGINEID_PARAMS_MESSAGE_ID" */
+-
+-#define NVA06F_CTRL_GET_CLASS_ENGINEID_PARAMS_MESSAGE_ID (0x1U)
+-
+-typedef NV906F_CTRL_GET_CLASS_ENGINEID_PARAMS NVA06F_CTRL_GET_CLASS_ENGINEID_PARAMS;
+-
+-/*
+- * NVA06F_CTRL_RESET_CHANNEL
+- *
+- * Please see description of NV906F_CTRL_RESET_CHANNEL for more information.
+- */
+-#define NVA06F_CTRL_CMD_RESET_CHANNEL (0xa06f0102) /* finn: Evaluated from "(FINN_KEPLER_CHANNEL_GPFIFO_A_GPFIFO_INTERFACE_ID << 8) | NVA06F_CTRL_CMD_RESET_CHANNEL_PARAMS_MESSAGE_ID" */
+-
+-#define NVA06F_CTRL_CMD_RESET_CHANNEL_PARAMS_MESSAGE_ID (0x2U)
+-
+-typedef NV906F_CTRL_CMD_RESET_CHANNEL_PARAMS NVA06F_CTRL_CMD_RESET_CHANNEL_PARAMS;
+-
+ /*
+  * NVA06F_CTRL_CMD_GPFIFO_SCHEDULE
+  *
+@@ -67,6 +44,18 @@ typedef NV906F_CTRL_CMD_RESET_CHANNEL_PARAMS NVA06F_CTRL_CMD_RESET_CHANNEL_PARAM
+  *   When set, the channel will be enabled in addition to being added to the appropriate runlist.
+  *   When not set, the channel will be disabled and removed from runlist.
+  *
++ * bSkipSubmit
++ *   This parameter indicates whether this channel is not to be scheduled, even though it is enabled.
++ *   When set, the channel will not be scheduled.
++ *   When not set, the channel will be scheduled.
++ *
++ * bSkipEnable
++ *   This parameter indicates whether this channel is not to be enabled, even though it is scheduled.
++ *   When set, the channel will not be enabled.
++ *   When not set, the channel will be enabled.
++ *
++ * When bEnable is set, both bSkipSubmit and bSkipEnable can't be set.
++ *
+  * Possible status values returned are:
+  *   NV_OK
+  *   NV_ERR_INVALID_OBJECT_HANDLE
+@@ -80,6 +69,7 @@ typedef NV906F_CTRL_CMD_RESET_CHANNEL_PARAMS NVA06F_CTRL_CMD_RESET_CHANNEL_PARAM
+ typedef struct NVA06F_CTRL_GPFIFO_SCHEDULE_PARAMS {
+     NvBool bEnable;
+     NvBool bSkipSubmit;
++    NvBool bSkipEnable;
+ } NVA06F_CTRL_GPFIFO_SCHEDULE_PARAMS;
+ 
+ /*
+@@ -111,20 +101,6 @@ typedef struct NVA06F_CTRL_BIND_PARAMS {
+     NvU32 engineType;
+ } NVA06F_CTRL_BIND_PARAMS;
+ 
+-
+-
+-/*
+- * NVA06F_CTRL_CMD_GET_MMU_FAULT_INFO
+- *
+- * Please see description of NV906F_CTRL_CMD_GET_MMU_FAULT_INFO for more information.
+- *   
+- */
+-#define NVA06F_CTRL_CMD_GET_MMU_FAULT_INFO (0xa06f0107) /* finn: Evaluated from "(FINN_KEPLER_CHANNEL_GPFIFO_A_GPFIFO_INTERFACE_ID << 8) | NVA06F_CTRL_GET_MMU_FAULT_INFO_PARAMS_MESSAGE_ID" */
+-
+-#define NVA06F_CTRL_GET_MMU_FAULT_INFO_PARAMS_MESSAGE_ID (0x7U)
+-
+-typedef NV906F_CTRL_GET_MMU_FAULT_INFO_PARAMS NVA06F_CTRL_GET_MMU_FAULT_INFO_PARAMS;
+-
+ /*
+  * NVA06F_CTRL_CMD_SET_ERROR_NOTIFIER
+  *
+@@ -132,7 +108,7 @@ typedef NV906F_CTRL_GET_MMU_FAULT_INFO_PARAMS NVA06F_CTRL_GET_MMU_FAULT_INFO_PAR
+  *   bNotifyEachChannelInTSG
+  *     When true, the error notifier will be set on every channel in
+  *     the TSG that contains the channel.
+- * 
++ *
+  * Possible status values returned are:
+  *   NV_OK
+  */
+@@ -248,7 +224,7 @@ typedef struct NVA06F_CTRL_RESTART_RUNLIST_PARAMS {
+  * Also set an error notifier to notify user space that channel is stopped.
+  *
+  *   bImmediate
+- *     Input parameter. If NV_FALSE, we will wait for default RM timeout 
++ *     Input parameter. If NV_FALSE, we will wait for default RM timeout
+  *     for channel to idle. If NV_TRUE, we don't wait for channel to idle.
+  *     If channel is not idle, we forcefully preempt it off the runlist.
+  *     If the preempt times out, we will RC the channel.
+@@ -266,4 +242,20 @@ typedef struct NVA06F_CTRL_STOP_CHANNEL_PARAMS {
+     NvBool bImmediate;
+ } NVA06F_CTRL_STOP_CHANNEL_PARAMS;
+ 
++/*
++ * NVA06F_CTRL_CMD_GET_CONTEXT_ID
++ * 
++ * This command returns the context ID of a given channel.
++ *
++ * Possible status values returned are:
++ *   NV_OK
++ */
++#define NVA06F_CTRL_CMD_GET_CONTEXT_ID (0xa06f0113) /* finn: Evaluated from "(FINN_KEPLER_CHANNEL_GPFIFO_A_GPFIFO_INTERFACE_ID << 8) | NVA06F_CTRL_GET_CONTEXT_ID_PARAMS_MESSAGE_ID" */
++
++#define NVA06F_CTRL_GET_CONTEXT_ID_PARAMS_MESSAGE_ID (0x13U)
++
++typedef struct NVA06F_CTRL_GET_CONTEXT_ID_PARAMS {
++    NvU32 contextId;
++} NVA06F_CTRL_GET_CONTEXT_ID_PARAMS;
++
+ /* _ctrla06fgpfifo_h_ */
+diff --git a/src/nvidia/inc/kernel/rmapi/control.h b/src/nvidia/inc/kernel/rmapi/control.h
+index 54f040f1..700346a7 100644
+--- a/src/nvidia/inc/kernel/rmapi/control.h
++++ b/src/nvidia/inc/kernel/rmapi/control.h
+@@ -1,5 +1,5 @@
+ /*
+- * SPDX-FileCopyrightText: Copyright (c) 2004-2023 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
++ * SPDX-FileCopyrightText: Copyright (c) 2004-2024 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+  * SPDX-License-Identifier: MIT
+  *
+  * Permission is hereby granted, free of charge, to any person obtaining a
+@@ -25,6 +25,7 @@
+ 
+ #include "core/core.h"
+ 
++#include "nvsecurityinfo.h"
+ #include "resserv/rs_resource.h"
+ #include "resserv/resserv.h"
+ 
+@@ -68,9 +69,9 @@ struct RS_CONTROL_COOKIE
+     const RS_ACCESS_MASK rightsRequired;
+ 
+     NvBool              bFreeParamCopy;    ///< Indicates that param copies should be cleaned up
+-    NvBool              bFreeEmbeddedCopy; ///< Indicates embedded param copies should be cleaned up
+-
+     RMAPI_PARAM_COPY    paramCopy;
++
++    NvBool              bFreeEmbeddedCopy; ///< Indicates embedded param copies should be cleaned up
+     RMAPI_PARAM_COPY    embeddedParamCopies[4];   // Up to 4 embedded pointers per one RmControl identified
+ };
+ typedef RS_CONTROL_COOKIE RmCtrlExecuteCookie;
+@@ -84,7 +85,7 @@ typedef RS_CONTROL_COOKIE RmCtrlExecuteCookie;
+ 
+ typedef struct
+ {
+-   NvS32 volatile pending;
++   NvS32 PORT_ATOMIC pending;
+    NvU32 cpuInst;
+    RmCtrlParams rmCtrlDeferredParams;
+    NvU8 paramBuffer[RMCTRL_DEFERRED_MAX_PARAM_SIZE];    // buffer to hold rmCtrlDeferredParams.pParams
+@@ -119,13 +120,16 @@ typedef struct
+ // top-level internal RM Control interface
+ NV_STATUS   rmControl_Deferred(RmCtrlDeferredCmd *pRmCtrlDeferredCmd);
+ 
++//
++// Validate whether client has privilege to execute specified cmd.
++// Doesn't handle vGPU CPU plugin case.
++//
++NV_STATUS rmControlValidateClientPrivilegeAccess(NvHandle hClient, NvHandle hObject, NvU32 cmd, NvU32 ctrlFlags, API_SECURITY_INFO *pSecInfo);
++
+ // Helper functions for handling embedded parameter copies
+ NV_STATUS embeddedParamCopyIn(RMAPI_PARAM_COPY  *pParamCopy, RmCtrlParams *pRmCtrlParams);
+ NV_STATUS embeddedParamCopyOut(RMAPI_PARAM_COPY  *pParamCopy, RmCtrlParams *pRmCtrlParams);
+ 
+-#define RM_CLIENT_PTR_ACCESS_CHECK_READ     NVBIT(0)
+-#define RM_CLIENT_PTR_ACCESS_CHECK_WRITE    NVBIT(1)
+-
+ //
+ // For NVOC Exported functions
+ //
+@@ -198,7 +202,7 @@ NV_STATUS embeddedParamCopyOut(RMAPI_PARAM_COPY  *pParamCopy, RmCtrlParams *pRmC
+ // If the NON_PRIVILEGED flag is specified, the call will be allowed from any
+ // client.
+ //
+-#define RMCTRL_FLAGS_NON_PRIVILEGED                           0x000000010
++#define RMCTRL_FLAGS_NON_PRIVILEGED                           0x000000008
+ 
+ //
+ // The resman rmcontrol handler will grab the per-device lock instead
+@@ -206,7 +210,7 @@ NV_STATUS embeddedParamCopyOut(RMAPI_PARAM_COPY  *pParamCopy, RmCtrlParams *pRmC
+ //
+ // Please be sure you know what you're doing before using this!
+ //
+-#define RMCTRL_FLAGS_GPU_LOCK_DEVICE_ONLY                     0x000000040
++#define RMCTRL_FLAGS_GPU_LOCK_DEVICE_ONLY                     0x000000010
+ 
+ //
+ // This flag is equivalent to PRIVILEGED when the RM access rights
+@@ -217,19 +221,19 @@ NV_STATUS embeddedParamCopyOut(RMAPI_PARAM_COPY  *pParamCopy, RmCtrlParams *pRmC
+ // previously PRIVILEGED. Once access rights are enabled, this flag will no
+ // longer be necessary.
+ //
+-#define RMCTRL_FLAGS_PRIVILEGED_IF_RS_ACCESS_DISABLED         0x000000100 // for Resserv Access Rights migration
++#define RMCTRL_FLAGS_PRIVILEGED_IF_RS_ACCESS_DISABLED         0x000000020 // for Resserv Access Rights migration
+ 
+ //
+ // This flag specifies that the control shall be directly forwarded to the
+ // physical object if called on the CPU-RM kernel.
+ //
+-#define RMCTRL_FLAGS_ROUTE_TO_PHYSICAL                        0x000000200
++#define RMCTRL_FLAGS_ROUTE_TO_PHYSICAL                        0x000000040
+ 
+ //
+ // If the INTERNAL flag is specified, the call will only be allowed
+ // to be issued from RM itself. Otherwise, NV_ERR_NOT_SUPPORTED is returned.
+ //
+-#define RMCTRL_FLAGS_INTERNAL                                 0x000000400
++#define RMCTRL_FLAGS_INTERNAL                                 0x000000080
+ 
+ //
+ //  If the API_LOCK_READONLY flag is specified, the call will acquire the
+@@ -237,65 +241,50 @@ NV_STATUS embeddedParamCopyOut(RMAPI_PARAM_COPY  *pParamCopy, RmCtrlParams *pRmC
+ //  also taken the read-only API lock. This flag is ignored if read-only API
+ //  locking is disabled in RM.
+ //
+-#define RMCTRL_FLAGS_API_LOCK_READONLY                        0x000000800
+-
+-//
+-//  If the :GPU_LOCK_READONLY flag is specified, the call will acquire a
+-//  read-only GPU lock and may run concurrently with other operations that have
+-//  also taken a read-only GPU lock. This flag is ignored if read-only GPU
+-//  locking is disabled in RM.
+-//
+-#define RMCTRL_FLAGS_GPU_LOCK_READONLY                        0x000001000
++#define RMCTRL_FLAGS_API_LOCK_READONLY                        0x000000100
+ 
+ //
+ // This flag specifies that the control shall be directly forwarded to the
+ // the VGPU host if called from a guest (where IS_VIRTUAL() is true)
+ //
+-#define RMCTRL_FLAGS_ROUTE_TO_VGPU_HOST                       0x000002000
++#define RMCTRL_FLAGS_ROUTE_TO_VGPU_HOST                       0x000000200
+ 
+ //
+ // This flag specifies that the control output does not depend on the input
+ // parameters and can be cached on the receiving end.
+ // The cache is transparent and may not exist on all platforms.
+ //
+-#define RMCTRL_FLAGS_CACHEABLE                                0x000004000
++#define RMCTRL_FLAGS_CACHEABLE                                0x000000400
+ 
+ //
+ // This flag specifies that the control parameters will be
+ // copied out back to the caller even if the control call fails.
+ //
+-#define RMCTRL_FLAGS_COPYOUT_ON_ERROR                         0x000008000
++#define RMCTRL_FLAGS_COPYOUT_ON_ERROR                         0x000000800
+ 
+ // ??
+-#define RMCTRL_FLAGS_ALLOW_WITHOUT_SYSMEM_ACCESS              0x000010000
+-
+-//
+-// This flag specifies that the control can be run by an admin privileged
+-// client running in a full SRIOV, vGPU-GSP-ENABLED hypervisor environment.
+-// Overrides regular privilege level flags.
+-//
+-#define RMCTRL_FLAGS_CPU_PLUGIN_FOR_VGPU_GSP                  0x000020000
++#define RMCTRL_FLAGS_ALLOW_WITHOUT_SYSMEM_ACCESS              0x000001000
+ 
+ //
+ // This flag specifies that the control can be run by an admin privileged
+ // client running in a full SRIOV, vGPU-GSP-DISABLED hypervisor environment.
+ // Overrides regular privilege level flags.
+ //
+-#define RMCTRL_FLAGS_CPU_PLUGIN_FOR_SRIOV                     0x000040000
++#define RMCTRL_FLAGS_CPU_PLUGIN_FOR_SRIOV                     0x000004000
+ 
+ //
+ // This flag specifies that the control can be run by an admin privileged
+ // client running in a non-SRIOV or SRIOV-Heavy hypervisor environment.
+ // Overrides regular privilege level flags.
+ //
+-#define RMCTRL_FLAGS_CPU_PLUGIN_FOR_LEGACY                    0x000080000
++#define RMCTRL_FLAGS_CPU_PLUGIN_FOR_LEGACY                    0x000008000
+ 
+ //
+ // This flag specifies that the control can be run by an unprivileged
+ // client running in GSP-RM when SRIOV and vGPU-GSP are ENABLED.
+ // Overrides regular privilege level flags.
+ //
+-#define RMCTRL_FLAGS_GSP_PLUGIN_FOR_VGPU_GSP                  0x000100000
++#define RMCTRL_FLAGS_GSP_PLUGIN_FOR_VGPU_GSP                  0x000010000
+ 
+ //
+ // This flag specifies that the control output depends on the input
+@@ -303,16 +292,17 @@ NV_STATUS embeddedParamCopyOut(RMAPI_PARAM_COPY  *pParamCopy, RmCtrlParams *pRmC
+ // result depends on the input and the input varifies with controls,
+ // the cache should be handled in a per-control bases.
+ //
+-#define RMCTRL_FLAGS_CACHEABLE_BY_INPUT                       0x000200000
++#define RMCTRL_FLAGS_CACHEABLE_BY_INPUT                       0x000020000
+ 
+ 
++//
+ // This flag specifies that ROUTE_TO_PHYSICAL control is implemented on vGPU Guest RM.
+ // If a ROUTE_TO_PHYSICAL control is supported within vGPU Guest RM,
+ // it should either have this flag set (indicating the implementation in the vGPU Guest RM) or
+ // the ROUTE_TO_VGPU_HOST flag set (indicating the implementation in vGPU Host RM).
+ // Without either of these flags set, the control will return NV_ERR_NOT_SUPPORTED.
+ //
+-#define RMCTRL_FLAGS_PHYSICAL_IMPLEMENTED_ON_VGPU_GUEST       0x000400000
++#define RMCTRL_FLAGS_PHYSICAL_IMPLEMENTED_ON_VGPU_GUEST       0x000040000
+ 
+ // The combination of cacheable flags
+ #define RMCTRL_FLAGS_CACHEABLE_ANY (RMCTRL_FLAGS_CACHEABLE | RMCTRL_FLAGS_CACHEABLE_BY_INPUT)
+@@ -322,7 +312,36 @@ NV_STATUS embeddedParamCopyOut(RMAPI_PARAM_COPY  *pParamCopy, RmCtrlParams *pRmC
+ // An entry is required for any control calls that set this in
+ // serverControlLookupSecondClient or Resource Server will NV_ASSERT(0).
+ //
+-#define RMCTRL_FLAGS_DUAL_CLIENT_LOCK                         0x000800000
++#define RMCTRL_FLAGS_DUAL_CLIENT_LOCK                         0x000080000
++
++//
++// This flag specifies that the control call is for RM test only code.
++//
++#define RMCTRL_FLAGS_RM_TEST_ONLY_CODE                        0x000100000
++
++//
++// This flag specifies that all client handles in RM need to be locked.
++// This flag should almost never be used, the only cases where it is required
++// are cases where an RM API loops accessed several/arbitrary clients in RM using
++// something like serverutilGetFirstClientUnderLock. The RW API lock is required
++// to use this flag
++//
++#define RMCTRL_FLAGS_ALL_CLIENT_LOCK                          0x000200000
++
++//
++// This flag specifies that the API lock should not be acquired for this
++// RM Control. DO NOT use this flag without consulting Locking/Resource Server
++// experts first and please consider other alternatives as much as possible
++// before resorting to using this flag!
++//
++#define RMCTRL_FLAGS_NO_API_LOCK                              0x000400000
++
++//
++// This flag specifies that the control call persists in RMCTRL cache across
++// OBJGPU StateLoad/Unload. This flag may be set in addition to RMCTRL_FLAGS_CACHEABLE
++// or RMCTRL_FLAGS_CACHEABLE_BY_INPUT.
++//
++#define RMCTRL_FLAGS_PERSISTENT_CACHEABLE                     0x000800000
+ 
+ //
+ //  'ACCESS_RIGHTS' Attribute
+@@ -342,18 +361,6 @@ NV_STATUS embeddedParamCopyOut(RMAPI_PARAM_COPY  *pParamCopy, RmCtrlParams *pRmC
+ //    is enabled; see g_bRsAccessEnabled.
+ //
+ 
+-
+-/*
+- * On T234, RM is in kernel mode, so when RM is running in kernel mode it
+- * does not allow usermode clients like MODs to call control calls that are
+- * marked as KERNEL_PRIVILEGED.
+- * So defining new macro DISPLAY_PRIVILEGED(i.e PRIVILEGED) for Tegra and mark
+- * control calls needed by MODs with this so that MODs running as root can call
+- * these control calls. However keeping same privilege level for DGPUs which
+- * does not change the current behaviour.
+- */
+-#define DISPLAY_PRIVILEGED KERNEL_PRIVILEGED
+-
+ #endif // _CONTROL_H_
+ 
+ 

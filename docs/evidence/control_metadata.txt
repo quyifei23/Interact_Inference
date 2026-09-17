@@ -1,0 +1,340 @@
+
+550.120:src/nvidia/generated/g_kernel_channel_group_api_nvoc.c:270
+262:     {               /*  [4] */
+263: #if NVOC_EXPORTED_METHOD_DISABLED_BY_FLAG(0x10u)
+264:         /*pFunc=*/      (void (*)(void)) NULL,
+265: #else
+266:         /*pFunc=*/      (void (*)(void)) kchangrpapiCtrlCmdGpFifoSchedule_IMPL,
+267: #endif // NVOC_EXPORTED_METHOD_DISABLED_BY_FLAG(0x10u)
+268:         /*flags=*/      0x10u,
+269:         /*accessRight=*/0x0u,
+270:         /*methodId=*/   0xa06c0101u,
+271:         /*paramSize=*/  sizeof(NVA06C_CTRL_GPFIFO_SCHEDULE_PARAMS),
+272:         /*pClassInfo=*/ &(__nvoc_class_def_KernelChannelGroupApi.classInfo),
+273: #if NV_PRINTF_STRINGS_ALLOWED
+274:         /*func=*/       "kchangrpapiCtrlCmdGpFifoSchedule"
+275: #endif
+276:     },
+
+550.120:src/nvidia/generated/g_kernel_channel_group_api_nvoc.c:300
+292:     {               /*  [6] */
+293: #if NVOC_EXPORTED_METHOD_DISABLED_BY_FLAG(0x10u)
+294:         /*pFunc=*/      (void (*)(void)) NULL,
+295: #else
+296:         /*pFunc=*/      (void (*)(void)) kchangrpapiCtrlCmdSetTimeslice_IMPL,
+297: #endif // NVOC_EXPORTED_METHOD_DISABLED_BY_FLAG(0x10u)
+298:         /*flags=*/      0x10u,
+299:         /*accessRight=*/0x0u,
+300:         /*methodId=*/   0xa06c0103u,
+301:         /*paramSize=*/  sizeof(NVA06C_CTRL_TIMESLICE_PARAMS),
+302:         /*pClassInfo=*/ &(__nvoc_class_def_KernelChannelGroupApi.classInfo),
+303: #if NV_PRINTF_STRINGS_ALLOWED
+304:         /*func=*/       "kchangrpapiCtrlCmdSetTimeslice"
+305: #endif
+306:     },
+
+550.120:src/nvidia/generated/g_kernel_channel_group_api_nvoc.c:330
+322:     {               /*  [8] */
+323: #if NVOC_EXPORTED_METHOD_DISABLED_BY_FLAG(0x2210u)
+324:         /*pFunc=*/      (void (*)(void)) NULL,
+325: #else
+326:         /*pFunc=*/      (void (*)(void)) kchangrpapiCtrlCmdPreempt_IMPL,
+327: #endif // NVOC_EXPORTED_METHOD_DISABLED_BY_FLAG(0x2210u)
+328:         /*flags=*/      0x2210u,
+329:         /*accessRight=*/0x0u,
+330:         /*methodId=*/   0xa06c0105u,
+331:         /*paramSize=*/  sizeof(NVA06C_CTRL_PREEMPT_PARAMS),
+332:         /*pClassInfo=*/ &(__nvoc_class_def_KernelChannelGroupApi.classInfo),
+333: #if NV_PRINTF_STRINGS_ALLOWED
+334:         /*func=*/       "kchangrpapiCtrlCmdPreempt"
+335: #endif
+336:     },
+
+550.120:src/nvidia/generated/g_kernel_channel_group_api_nvoc.c:360
+352:     {               /*  [10] */
+353: #if NVOC_EXPORTED_METHOD_DISABLED_BY_FLAG(0x110u)
+354:         /*pFunc=*/      (void (*)(void)) NULL,
+355: #else
+356:         /*pFunc=*/      (void (*)(void)) kchangrpapiCtrlCmdSetInterleaveLevel_IMPL,
+357: #endif // NVOC_EXPORTED_METHOD_DISABLED_BY_FLAG(0x110u)
+358:         /*flags=*/      0x110u,
+359:         /*accessRight=*/0x2u,
+360:         /*methodId=*/   0xa06c0107u,
+361:         /*paramSize=*/  sizeof(NVA06C_CTRL_INTERLEAVE_LEVEL_PARAMS),
+362:         /*pClassInfo=*/ &(__nvoc_class_def_KernelChannelGroupApi.classInfo),
+363: #if NV_PRINTF_STRINGS_ALLOWED
+364:         /*func=*/       "kchangrpapiCtrlCmdSetInterleaveLevel"
+365: #endif
+366:     },
+
+550.120:src/nvidia/generated/g_kernel_channel_group_api_nvoc.c:405
+397:     {               /*  [13] */
+398: #if NVOC_EXPORTED_METHOD_DISABLED_BY_FLAG(0x210u)
+399:         /*pFunc=*/      (void (*)(void)) NULL,
+400: #else
+401:         /*pFunc=*/      (void (*)(void)) kchangrpapiCtrlCmdMakeRealtime_IMPL,
+402: #endif // NVOC_EXPORTED_METHOD_DISABLED_BY_FLAG(0x210u)
+403:         /*flags=*/      0x210u,
+404:         /*accessRight=*/0x2u,
+405:         /*methodId=*/   0xa06c0110u,
+406:         /*paramSize=*/  sizeof(NVA06C_CTRL_MAKE_REALTIME_PARAMS),
+407:         /*pClassInfo=*/ &(__nvoc_class_def_KernelChannelGroupApi.classInfo),
+408: #if NV_PRINTF_STRINGS_ALLOWED
+409:         /*func=*/       "kchangrpapiCtrlCmdMakeRealtime"
+410: #endif
+411:     },
+
+550.120:src/nvidia/generated/g_kernel_channel_nvoc.c:443
+435:     {               /*  [13] */
+436: #if NVOC_EXPORTED_METHOD_DISABLED_BY_FLAG(0x10u)
+437:         /*pFunc=*/      (void (*)(void)) NULL,
+438: #else
+439:         /*pFunc=*/      (void (*)(void)) kchannelCtrlCmdGpFifoSchedule_IMPL,
+440: #endif // NVOC_EXPORTED_METHOD_DISABLED_BY_FLAG(0x10u)
+441:         /*flags=*/      0x10u,
+442:         /*accessRight=*/0x0u,
+443:         /*methodId=*/   0xa06f0103u,
+444:         /*paramSize=*/  sizeof(NVA06F_CTRL_GPFIFO_SCHEDULE_PARAMS),
+445:         /*pClassInfo=*/ &(__nvoc_class_def_KernelChannel.classInfo),
+446: #if NV_PRINTF_STRINGS_ALLOWED
+447:         /*func=*/       "kchannelCtrlCmdGpFifoSchedule"
+448: #endif
+449:     },
+
+550.120:src/nvidia/generated/g_kernel_channel_nvoc.c:518
+510:     {               /*  [18] */
+511: #if NVOC_EXPORTED_METHOD_DISABLED_BY_FLAG(0x2210u)
+512:         /*pFunc=*/      (void (*)(void)) NULL,
+513: #else
+514:         /*pFunc=*/      (void (*)(void)) kchannelCtrlCmdRestartRunlist_IMPL,
+515: #endif // NVOC_EXPORTED_METHOD_DISABLED_BY_FLAG(0x2210u)
+516:         /*flags=*/      0x2210u,
+517:         /*accessRight=*/0x2u,
+518:         /*methodId=*/   0xa06f0111u,
+519:         /*paramSize=*/  sizeof(NVA06F_CTRL_RESTART_RUNLIST_PARAMS),
+520:         /*pClassInfo=*/ &(__nvoc_class_def_KernelChannel.classInfo),
+521: #if NV_PRINTF_STRINGS_ALLOWED
+522:         /*func=*/       "kchannelCtrlCmdRestartRunlist"
+523: #endif
+524:     },
+
+550.120:src/nvidia/generated/g_kernel_channel_nvoc.c:533
+525:     {               /*  [19] */
+526: #if NVOC_EXPORTED_METHOD_DISABLED_BY_FLAG(0x10u)
+527:         /*pFunc=*/      (void (*)(void)) NULL,
+528: #else
+529:         /*pFunc=*/      (void (*)(void)) kchannelCtrlCmdStopChannel_IMPL,
+530: #endif // NVOC_EXPORTED_METHOD_DISABLED_BY_FLAG(0x10u)
+531:         /*flags=*/      0x10u,
+532:         /*accessRight=*/0x0u,
+533:         /*methodId=*/   0xa06f0112u,
+534:         /*paramSize=*/  sizeof(NVA06F_CTRL_STOP_CHANNEL_PARAMS),
+535:         /*pClassInfo=*/ &(__nvoc_class_def_KernelChannel.classInfo),
+536: #if NV_PRINTF_STRINGS_ALLOWED
+537:         /*func=*/       "kchannelCtrlCmdStopChannel"
+538: #endif
+539:     },
+
+550.120:src/nvidia/generated/g_subdevice_nvoc.c:4268
+4260:     {               /*  [268] */
+4261: #if NVOC_EXPORTED_METHOD_DISABLED_BY_FLAG(0x810u)
+4262:         /*pFunc=*/      (void (*)(void)) NULL,
+4263: #else
+4264:         /*pFunc=*/      (void (*)(void)) subdeviceCtrlCmdFifoDisableChannels_IMPL,
+4265: #endif // NVOC_EXPORTED_METHOD_DISABLED_BY_FLAG(0x810u)
+4266:         /*flags=*/      0x810u,
+4267:         /*accessRight=*/0x0u,
+4268:         /*methodId=*/   0x2080110bu,
+4269:         /*paramSize=*/  sizeof(NV2080_CTRL_FIFO_DISABLE_CHANNELS_PARAMS),
+4270:         /*pClassInfo=*/ &(__nvoc_class_def_Subdevice.classInfo),
+4271: #if NV_PRINTF_STRINGS_ALLOWED
+4272:         /*func=*/       "subdeviceCtrlCmdFifoDisableChannels"
+4273: #endif
+4274:     },
+
+550.120:src/nvidia/generated/g_subdevice_nvoc.c:4358
+4350:     {               /*  [274] */
+4351: #if NVOC_EXPORTED_METHOD_DISABLED_BY_FLAG(0x2310u)
+4352:         /*pFunc=*/      (void (*)(void)) NULL,
+4353: #else
+4354:         /*pFunc=*/      (void (*)(void)) subdeviceCtrlCmdFifoRunlistSetSchedPolicy_IMPL,
+4355: #endif // NVOC_EXPORTED_METHOD_DISABLED_BY_FLAG(0x2310u)
+4356:         /*flags=*/      0x2310u,
+4357:         /*accessRight=*/0x2u,
+4358:         /*methodId=*/   0x20801115u,
+4359:         /*paramSize=*/  sizeof(NV2080_CTRL_FIFO_RUNLIST_SET_SCHED_POLICY_PARAMS),
+4360:         /*pClassInfo=*/ &(__nvoc_class_def_Subdevice.classInfo),
+4361: #if NV_PRINTF_STRINGS_ALLOWED
+4362:         /*func=*/       "subdeviceCtrlCmdFifoRunlistSetSchedPolicy"
+4363: #endif
+4364:     },
+
+origin/main:src/nvidia/generated/g_kernel_channel_group_api_nvoc.c:339
+331:     {               /*  [6] */
+332: #if NVOC_EXPORTED_METHOD_DISABLED_BY_FLAG(0x10008u)
+333:         /*pFunc=*/      (void (*)(void)) NULL,
+334: #else
+335:         /*pFunc=*/      (void (*)(void)) &kchangrpapiCtrlCmdGpFifoSchedule__EXPORT,
+336: #endif // NVOC_EXPORTED_METHOD_DISABLED_BY_FLAG(0x10008u)
+337:         /*flags=*/      0x10008u,
+338:         /*accessRight=*/0x0u,
+339:         /*methodId=*/   0xa06c0101u,
+340:         /*paramSize=*/  sizeof(NVA06C_CTRL_GPFIFO_SCHEDULE_PARAMS),
+341:         /*pClassInfo=*/ &(__nvoc_class_def_KernelChannelGroupApi.classInfo),
+342: #if NV_PRINTF_STRINGS_ALLOWED
+343:         /*func=*/       "kchangrpapiCtrlCmdGpFifoSchedule"
+344: #endif
+345:     },
+
+origin/main:src/nvidia/generated/g_kernel_channel_group_api_nvoc.c:369
+361:     {               /*  [8] */
+362: #if NVOC_EXPORTED_METHOD_DISABLED_BY_FLAG(0x10008u)
+363:         /*pFunc=*/      (void (*)(void)) NULL,
+364: #else
+365:         /*pFunc=*/      (void (*)(void)) &kchangrpapiCtrlCmdSetTimeslice__EXPORT,
+366: #endif // NVOC_EXPORTED_METHOD_DISABLED_BY_FLAG(0x10008u)
+367:         /*flags=*/      0x10008u,
+368:         /*accessRight=*/0x0u,
+369:         /*methodId=*/   0xa06c0103u,
+370:         /*paramSize=*/  sizeof(NVA06C_CTRL_TIMESLICE_PARAMS),
+371:         /*pClassInfo=*/ &(__nvoc_class_def_KernelChannelGroupApi.classInfo),
+372: #if NV_PRINTF_STRINGS_ALLOWED
+373:         /*func=*/       "kchangrpapiCtrlCmdSetTimeslice"
+374: #endif
+375:     },
+
+origin/main:src/nvidia/generated/g_kernel_channel_group_api_nvoc.c:399
+391:     {               /*  [10] */
+392: #if NVOC_EXPORTED_METHOD_DISABLED_BY_FLAG(0x10008u)
+393:         /*pFunc=*/      (void (*)(void)) NULL,
+394: #else
+395:         /*pFunc=*/      (void (*)(void)) &kchangrpapiCtrlCmdPreempt__EXPORT,
+396: #endif // NVOC_EXPORTED_METHOD_DISABLED_BY_FLAG(0x10008u)
+397:         /*flags=*/      0x10008u,
+398:         /*accessRight=*/0x0u,
+399:         /*methodId=*/   0xa06c0105u,
+400:         /*paramSize=*/  sizeof(NVA06C_CTRL_PREEMPT_PARAMS),
+401:         /*pClassInfo=*/ &(__nvoc_class_def_KernelChannelGroupApi.classInfo),
+402: #if NV_PRINTF_STRINGS_ALLOWED
+403:         /*func=*/       "kchangrpapiCtrlCmdPreempt"
+404: #endif
+405:     },
+
+origin/main:src/nvidia/generated/g_kernel_channel_group_api_nvoc.c:429
+421:     {               /*  [12] */
+422: #if NVOC_EXPORTED_METHOD_DISABLED_BY_FLAG(0x10028u)
+423:         /*pFunc=*/      (void (*)(void)) NULL,
+424: #else
+425:         /*pFunc=*/      (void (*)(void)) &kchangrpapiCtrlCmdSetInterleaveLevel__EXPORT,
+426: #endif // NVOC_EXPORTED_METHOD_DISABLED_BY_FLAG(0x10028u)
+427:         /*flags=*/      0x10028u,
+428:         /*accessRight=*/0x2u,
+429:         /*methodId=*/   0xa06c0107u,
+430:         /*paramSize=*/  sizeof(NVA06C_CTRL_INTERLEAVE_LEVEL_PARAMS),
+431:         /*pClassInfo=*/ &(__nvoc_class_def_KernelChannelGroupApi.classInfo),
+432: #if NV_PRINTF_STRINGS_ALLOWED
+433:         /*func=*/       "kchangrpapiCtrlCmdSetInterleaveLevel"
+434: #endif
+435:     },
+
+origin/main:src/nvidia/generated/g_kernel_channel_group_api_nvoc.c:474
+466:     {               /*  [15] */
+467: #if NVOC_EXPORTED_METHOD_DISABLED_BY_FLAG(0x48u)
+468:         /*pFunc=*/      (void (*)(void)) NULL,
+469: #else
+470:         /*pFunc=*/      (void (*)(void)) &kchangrpapiCtrlCmdMakeRealtime__EXPORT,
+471: #endif // NVOC_EXPORTED_METHOD_DISABLED_BY_FLAG(0x48u)
+472:         /*flags=*/      0x48u,
+473:         /*accessRight=*/0x2u,
+474:         /*methodId=*/   0xa06c0110u,
+475:         /*paramSize=*/  sizeof(NVA06C_CTRL_MAKE_REALTIME_PARAMS),
+476:         /*pClassInfo=*/ &(__nvoc_class_def_KernelChannelGroupApi.classInfo),
+477: #if NV_PRINTF_STRINGS_ALLOWED
+478:         /*func=*/       "kchangrpapiCtrlCmdMakeRealtime"
+479: #endif
+480:     },
+
+origin/main:src/nvidia/generated/g_kernel_channel_nvoc.c:532
+524:     {               /*  [12] */
+525: #if NVOC_EXPORTED_METHOD_DISABLED_BY_FLAG(0x10008u)
+526:         /*pFunc=*/      (void (*)(void)) NULL,
+527: #else
+528:         /*pFunc=*/      (void (*)(void)) &kchannelCtrlCmdGpFifoSchedule__EXPORT,
+529: #endif // NVOC_EXPORTED_METHOD_DISABLED_BY_FLAG(0x10008u)
+530:         /*flags=*/      0x10008u,
+531:         /*accessRight=*/0x0u,
+532:         /*methodId=*/   0xa06f0103u,
+533:         /*paramSize=*/  sizeof(NVA06F_CTRL_GPFIFO_SCHEDULE_PARAMS),
+534:         /*pClassInfo=*/ &(__nvoc_class_def_KernelChannel.classInfo),
+535: #if NV_PRINTF_STRINGS_ALLOWED
+536:         /*func=*/       "kchannelCtrlCmdGpFifoSchedule"
+537: #endif
+538:     },
+
+origin/main:src/nvidia/generated/g_kernel_channel_nvoc.c:592
+584:     {               /*  [16] */
+585: #if NVOC_EXPORTED_METHOD_DISABLED_BY_FLAG(0x48u)
+586:         /*pFunc=*/      (void (*)(void)) NULL,
+587: #else
+588:         /*pFunc=*/      (void (*)(void)) &kchannelCtrlCmdRestartRunlist__EXPORT,
+589: #endif // NVOC_EXPORTED_METHOD_DISABLED_BY_FLAG(0x48u)
+590:         /*flags=*/      0x48u,
+591:         /*accessRight=*/0x2u,
+592:         /*methodId=*/   0xa06f0111u,
+593:         /*paramSize=*/  sizeof(NVA06F_CTRL_RESTART_RUNLIST_PARAMS),
+594:         /*pClassInfo=*/ &(__nvoc_class_def_KernelChannel.classInfo),
+595: #if NV_PRINTF_STRINGS_ALLOWED
+596:         /*func=*/       "kchannelCtrlCmdRestartRunlist"
+597: #endif
+598:     },
+
+origin/main:src/nvidia/generated/g_kernel_channel_nvoc.c:607
+599:     {               /*  [17] */
+600: #if NVOC_EXPORTED_METHOD_DISABLED_BY_FLAG(0x10008u)
+601:         /*pFunc=*/      (void (*)(void)) NULL,
+602: #else
+603:         /*pFunc=*/      (void (*)(void)) &kchannelCtrlCmdStopChannel__EXPORT,
+604: #endif // NVOC_EXPORTED_METHOD_DISABLED_BY_FLAG(0x10008u)
+605:         /*flags=*/      0x10008u,
+606:         /*accessRight=*/0x0u,
+607:         /*methodId=*/   0xa06f0112u,
+608:         /*paramSize=*/  sizeof(NVA06F_CTRL_STOP_CHANNEL_PARAMS),
+609:         /*pClassInfo=*/ &(__nvoc_class_def_KernelChannel.classInfo),
+610: #if NV_PRINTF_STRINGS_ALLOWED
+611:         /*func=*/       "kchannelCtrlCmdStopChannel"
+612: #endif
+613:     },
+
+origin/main:src/nvidia/generated/g_subdevice_nvoc.c:9085
+9077:     {               /*  [333] */
+9078: #if NVOC_EXPORTED_METHOD_DISABLED_BY_FLAG(0x10108u)
+9079:         /*pFunc=*/      (void (*)(void)) NULL,
+9080: #else
+9081:         /*pFunc=*/      (void (*)(void)) &subdeviceCtrlCmdFifoDisableChannels__EXPORT,
+9082: #endif // NVOC_EXPORTED_METHOD_DISABLED_BY_FLAG(0x10108u)
+9083:         /*flags=*/      0x10108u,
+9084:         /*accessRight=*/0x0u,
+9085:         /*methodId=*/   0x2080110bu,
+9086:         /*paramSize=*/  sizeof(NV2080_CTRL_FIFO_DISABLE_CHANNELS_PARAMS),
+9087:         /*pClassInfo=*/ &(__nvoc_class_def_Subdevice.classInfo),
+9088: #if NV_PRINTF_STRINGS_ALLOWED
+9089:         /*func=*/       "subdeviceCtrlCmdFifoDisableChannels"
+9090: #endif
+9091:     },
+
+origin/main:src/nvidia/generated/g_subdevice_nvoc.c:9190
+9182:     {               /*  [340] */
+9183: #if NVOC_EXPORTED_METHOD_DISABLED_BY_FLAG(0x68u)
+9184:         /*pFunc=*/      (void (*)(void)) NULL,
+9185: #else
+9186:         /*pFunc=*/      (void (*)(void)) &subdeviceCtrlCmdFifoRunlistSetSchedPolicy__EXPORT,
+9187: #endif // NVOC_EXPORTED_METHOD_DISABLED_BY_FLAG(0x68u)
+9188:         /*flags=*/      0x68u,
+9189:         /*accessRight=*/0x2u,
+9190:         /*methodId=*/   0x20801115u,
+9191:         /*paramSize=*/  sizeof(NV2080_CTRL_FIFO_RUNLIST_SET_SCHED_POLICY_PARAMS),
+9192:         /*pClassInfo=*/ &(__nvoc_class_def_Subdevice.classInfo),
+9193: #if NV_PRINTF_STRINGS_ALLOWED
+9194:         /*func=*/       "subdeviceCtrlCmdFifoRunlistSetSchedPolicy"
+9195: #endif
+9196:     },

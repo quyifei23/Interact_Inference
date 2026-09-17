@@ -1,0 +1,373 @@
+commit 249ee3e56d01068451e172e691853b4d055c0dec
+Author:     Ruwen Fan <frw23@mails.tsinghua.edu.cn>
+AuthorDate: Sun May 18 04:50:57 2025 +0000
+Commit:     Ruwen Fan <frw23@mails.tsinghua.edu.cn>
+CommitDate: Sun May 18 04:50:57 2025 +0000
+
+    fix run-all script issue
+
+ scripts/ae/run-all.sh | 6 +++---
+ 1 file changed, 3 insertions(+), 3 deletions(-)
+
+commit 73120418b10018dc786f8b78a5be06f8de04891f
+Author:     Ruwen Fan <frw23@mails.tsinghua.edu.cn>
+AuthorDate: Sun May 18 04:39:39 2025 +0000
+Commit:     Ruwen Fan <frw23@mails.tsinghua.edu.cn>
+CommitDate: Sun May 18 04:39:39 2025 +0000
+
+    update readme
+
+ README.md | 4 +++-
+ 1 file changed, 3 insertions(+), 1 deletion(-)
+
+commit 6b6039463da863c1ba569895a30bd8c439283c2a
+Author:     Ruwen Fan <frw23@mails.tsinghua.edu.cn>
+AuthorDate: Wed May 14 11:42:02 2025 +0000
+Commit:     Ruwen Fan <frw23@mails.tsinghua.edu.cn>
+CommitDate: Wed May 14 11:42:02 2025 +0000
+
+    remove some unused file
+
+ include/util/occupancy.h |  12 ---
+ src/util/occupancy.cpp   | 274 -----------------------------------------------
+ 2 files changed, 286 deletions(-)
+
+commit aec69aa208fe348f72a2cb5dfcb47d30a7c8ad48
+Author:     Ruwen Fan <frw23@mails.tsinghua.edu.cn>
+AuthorDate: Mon May 12 06:51:57 2025 +0000
+Commit:     Ruwen Fan <frw23@mails.tsinghua.edu.cn>
+CommitDate: Mon May 12 06:51:57 2025 +0000
+
+    update README
+
+ README.md | 2 ++
+ 1 file changed, 2 insertions(+)
+
+commit baa679262e80cd8fc650f067277edbb752f4de36
+Author:     Ruwen Fan <frw23@mails.tsinghua.edu.cn>
+AuthorDate: Mon May 12 06:45:46 2025 +0000
+Commit:     Ruwen Fan <frw23@mails.tsinghua.edu.cn>
+CommitDate: Mon May 12 06:45:46 2025 +0000
+
+    update
+
+ README.md       |  14 +-
+ patch/tvm.patch | 635 ++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+ 2 files changed, 647 insertions(+), 2 deletions(-)
+
+commit 59ab51e61991412eff897e4f29ebc866f8577dda
+Author:     Ruwen Fan <frw23@mails.tsinghua.edu.cn>
+AuthorDate: Sat May 10 03:24:39 2025 +0000
+Commit:     Ruwen Fan <frw23@mails.tsinghua.edu.cn>
+CommitDate: Sat May 10 03:24:39 2025 +0000
+
+    init
+
+ .gitignore                             |    9 +
+ .gitmodules                            |    6 +
+ CMakeLists.txt                         |  170 +++
+ LICENSE                                |  201 ++++
+ LICENSES/Apache-2.0.txt                |  201 ++++
+ LICENSES/BSD-2-Clause.txt              |   25 +
+ README.md                              |  239 ++++
+ config/A.json                          |   41 +
+ config/B.json                          |   41 +
+ config/C.json                          |  113 ++
+ config/D.json                          |  185 ++++
+ config/E.json                          |  175 +++
+ config/R.json                          |   39 +
+ config/REAL.json                       | 1864 ++++++++++++++++++++++++++++++++
+ config/Y.json                          |   41 +
+ config/Z.json                          |   99 ++
+ config/micro-3.2.2/B0.json             |   39 +
+ config/micro-3.2.2/B1.json             |   39 +
+ config/micro-3.2.2/B2.json             |   39 +
+ config/micro-3.2.2/B3.json             |   39 +
+ config/micro-3.2.2/B4.json             |   39 +
+ config/micro-5.3/A1.json               |   41 +
+ config/micro-5.3/A2.json               |   41 +
+ config/micro-5.3/A3.json               |   41 +
+ config/micro-5.3/A4.json               |   41 +
+ config/micro-5.3/A5.json               |   41 +
+ config/micro-5.3/A6.json               |   41 +
+ config/short/A.json                    |   41 +
+ config/short/B.json                    |   41 +
+ config/short/C.json                    |  113 ++
+ config/short/D.json                    |  185 ++++
+ config/short/E.json                    |  175 +++
+ config/short/R.json                    |   39 +
+ config/short/REAL.json                 | 1864 ++++++++++++++++++++++++++++++++
+ config/short/Y.json                    |   41 +
+ config/short/Z.json                    |   99 ++
+ include/block.h                        |    5 +
+ include/executor.h                     |   86 ++
+ include/gpreempt.h                     |  196 ++++
+ include/hybrid_executor.h              |   53 +
+ include/model.h                        |  103 ++
+ include/reef_scheduler.h               |  164 +++
+ include/threadsafe_queue.h             |   87 ++
+ include/util/common.h                  |   62 ++
+ include/util/gpu_util.h                |  187 ++++
+ include/util/occupancy.h               |   12 +
+ include/util/threadsafe_queue.h        |   86 ++
+ include/workloads/graphcompute.h       |  253 +++++
+ include/workloads/scicomput.h          |   28 +
+ model/makefile                         |   40 +
+ patch/driver.patch                     |  522 +++++++++
+ requirements.txt                       |   10 +
+ scripts/ae/hello_world.sh              |    5 +
+ scripts/ae/run-all.sh                  |   21 +
+ scripts/ae/run-cuda.sh                 |   17 +
+ scripts/ae/run-hip.sh                  |   18 +
+ scripts/ae/run-micro.sh                |   31 +
+ scripts/compile/compile-bert.py        |  114 ++
+ scripts/compile/compile.py             |   89 ++
+ scripts/compile/convert_to_blp.py      |   92 ++
+ scripts/compile/kernel_transform.py    |   33 +
+ scripts/compile/kernel_transform_be.py |   27 +
+ scripts/plot/plot.ipynb                |  572 ++++++++++
+ scripts/plot/plot.py                   |  427 ++++++++
+ src/block.cu                           |    8 +
+ src/common-clients/baseclient.cpp      |  127 +++
+ src/common-clients/rtonlyclient.cpp    |  150 +++
+ src/common-clients/seqclient.cpp       |  145 +++
+ src/cuda-clients/blpclient.cpp         |  242 +++++
+ src/cuda-clients/gpreemptclient.cpp    |  324 ++++++
+ src/cuda-clients/gpreemptclient_wo.cpp |  159 +++
+ src/executor.cpp                       |  345 ++++++
+ src/gpreempt.cpp                       |  198 ++++
+ src/hip-clients/blpclient.cpp          |  227 ++++
+ src/hip-clients/gpreemptclient.cpp     |  204 ++++
+ src/model.cpp                          |  398 +++++++
+ src/reef-client/hybrid_executor.cpp    |  110 ++
+ src/reef-client/reef_scheduler.cpp     |  526 +++++++++
+ src/reef-client/reefclient.cpp         |  154 +++
+ src/tests/test-basic.cpp               |   56 +
+ src/tests/test-dnn-blp.cpp             |   54 +
+ src/tests/test-dnn.cpp                 |   43 +
+ src/tests/test-graph-blp.cpp           |   50 +
+ src/tests/test-graph.cpp               |   46 +
+ src/tests/test-sci-blp.cpp             |   31 +
+ src/tests/test-sci.cpp                 |   24 +
+ src/tests/utest-reef.cpp               |   98 ++
+ src/util/gpu_util.cpp                  |   57 +
+ src/util/occupancy.cpp                 |  274 +++++
+ src/util/util.cpp                      |   11 +
+ src/workloads/graphcompute.cu          |  396 +++++++
+ src/workloads/graphcompute.tr.cu       |  690 ++++++++++++
+ src/workloads/miniweather.cu           |  678 ++++++++++++
+ src/workloads/miniweather.tr.cu        |  933 ++++++++++++++++
+ third_party/disb/CMakeLists.txt        |   45 +
+ third_party/disb/include/analyzer.h    |  117 ++
+ third_party/disb/include/benchmark.h   |   89 ++
+ third_party/disb/include/client.h      |   97 ++
+ third_party/disb/include/disb.h        |   35 +
+ third_party/disb/include/disb_utils.h  |   42 +
+ third_party/disb/include/load.h        |  197 ++++
+ third_party/disb/src/analyzer.cpp      |  172 +++
+ third_party/disb/src/benchmark.cpp     |  356 ++++++
+ third_party/disb/src/client.cpp        |  131 +++
+ third_party/disb/src/load.cpp          |  363 +++++++
+ third_party/disb/src/utils.cpp         |  132 +++
+ third_party/glog                       |    1 +
+ third_party/jsoncpp                    |    1 +
+ 108 files changed, 18364 insertions(+)
+
+^59ab51e (Ruwen Fan 2025-05-10 03:24:39 +0000   1) #include "gpreempt.h"
+^59ab51e (Ruwen Fan 2025-05-10 03:24:39 +0000   2) #include <stdio.h>
+^59ab51e (Ruwen Fan 2025-05-10 03:24:39 +0000   3) 
+^59ab51e (Ruwen Fan 2025-05-10 03:24:39 +0000   4) #ifdef CUDA
+^59ab51e (Ruwen Fan 2025-05-10 03:24:39 +0000   5) 
+^59ab51e (Ruwen Fan 2025-05-10 03:24:39 +0000   6) thread_local int fd = -1;
+^59ab51e (Ruwen Fan 2025-05-10 03:24:39 +0000   7) 
+^59ab51e (Ruwen Fan 2025-05-10 03:24:39 +0000   8) NV_STATUS NvRmControl(
+^59ab51e (Ruwen Fan 2025-05-10 03:24:39 +0000   9)     NvHandle hClient, 
+^59ab51e (Ruwen Fan 2025-05-10 03:24:39 +0000  10)     NvHandle hObject, 
+^59ab51e (Ruwen Fan 2025-05-10 03:24:39 +0000  11)     NvU32 cmd, 
+^59ab51e (Ruwen Fan 2025-05-10 03:24:39 +0000  12)     NvP64 params, 
+^59ab51e (Ruwen Fan 2025-05-10 03:24:39 +0000  13)     NvU32 paramsSize
+^59ab51e (Ruwen Fan 2025-05-10 03:24:39 +0000  14) ) {
+^59ab51e (Ruwen Fan 2025-05-10 03:24:39 +0000  15)     if (fd < 0) {
+^59ab51e (Ruwen Fan 2025-05-10 03:24:39 +0000  16)         fd = open("/dev/nvidiactl", O_RDWR);
+^59ab51e (Ruwen Fan 2025-05-10 03:24:39 +0000  17)         if (fd < 0) {
+^59ab51e (Ruwen Fan 2025-05-10 03:24:39 +0000  18)             return NV_ERR_GENERIC;
+^59ab51e (Ruwen Fan 2025-05-10 03:24:39 +0000  19)         }
+^59ab51e (Ruwen Fan 2025-05-10 03:24:39 +0000  20)     }
+^59ab51e (Ruwen Fan 2025-05-10 03:24:39 +0000  21)     NVOS54_PARAMETERS controlArgs;
+^59ab51e (Ruwen Fan 2025-05-10 03:24:39 +0000  22)     controlArgs.hClient = hClient;
+^59ab51e (Ruwen Fan 2025-05-10 03:24:39 +0000  23)     controlArgs.hObject = hObject;
+^59ab51e (Ruwen Fan 2025-05-10 03:24:39 +0000  24)     controlArgs.cmd = cmd;
+^59ab51e (Ruwen Fan 2025-05-10 03:24:39 +0000  25)     controlArgs.params = params;
+^59ab51e (Ruwen Fan 2025-05-10 03:24:39 +0000  26)     controlArgs.paramsSize = paramsSize;
+^59ab51e (Ruwen Fan 2025-05-10 03:24:39 +0000  27)     controlArgs.flags = 0x0;
+^59ab51e (Ruwen Fan 2025-05-10 03:24:39 +0000  28)     controlArgs.status = 0x0;
+^59ab51e (Ruwen Fan 2025-05-10 03:24:39 +0000  29)     ioctl(fd, OP_CONTROL, &controlArgs);
+^59ab51e (Ruwen Fan 2025-05-10 03:24:39 +0000  30)     return controlArgs.status;
+^59ab51e (Ruwen Fan 2025-05-10 03:24:39 +0000  31) }
+^59ab51e (Ruwen Fan 2025-05-10 03:24:39 +0000  32) 
+^59ab51e (Ruwen Fan 2025-05-10 03:24:39 +0000  33) NV_STATUS NvRmQuery(
+^59ab51e (Ruwen Fan 2025-05-10 03:24:39 +0000  34)     NvContext *pContext
+^59ab51e (Ruwen Fan 2025-05-10 03:24:39 +0000  35) ) {
+^59ab51e (Ruwen Fan 2025-05-10 03:24:39 +0000  36)     if (fd < 0) {
+^59ab51e (Ruwen Fan 2025-05-10 03:24:39 +0000  37)         fd = open("/dev/nvidiactl", O_RDWR);
+^59ab51e (Ruwen Fan 2025-05-10 03:24:39 +0000  38)         if (fd < 0) {
+^59ab51e (Ruwen Fan 2025-05-10 03:24:39 +0000  39)             return NV_ERR_GENERIC;
+^59ab51e (Ruwen Fan 2025-05-10 03:24:39 +0000  40)         }
+^59ab51e (Ruwen Fan 2025-05-10 03:24:39 +0000  41)     }
+^59ab51e (Ruwen Fan 2025-05-10 03:24:39 +0000  42)     NVOS54_PARAMETERS queryArgs;
+^59ab51e (Ruwen Fan 2025-05-10 03:24:39 +0000  43)     queryArgs.hClient = pContext->hClient;
+^59ab51e (Ruwen Fan 2025-05-10 03:24:39 +0000  44)     queryArgs.status = 0x0;
+^59ab51e (Ruwen Fan 2025-05-10 03:24:39 +0000  45)     queryArgs.params = (NvP64)&pContext->channels;
+^59ab51e (Ruwen Fan 2025-05-10 03:24:39 +0000  46)     ioctl(fd, OP_QUERY, &queryArgs);
+^59ab51e (Ruwen Fan 2025-05-10 03:24:39 +0000  47)     pContext->hClient = queryArgs.hClient;
+^59ab51e (Ruwen Fan 2025-05-10 03:24:39 +0000  48)     pContext->hObject = queryArgs.hObject;
+^59ab51e (Ruwen Fan 2025-05-10 03:24:39 +0000  49)     return queryArgs.status;
+^59ab51e (Ruwen Fan 2025-05-10 03:24:39 +0000  50) }
+^59ab51e (Ruwen Fan 2025-05-10 03:24:39 +0000  51) 
+^59ab51e (Ruwen Fan 2025-05-10 03:24:39 +0000  52) NV_STATUS NvRmModifyTS(
+^59ab51e (Ruwen Fan 2025-05-10 03:24:39 +0000  53)     NvContext ctx,
+^59ab51e (Ruwen Fan 2025-05-10 03:24:39 +0000  54)     NvU64 timesliceUs
+^59ab51e (Ruwen Fan 2025-05-10 03:24:39 +0000  55) ) {
+^59ab51e (Ruwen Fan 2025-05-10 03:24:39 +0000  56)     NVA06C_CTRL_TIMESLICE_PARAMS timesliceParams0;
+^59ab51e (Ruwen Fan 2025-05-10 03:24:39 +0000  57)     timesliceParams0.timesliceUs = timesliceUs;
+^59ab51e (Ruwen Fan 2025-05-10 03:24:39 +0000  58)     return NvRmControl(ctx.hClient, ctx.hObject, NVA06C_CTRL_CMD_SET_TIMESLICE, (NvP64)&timesliceParams0, sizeof(timesliceParams0));
+^59ab51e (Ruwen Fan 2025-05-10 03:24:39 +0000  59) }
+^59ab51e (Ruwen Fan 2025-05-10 03:24:39 +0000  60) 
+^59ab51e (Ruwen Fan 2025-05-10 03:24:39 +0000  61) int set_priority(NvContext ctx, int priority) {
+^59ab51e (Ruwen Fan 2025-05-10 03:24:39 +0000  62)     NV_STATUS status;
+^59ab51e (Ruwen Fan 2025-05-10 03:24:39 +0000  63)     if (priority == 0){
+^59ab51e (Ruwen Fan 2025-05-10 03:24:39 +0000  64)         status = NvRmModifyTS(ctx, 1000000);
+^59ab51e (Ruwen Fan 2025-05-10 03:24:39 +0000  65)     } else {
+^59ab51e (Ruwen Fan 2025-05-10 03:24:39 +0000  66)         status = NvRmModifyTS(ctx, 1);
+^59ab51e (Ruwen Fan 2025-05-10 03:24:39 +0000  67)     }
+^59ab51e (Ruwen Fan 2025-05-10 03:24:39 +0000  68)     if (status != NV_OK) {
+^59ab51e (Ruwen Fan 2025-05-10 03:24:39 +0000  69)         return -1;
+^59ab51e (Ruwen Fan 2025-05-10 03:24:39 +0000  70)     }
+^59ab51e (Ruwen Fan 2025-05-10 03:24:39 +0000  71)     return 0;
+^59ab51e (Ruwen Fan 2025-05-10 03:24:39 +0000  72) }
+^59ab51e (Ruwen Fan 2025-05-10 03:24:39 +0000  73) 
+^59ab51e (Ruwen Fan 2025-05-10 03:24:39 +0000  74) NV_STATUS NvRmPreempt(
+^59ab51e (Ruwen Fan 2025-05-10 03:24:39 +0000  75)     NvContext ctx
+^59ab51e (Ruwen Fan 2025-05-10 03:24:39 +0000  76) ) {
+^59ab51e (Ruwen Fan 2025-05-10 03:24:39 +0000  77)     NVA06C_CTRL_PREEMPT_PARAMS preemptParams;
+^59ab51e (Ruwen Fan 2025-05-10 03:24:39 +0000  78)     preemptParams.bWait = NV_FALSE;
+^59ab51e (Ruwen Fan 2025-05-10 03:24:39 +0000  79)     preemptParams.bManualTimeout = NV_FALSE;
+^59ab51e (Ruwen Fan 2025-05-10 03:24:39 +0000  80)     return NvRmControl(ctx.hClient, ctx.hObject, NVA06C_CTRL_CMD_PREEMPT, (NvP64)&preemptParams, sizeof(preemptParams));
+^59ab51e (Ruwen Fan 2025-05-10 03:24:39 +0000  81) }
+^59ab51e (Ruwen Fan 2025-05-10 03:24:39 +0000  82) 
+^59ab51e (Ruwen Fan 2025-05-10 03:24:39 +0000  83) // Not supported yet
+^59ab51e (Ruwen Fan 2025-05-10 03:24:39 +0000  84) NV_STATUS NvRmGPFIFOSch(
+^59ab51e (Ruwen Fan 2025-05-10 03:24:39 +0000  85)     NvContext ctx, 
+^59ab51e (Ruwen Fan 2025-05-10 03:24:39 +0000  86)     NvBool bEnable
+^59ab51e (Ruwen Fan 2025-05-10 03:24:39 +0000  87) ) {
+^59ab51e (Ruwen Fan 2025-05-10 03:24:39 +0000  88)     NVA06F_CTRL_GPFIFO_SCHEDULE_PARAMS schParams;
+^59ab51e (Ruwen Fan 2025-05-10 03:24:39 +0000  89)     schParams.bEnable = bEnable;
+^59ab51e (Ruwen Fan 2025-05-10 03:24:39 +0000  90)     return NvRmControl(ctx.hClient, ctx.hObject, NVA06F_CTRL_CMD_GPFIFO_SCHEDULE, (NvP64)&schParams, sizeof(schParams));
+^59ab51e (Ruwen Fan 2025-05-10 03:24:39 +0000  91)     // return NvRmControl(ctx.hClient, ctx.channels.hChannelList[1], NVC56F_CTRL_CMD_GPFIFO_SCHEDULE, (NvP64)&schParams, sizeof(schParams));
+^59ab51e (Ruwen Fan 2025-05-10 03:24:39 +0000  92) }
+^59ab51e (Ruwen Fan 2025-05-10 03:24:39 +0000  93) 
+^59ab51e (Ruwen Fan 2025-05-10 03:24:39 +0000  94) NV_STATUS NvRmRestartRunlist(
+^59ab51e (Ruwen Fan 2025-05-10 03:24:39 +0000  95)     NvContext ctx
+^59ab51e (Ruwen Fan 2025-05-10 03:24:39 +0000  96) ) {
+^59ab51e (Ruwen Fan 2025-05-10 03:24:39 +0000  97)     NVA06F_CTRL_RESTART_RUNLIST_PARAMS restartParams;
+^59ab51e (Ruwen Fan 2025-05-10 03:24:39 +0000  98)     restartParams.bForceRestart = NV_FALSE;
+^59ab51e (Ruwen Fan 2025-05-10 03:24:39 +0000  99)     restartParams.bBypassWait = NV_FALSE;
+^59ab51e (Ruwen Fan 2025-05-10 03:24:39 +0000 100)     return NvRmControl(ctx.hClient, ctx.channels.hChannelList[1], NVA06F_CTRL_CMD_RESTART_RUNLIST, (NvP64)&restartParams, sizeof(restartParams));
+^59ab51e (Ruwen Fan 2025-05-10 03:24:39 +0000 101) }
+^59ab51e (Ruwen Fan 2025-05-10 03:24:39 +0000 102) 
+^59ab51e (Ruwen Fan 2025-05-10 03:24:39 +0000 103) NV_STATUS NvRmDisableCh(
+^59ab51e (Ruwen Fan 2025-05-10 03:24:39 +0000 104)     std::vector<NvContext> ctxs,
+^59ab51e (Ruwen Fan 2025-05-10 03:24:39 +0000 105)     NvBool bDisable
+^59ab51e (Ruwen Fan 2025-05-10 03:24:39 +0000 106) ) {
+^59ab51e (Ruwen Fan 2025-05-10 03:24:39 +0000 107)     if(!ctxs.size()) return NV_OK;
+^59ab51e (Ruwen Fan 2025-05-10 03:24:39 +0000 108)     NvChannels params;
+^59ab51e (Ruwen Fan 2025-05-10 03:24:39 +0000 109)     params.bDisable = bDisable;
+^59ab51e (Ruwen Fan 2025-05-10 03:24:39 +0000 110)     params.bOnlyDisableScheduling = NV_FALSE;
+^59ab51e (Ruwen Fan 2025-05-10 03:24:39 +0000 111)     params.pRunlistPreemptEvent = nullptr;
+^59ab51e (Ruwen Fan 2025-05-10 03:24:39 +0000 112)     params.bRewindGpPut = NV_FALSE;
+^59ab51e (Ruwen Fan 2025-05-10 03:24:39 +0000 113)     params.numChannels = 0;
+^59ab51e (Ruwen Fan 2025-05-10 03:24:39 +0000 114)     for(auto ctx : ctxs) {
+^59ab51e (Ruwen Fan 2025-05-10 03:24:39 +0000 115)         for(int i = 0; i < ctx.channels.numChannels; i++) {
+^59ab51e (Ruwen Fan 2025-05-10 03:24:39 +0000 116)             params.hClientList[params.numChannels] = ctx.channels.hClientList[i];
+^59ab51e (Ruwen Fan 2025-05-10 03:24:39 +0000 117)             params.hChannelList[params.numChannels] = ctx.channels.hChannelList[i];
+^59ab51e (Ruwen Fan 2025-05-10 03:24:39 +0000 118)             params.numChannels++;
+^59ab51e (Ruwen Fan 2025-05-10 03:24:39 +0000 119)         }
+^59ab51e (Ruwen Fan 2025-05-10 03:24:39 +0000 120)     }
+^59ab51e (Ruwen Fan 2025-05-10 03:24:39 +0000 121)     return NvRmControl(ctxs[0].hClient, NV_HSUBDEVICE, NV2080_CTRL_CMD_FIFO_DISABLE_CHANNELS, (NvP64)&params, sizeof(NvChannels));
+^59ab51e (Ruwen Fan 2025-05-10 03:24:39 +0000 122) }
+^59ab51e (Ruwen Fan 2025-05-10 03:24:39 +0000 123) 
+^59ab51e (Ruwen Fan 2025-05-10 03:24:39 +0000 124) NV_STATUS NvRmSetPolicy(
+^59ab51e (Ruwen Fan 2025-05-10 03:24:39 +0000 125)     NvContext ctx
+^59ab51e (Ruwen Fan 2025-05-10 03:24:39 +0000 126) ) {
+^59ab51e (Ruwen Fan 2025-05-10 03:24:39 +0000 127)     NV2080_CTRL_FIFO_RUNLIST_SET_SCHED_POLICY_PARAMS policyParams = {0};
+^59ab51e (Ruwen Fan 2025-05-10 03:24:39 +0000 128)     policyParams.schedPolicy = NV2080_CTRL_FIFO_RUNLIST_SCHED_POLICY_CHANNEL_INTERLEAVED;
+^59ab51e (Ruwen Fan 2025-05-10 03:24:39 +0000 129)     return NvRmControl(ctx.hClient, NV_HSUBDEVICE, NV2080_CTRL_CMD_FIFO_RUNLIST_SET_SCHED_POLICY, (NvP64)&policyParams, sizeof(policyParams));
+^59ab51e (Ruwen Fan 2025-05-10 03:24:39 +0000 130) }
+^59ab51e (Ruwen Fan 2025-05-10 03:24:39 +0000 131) 
+^59ab51e (Ruwen Fan 2025-05-10 03:24:39 +0000 132) NV_STATUS NvRmSetLevel(
+^59ab51e (Ruwen Fan 2025-05-10 03:24:39 +0000 133)     NvContext ctx,
+^59ab51e (Ruwen Fan 2025-05-10 03:24:39 +0000 134)     NvU32 level
+^59ab51e (Ruwen Fan 2025-05-10 03:24:39 +0000 135) ) {
+^59ab51e (Ruwen Fan 2025-05-10 03:24:39 +0000 136)     NVA06C_CTRL_INTERLEAVE_LEVEL_PARAMS levelParams;
+^59ab51e (Ruwen Fan 2025-05-10 03:24:39 +0000 137)     levelParams.tsgInterleaveLevel = level;
+^59ab51e (Ruwen Fan 2025-05-10 03:24:39 +0000 138)     return NvRmControl(ctx.hClient, ctx.hObject, NVA06C_CTRL_CMD_SET_INTERLEAVE_LEVEL, (NvP64)&levelParams, sizeof(levelParams));
+^59ab51e (Ruwen Fan 2025-05-10 03:24:39 +0000 139) }
+^59ab51e (Ruwen Fan 2025-05-10 03:24:39 +0000 140) 
+^59ab51e (Ruwen Fan 2025-05-10 03:24:39 +0000 141) 
+^59ab51e (Ruwen Fan 2025-05-10 03:24:39 +0000 142) #else
+^59ab51e (Ruwen Fan 2025-05-10 03:24:39 +0000 143) int hipGetFd() {
+^59ab51e (Ruwen Fan 2025-05-10 03:24:39 +0000 144)     int fd = open("/dev/kfd", O_RDWR);
+^59ab51e (Ruwen Fan 2025-05-10 03:24:39 +0000 145)     if(fd < 0) {
+^59ab51e (Ruwen Fan 2025-05-10 03:24:39 +0000 146)         printf("open failed: %d\n", fd);
+^59ab51e (Ruwen Fan 2025-05-10 03:24:39 +0000 147)         return -1;
+^59ab51e (Ruwen Fan 2025-05-10 03:24:39 +0000 148)     }
+^59ab51e (Ruwen Fan 2025-05-10 03:24:39 +0000 149)     return fd;
+^59ab51e (Ruwen Fan 2025-05-10 03:24:39 +0000 150) }
+^59ab51e (Ruwen Fan 2025-05-10 03:24:39 +0000 151) 
+^59ab51e (Ruwen Fan 2025-05-10 03:24:39 +0000 152) int hipResetWavefronts(int fd) {
+^59ab51e (Ruwen Fan 2025-05-10 03:24:39 +0000 153)     kfd_ioctl_wave_reset_args reset_args;
+^59ab51e (Ruwen Fan 2025-05-10 03:24:39 +0000 154)     reset_args.gpu_id = 0x677d;
+^59ab51e (Ruwen Fan 2025-05-10 03:24:39 +0000 155)     int res = ioctl(fd, _IOWR('K', 0x86, kfd_ioctl_wave_reset_args), &reset_args);
+^59ab51e (Ruwen Fan 2025-05-10 03:24:39 +0000 156)     if(res < 0) {
+^59ab51e (Ruwen Fan 2025-05-10 03:24:39 +0000 157)         printf("ioctl failed: %d\n", res);
+^59ab51e (Ruwen Fan 2025-05-10 03:24:39 +0000 158)         perror("reset failed");
+^59ab51e (Ruwen Fan 2025-05-10 03:24:39 +0000 159)     }
+^59ab51e (Ruwen Fan 2025-05-10 03:24:39 +0000 160) 
+^59ab51e (Ruwen Fan 2025-05-10 03:24:39 +0000 161)     return 0;
+^59ab51e (Ruwen Fan 2025-05-10 03:24:39 +0000 162) }
+^59ab51e (Ruwen Fan 2025-05-10 03:24:39 +0000 163) 
+^59ab51e (Ruwen Fan 2025-05-10 03:24:39 +0000 164) int hipSuspendStreams(int fd, std::vector<int> &stream_ids) {
+^59ab51e (Ruwen Fan 2025-05-10 03:24:39 +0000 165)     kfd_ioctl_dbg_trap_suspend_queues_args args;
+^59ab51e (Ruwen Fan 2025-05-10 03:24:39 +0000 166)     args.num_queues = stream_ids.size();
+^59ab51e (Ruwen Fan 2025-05-10 03:24:39 +0000 167)     args.grace_period = 0;
+^59ab51e (Ruwen Fan 2025-05-10 03:24:39 +0000 168)     args.exception_mask = 63;
+^59ab51e (Ruwen Fan 2025-05-10 03:24:39 +0000 169)     args.queue_array_ptr = (__u64)stream_ids.data();
+^59ab51e (Ruwen Fan 2025-05-10 03:24:39 +0000 170)     args.type = 0;
+^59ab51e (Ruwen Fan 2025-05-10 03:24:39 +0000 171) 
+^59ab51e (Ruwen Fan 2025-05-10 03:24:39 +0000 172)     int res = ioctl(fd, _IOWR('K', 0x88, kfd_ioctl_dbg_trap_suspend_queues_args), &args);
+^59ab51e (Ruwen Fan 2025-05-10 03:24:39 +0000 173)     // printf("res = %d\n", res);
+^59ab51e (Ruwen Fan 2025-05-10 03:24:39 +0000 174)     if(res < 0) {
+^59ab51e (Ruwen Fan 2025-05-10 03:24:39 +0000 175)         printf("ioctl failed: %d\n", res);
+^59ab51e (Ruwen Fan 2025-05-10 03:24:39 +0000 176)         perror("suspend failed");
+^59ab51e (Ruwen Fan 2025-05-10 03:24:39 +0000 177)     }
+^59ab51e (Ruwen Fan 2025-05-10 03:24:39 +0000 178)     return 0;
+^59ab51e (Ruwen Fan 2025-05-10 03:24:39 +0000 179) }
+^59ab51e (Ruwen Fan 2025-05-10 03:24:39 +0000 180) 
+^59ab51e (Ruwen Fan 2025-05-10 03:24:39 +0000 181) int hipResumeStreams(int fd, std::vector<int> &stream_ids) {
+^59ab51e (Ruwen Fan 2025-05-10 03:24:39 +0000 182)     kfd_ioctl_dbg_trap_suspend_queues_args args;
+^59ab51e (Ruwen Fan 2025-05-10 03:24:39 +0000 183)     args.num_queues = stream_ids.size();
+^59ab51e (Ruwen Fan 2025-05-10 03:24:39 +0000 184)     args.grace_period = 0;
+^59ab51e (Ruwen Fan 2025-05-10 03:24:39 +0000 185)     args.exception_mask = 63;
+^59ab51e (Ruwen Fan 2025-05-10 03:24:39 +0000 186)     args.queue_array_ptr = (__u64)stream_ids.data();
+^59ab51e (Ruwen Fan 2025-05-10 03:24:39 +0000 187)     args.type = 1;
+^59ab51e (Ruwen Fan 2025-05-10 03:24:39 +0000 188) 
+^59ab51e (Ruwen Fan 2025-05-10 03:24:39 +0000 189)     int res = ioctl(fd, _IOWR('K', 0x88, kfd_ioctl_dbg_trap_suspend_queues_args), &args);
+^59ab51e (Ruwen Fan 2025-05-10 03:24:39 +0000 190)     // printf("res = %d\n", res);
+^59ab51e (Ruwen Fan 2025-05-10 03:24:39 +0000 191)     if(res < 0) {
+^59ab51e (Ruwen Fan 2025-05-10 03:24:39 +0000 192)         printf("ioctl failed: %d\n", res);
+^59ab51e (Ruwen Fan 2025-05-10 03:24:39 +0000 193)         perror("reset failed");
+^59ab51e (Ruwen Fan 2025-05-10 03:24:39 +0000 194)     }
+^59ab51e (Ruwen Fan 2025-05-10 03:24:39 +0000 195)     return 0;
+^59ab51e (Ruwen Fan 2025-05-10 03:24:39 +0000 196) }
+^59ab51e (Ruwen Fan 2025-05-10 03:24:39 +0000 197) 
+^59ab51e (Ruwen Fan 2025-05-10 03:24:39 +0000 198) #endif

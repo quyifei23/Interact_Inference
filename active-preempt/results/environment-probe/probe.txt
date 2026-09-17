@@ -1,0 +1,1 @@
+SKIP: no accessible /dev/nvidiactl; no GPU benchmark results produced

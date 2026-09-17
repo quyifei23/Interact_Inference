@@ -1,0 +1,28 @@
+
+Fatbin ptx code:
+================
+arch = sm_80
+code version = [8,7]
+host = linux
+compile_size = 64bit
+compressed
+identifier = /home/quyifei/multimodal/workspace/Interception/active-preempt/src/int_worker.cu
+ptxasOptions =  --generate-line-info 
+
+Fatbin elf code:
+================
+arch = sm_80
+code version = [1,7]
+host = linux
+compile_size = 64bit
+identifier = /home/quyifei/multimodal/workspace/Interception/active-preempt/src/int_worker.cu
+
+Resource usage:
+ Common:
+  GLOBAL:0
+ Function _ZN2ap16ping_calibrationEPNS_9TelemetryEj:
+  REG:14 STACK:0 SHARED:0 LOCAL:0 CONSTANT[0]:364 TEXTURE:0 SURFACE:0 SAMPLER:0
+ Function _ZN2ap13finish_markerEPNS_9TelemetryE:
+  REG:10 STACK:0 SHARED:0 LOCAL:0 CONSTANT[0]:360 TEXTURE:0 SURFACE:0 SAMPLER:0
+ Function _ZN2ap10arithmeticEPjmPNS_9TelemetryEmbj:
+  REG:26 STACK:0 SHARED:16 LOCAL:0 CONSTANT[0]:392 TEXTURE:0 SURFACE:0 SAMPLER:0

@@ -1,0 +1,12 @@
+Thu Sep 17 02:44:21 UTC 2026
+Linux JY-R308-E03-8 5.15.0-186-generic #196-Ubuntu SMP Sat Jun 20 16:09:34 UTC 2026 x86_64 x86_64 x86_64 GNU/Linux
+nvcc: NVIDIA (R) Cuda compiler driver
+Copyright (c) 2005-2025 NVIDIA Corporation
+Built on Wed_Jan_15_19:20:09_PST_2025
+Cuda compilation tools, release 12.8, V12.8.61
+Build cuda_12.8.r12.8/compiler.35404655_0
+NVIDIA-SMI has failed because it couldn't communicate with the NVIDIA driver. Make sure that the latest NVIDIA driver is installed and running.
+
+NVRM version: NVIDIA UNIX x86_64 Kernel Module  595.58.03  Tue Mar 17 19:54:55 UTC 2026
+GCC version:  gcc version 11.4.0 (Ubuntu 11.4.0-1ubuntu1~22.04.3) 
+total 0
