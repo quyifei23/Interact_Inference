@@ -1,37 +1,17 @@
-# 推荐：复用现有 RM，先测试 C/B/D，不新增 driver primitive
+# 推荐：先验证 B/C 的增量作用，保留 timeslice 对照
 
-对“CPU 事件到来后，让独立 INT context 尽快获得 GPU，BG 状态仍有效”的目标，**`MAKE_REALTIME(INT_TSG) + RESTART_RUNLIST(INT_CHANNEL)` 是调度意图最匹配的现有接口组合**。550.120 文档明确把 realtime 排前，并让 client 手动 restart 以触发当前工作抢占。它值得优先验证，但尚不能称实测最优方案。
+**没有实测性能 winner。** 对“CPU 收到交互后使独立 INT 尽早运行、BG context 保持有效”的意图，550.120 `MAKE_REALTIME(INT) + RESTART_RUNLIST(INT channel)` 有最明确的 realtime-next 契约；`PREEMPT(BG)` 是更直接、没有额外 NICE access-right 要求的触发器。B 不包含持久 hold 或指定下一个 context 的参数，C 也仍受 runnable 状态、runlist/policy、其他 realtime 工作、粒度与 firmware 支持制约。[固定版本源码证据](source_archaeology.md)
 
-`PREEMPT(BG)` 是更简单、且 550.120 元数据不要求 NICE 的主动触发器。它不包含持续 hold 或指定 next context 的参数；不能据此承诺 `PREEMPT(BG) → RUN(INT)`。如果需要“INT 完成以前 BG 一定不再调度”，`FIFO_DISABLE_CHANNELS(disable=true, onlyScheduling=false, rewind=false, event=NULL)` 加显式 enable 的契约更接近目标。
+阶段二的决定性对照是 **PREEMPT vs none（M3/M1）**、**realtime-restart vs realtime-only（M5/M4）**。M5 对 M1 的总体改善不能全部归因于主动 restart。timeslice 初始化可能避免每次交互的 RM/GSP 往返，因此不因“被动”而提前淘汰；请求/读回 timeslice 不等于真实 hardware quantum。D 的持续 disable/enable 契约仍有价值，但本轮排在恢复责任审查之后，不是默认试验。
 
-| 需求 | 当前最贴合的 primitive | 尚缺的决定性证据 |
-|---|---|---|
-| 向当前 BG 发主动 context/TSG preempt | PREEMPT(BG_TSG) | A100 mode/granularity、完成等待、BG 重选概率 |
-| 指向更高优先级 INT next | MAKE_REALTIME(INT) + RESTART_RUNLIST(INT channel) | NICE/firmware 支持，CTA 文档歧义、long-CTA 延迟，实际 queue readiness |
-| BG 保持停止直到应用恢复 | FIFO_DISABLE_CHANNELS + enable | 所有相关 channels、CUDA queued work/stream/graph 状态连续、失败后恢复 |
-| 避免每次 interaction 发同步 RM RPC | GPreempt 初始化 timeslice 配置 | 真实 hardware quantum、尾延迟和与主动触发的公平比较 |
+已修正 prototype 的 generation 生命周期、多 compute channel 歧义、构造后缓存身份、失败日志丢失、Graph 主节点冒充入口、observer 迟到误判以及不完整 trial/进程树清理。新增 independent CUDA/RM probes、int-only/realtime-only、schema 2 和 progress 诊断。详情见 [phase2_changes](phase2_changes.md)，运行边界见 [runtime_readiness](runtime_readiness.md)。这些代码与离线测试提高了可测性，不是 GPU 抢占成功的证据。
 
-比较不能只看控制 API 名称或论文采用了什么。timeslice 的事件路径可以没有 ioctl/GSP 往返；C 的明确调度语义也可能受 CTA 粒度限制；B 可以切出但马上被重选；D 提供更强暂停语义但增加恢复 control。这些是源码支持的机制差异，**没有真实延迟数据，不能宣布性能 winner**。
+当前会话 `cuInit=CUDA_ERROR_NO_DEVICE`，KMD/libcuda 为 595.58.03；本项目只保留 550.120 的执行 profile。已独立比对 595 的参数布局、control ID、NVOC/权限/RPC 路径，但未完成新 runtime adapter。没有发出调度 RM control，没有实际 latency、恢复正确性或 Graph 抢占数据。
 
-两点需要特别纠正：
+后续只有在 CUDA 最小 workload、owner binding、只读 RM、隔离测试主机和权限条件满足后，才做 1 → 约 10 次同步 B，再做合法 NICE 下的 M4/M5。固定/复用工作量，分别测试长 CTA 和多轮短 CTA。根据完整应用样本、ambiguous 分类、可靠时间线与状态正确性来判断，而不是只选较快且看似成功的样本。
 
-1. GPreempt 的发布代码只调用 Query + SET_TIMESLICE；PREEMPT/RESTART/DISABLE 等 wrapper 没有 callsite。六个公开提交没有作者弃用 PREEMPT 的解释，不能将 GSP latency、重选或权限问题伪装成作者实验结论。
-2. 其 `Nv04ControlWithSecInfo → Nv04Control` 改动丢弃 clientOSInfo，放松 FD 归属校验，但仍保留用户权限等级和 RS rights；不能说成所有 control 变 kernel-privileged。新实现没有复制此改动。RPC patch 中 skip-wait helper 未被调用，正式 RPC 仍同步。
+本轮没有新增 driver primitive / patch。若 binding 在实机失败，先解决最小 self-object 查询/绑定缺口，保留原 FD/SecInfo/权限；不以全局 bypass 修复可达性。若 B/C 后续被证实不足，再讨论 D 或已有 internal primitive 的受控封装。
 
-## 推荐 prototype 和实施状态
+历史结论没有改变：公开 GPreempt 调用 Query + SET_TIMESLICE，其他 wrapper 的存在不能证明作者已实验并淘汰 PREEMPT。其公开历史没有解释为何弃用；GSP latency、重选等只能作为待验证机制解释。其 RPC skip-wait helper 未被实际调用，SecInfo 修改放松 FD 归属而非赋予全部 kernel 权限。[既有考古和证据](source_archaeology.md)
 
-已提供 [active-preempt](../active-preempt/README.md)：两个 process，各自显式创建 context；从本进程 allocation 捕获 group、compute child channel、subdevice，并复用原控制 FD；读回 hardware TSG ID、GPU UUID；拒绝身份歧义。用户态先用 stock RM owner/权限路径，不能发现句柄或不获授权就报告拒绝，不进行绕过。
-
-实现包括：有限 arithmetic BG/INT、单独 reference 校验 register/shared-memory/output、mapped start/done/heartbeat、1000 次前后 ping 校准、RM errno/status 分离、B wait/async、C force×bypass、D disable/enable 和 split 对照、原 timeslice 数值 baseline、CTA waves 对照、可选三节点 CUDA Graph、raw/分位数脚本。Graph 代码已编译但未测试，runner 在普通-kernel evidence 之前拒绝 graph 阶段。
-
-**已验证**：CUDA 12.8.61 / sm_80 编译与链接、host-side ABI/错误处理/身份缺失拒绝检查、统计过滤测试；详见 [results/summary.md](../results/summary.md)。**未验证**：libcuda 捕获可用性、真实 A100 TSG 身份、权限成功、GPU preempt、state save/restore、任何延迟或 graph 透明性。
-
-本机 GPU 设备不可访问，宿主模块版本还是 595.58.03，因此没有 GPU benchmark，也没有 `results/raw.csv`。没有 build/install/unload kernel module；没有生成 `patches/active_preempt.patch`，因为尚未证明需要新 KMD primitive。条件性窄接口方案见 [minimal_kmd_interface.md](minimal_kmd_interface.md)。
-
-## 下一步如何改变判断
-
-先在 disposable A100/550.120/GSP host 上做 10 次 smoke，再每配置 1000 trials。先检查 capture inventory / GET_INFO，再记录 C init 前后 `GR_GET_CTXSW_MODES` 的返回（失败同样保留）。普通 owner 先测 B/D；有合法 NICE 权限后测试 C 四组合。long-CTA 和多 short-CTA 都必须保留，避免把 CTA 等待误判成 context-save 成本。
-
-若 C 在 long-CTA 内部仍低延迟切换、INT next 且 BG 正确恢复，就采用 C。若 C 受 CTA 限制而 B 可 instruction-level 切出，则需要解决 B 的 next/hold 调度语义，D 可作强语义对照。若 RPC 是主导成本，才讨论 E 的窄接口和 transport 设计；单纯删 receive 不成立。若 A 的实际尾延迟更好且满足交互需求，也应接受 A 的实验结果。
-
-精确 GPU context-save completion 仍需可靠的 GPU/context-switch trace；本 prototype 保留 exact BG preempt/resume 列为空，只输出明确标注的 sentinel 线索和 observation uncertainty。它不会用 ioctl return、单次 heartbeat 静止或 CUDA kernel timeline 长条替代这一证据。
+单次 preempt/resume 不会取消旧 Graph 队列。固定 realtime INT context 也不能自动解决 INT-1 未结束时 INT-2 到来的问题；这需要明确旧 INT 如何 demote/被选为目标、context 复用、队列与 buffer 生命周期，以及独立的取消/回收机制。本轮没有声称这些问题已解决。

@@ -1,53 +1,73 @@
-# 时间戳、校准和正确性口径
+# 阶段二测量契约（CSV schema_version=2）
 
-## Clock domains
+旧版（仓库 `9d578f24fdaa102ad94e6db2093ec14386416138`）的 `T_int_gpu_start_observed` / `T_int_gpu_start_ns` 指主节点 K1。新版使用新字段，不能把旧字段默认为 Graph 首次执行；统计器明确拒绝 schema 1、混合 schema 和混合 diagnostic/performance。
 
-所有 CPU timestamp 是各进程共享 epoch 的 `CLOCK_MONOTONIC_RAW` ns。GPU timestamp 来自 `%globaltimer`，只在同一物理 GPU/context 时间线内直接比较；没有把 `clock64()` 当全 GPU 同步时钟，也没有直接相减 CPU/GPU timestamp。
+## 入口、时间域和发布顺序
 
-每 worker 前后各 1000 次 mapped-memory ping-pong：CPU 记录 send，GPU 看到 request 后记录 globaltimer 并 publish ack，CPU 记录 observed。可得 CPU−GPU offset 区间 `[cpu_send − gpu_time, cpu_observed − gpu_time]`。报告最小 RTT 区间和所有 RTT 分位数；后测检查漂移。此区间包含双向传播和观测，不可当作单向 overhead 的精确值。
+Graph 为 K0 → K1(main) → K2 → done marker。`graph_entry` 在 **K0 真实 arithmetic kernel 内**由 block0/thread0 发布；`main_entry` 在 K1 内发布；普通单 kernel 的两个 marker 对应同一次入口（CPU 读到时间可能不同）。没有另加前置 marker kernel。`graph_done` 仍是全部计算节点后的独立 completion marker，其额外调度成本保留在测量中。
 
-GPU 用自然对齐的 32-bit system-scope release store 发布 marker/counter；CPU acquire load。只用 load/store，不使用 host-mapped RMW atomics。GPU 先写 sample、system fence 后 publish sample count；CPU 只读已发布元素；每 trial 完全 drain 后才能 reset。heartbeat 仅 thread0/block0 每约 2 μs 记录一次，最多 65536 个，不覆盖旧 samples；overflow 单独记录。
-
-CPU 独立 observer thread 在 host launch 和阻塞 RM call 期间继续 poll，记录 first observed INT marker；迟到读取的多条 BG sample 共享同一个 CPU observation time，保留该事实。请在目标 host 为 observer/INT/BG CPU 线程安排充足 cores，并结合记录的最大 polling gap 判断调度噪声；代码不自动改变主机 affinity/policy。
-
-## 字段与能支持的主张
-
-| 字段 | 含义 / 限制 |
+| 字段 | 含义 |
 |---|---|
-| T_cpu_trigger | 本 trial CPU interaction，紧邻 INT launch 前 |
-| T_int_submit_end | host launch + event-record 返回；不是 GPU runnable acknowledgment |
-| T_rm_call_begin/end | 实际 ioctl 周围 CPU 时间，含同步 transport/firmware wait；B/D 在 BG process |
-| rm_syscall_result / rm_errno / rm_status | 三者分开，syscall failure 不得因 struct.status=0 被视作成功 |
-| T_int_gpu_start_observed | observer 看见主计算节点 block0/thread0 start marker；不是第一条 warp instruction 的硬件探针 |
-| T_int_gpu_done_observed | observer 看见 stream 后置 completion marker；覆盖全部计算 nodes |
-| T_bg_preempted_observed / T_bg_resumed_observed | **空值**；本版本没有全 TSG completion notifier / reliable context-switch trace |
-| T_int_gpu_start_ns / done_ns | GPU globaltimer 主节点 start 和后置 marker；与 CPU 时间分开 |
-| T_bg_gap_begin/end_gpu_proxy | BG sentinel 两个 samples 夹住 INT start 的区间；不代表所有 SM 停止或控制因果 |
-| T_bg_activity_after_int_observed | GPU timestamp 晚于 INT done 的第一条已记录 BG sample 的 CPU observation；只证明之后有 BG activity |
-| T_reenable_begin/end | D 的显式 enable control，其他模式为空 |
-| preliminary_rm_begin/end | split D 的 onlyScheduling=true 那次 control |
-| bg_correct / int_correct | 所有线程、所有 graph 节点的整数 output 与单独执行 reference 完全相等 |
-| observer_max_poll_gap_ns | CPU observer 采样间隔噪声上界线索，包含 trial 收尾期间 |
+| T_cpu_trigger | CPU interaction，CLOCK_MONOTONIC_RAW ns |
+| T_int_submit_begin/end | host launch 调用区间；end 不证明 GPU 已确认 runnable |
+| T_ipc_send/received/ack | controller 发消息、BG owner 收到、controller 看到 ack；B/D 的往返包含 control 工作 |
+| T_rm_call_begin/end | 真实 ioctl 前后；不包含之前的 IPC/身份检查，不是硬件完成时间 |
+| T_int_graph_entry_observed / main_entry_observed / graph_done_observed | 独立 CPU observer 首次看到三个 publication 的 host 时间 |
+| T_int_graph_entry_gpu_ns / main_entry_gpu_ns / graph_done_gpu_ns | GPU `%globaltimer` 时间；独立字段，不直接与 CPU 时间相减 |
+| int_entry_node / int_main_node / launch_id | marker 所属节点和本进程 launch/trial；不是 CUPTI graph/node ID |
+| T_bg_main_observed / main_gpu_ns / done_gpu_ns | BG 长主节点与全部完成；int-only 全部为空 |
+| T_bg_preempted_observed / T_bg_resumed_observed | **空值**；精确 preempt completion、context-save duration、resume latency 均 **unmeasured** |
 
-`interaction→INT observed start`、RM syscall duration、INT GPU marker duration 可直接汇总 p50/p95/p99/max。同步 B/C/D 的 RM return 根据接口契约给 preemption/context-switch completion **上界事件**，但不能从 syscall wall time 剥离精确 HW context-save latency。BG sentinel gap 也包含等候 INT 和调度间隔，不能命名为 context-switch cost。
+block0/thread0 是明确的入口代理，不保证是 GPU 第一条 warp 指令。BG main marker 用来安排 interaction，不替代 INT graph entry。长 kernel timeline 可以跨越抢占；单 CTA heartbeat 停顿不证明整个 TSG 暂停。
 
-精确的 preemption completion latency、context switch latency、BG resume latency 目前标 **unmeasured**。需要目标 host 上 Nsight Systems/CUPTI/FECS context-switch timeline 或可信 kernel/GSP notifier 才能填充；普通 Nsight kernel 的 start/end 范围本身也可能跨越 preemption，不能单凭一个长条分割硬件 resident 区间。未自动调用 nsys，也未伪造它的时间线。
+CPU 时间在进程间共享 CLOCK_MONOTONIC_RAW 域；两个 worker 核实同 GPU UUID 后，GPU marker 只作设备 globaltimer 域的 lifetime 比较，依赖目标单 GPU / 非虚拟化环境前提。跨 CUPTI、CPU、GPU 时钟未经模型不能相减。`gpu_overlap=lifetime_overlap` 是区间重叠，不是同时驻留或切换事件。
 
-## 扰动和对照
+## mapped memory 的内存模型
 
-`*_identity.txt` 包含相同迭代数在单独运行时的无 heartbeat / 有 heartbeat kernel duration。另用 `--heartbeat-ns 0` 做对照（仍有 start/done markers）；校准纯 host clock/poll 成本需要看 mapped ping RTT 和 observer gaps。不要简单减一个均值常数得到微秒级精确数值。
+`protocol.h` 保证 page-aligned Telemetry、自然对齐 32-bit flags、64-bit payload，并静态检查 CPU 32-bit atomic load/store lock-free。GPU 使用 `st.release.sys.global.u32`（之前 system fence）；CPU 用 GCC acquire load。CPU→GPU ping 用 release store / `ld.acquire.sys.global.u32`。这是 Linux x86-64 + CUDA 的跨设备发布协议，不以 `volatile` 自身保证正确性。
 
-`bg_ctas.csv` 保存主节点各 CTA start/end；跨越抢占的 CTA wall duration 包含暂停，不能当成纯计算时间。不同 `--cta-waves` 使相同目标 kernel 时长由更多短 CTA 组成，用于检验 CTA vs CILP 假设。单 sentinel 在 short-CTA 配置可能提前结束，不能覆盖整个 grid，因此该配置更应依赖 CTA 全部区间和外部 context-switch trace。
+payload 先写，再发布 flag/count；CPU 只读已发布、不会再覆盖的槽位。每个字段有单一 GPU writer，heartbeat buffer 满后停止追加，不循环覆盖。reset 在 CUDA event 已 drain、输出检查完成且 observer join 后进行。CPU-only command/ack 也用 release/acquire，不能仅凭 command 普通写入同步两个进程。
 
-每 trial 启动 BG 后，在其主节点 start 后约 1–5 ms 随机相位触发 INT，避免固定 timeslice phase；INT 必须先 host enqueue，再发 RM control。原 requested timeslice 和 mode GET 的返回值及错误单独保存。未观测到精确 hardware quantum。
+此路径没有对 mapped host memory 做 atomic RMW。CUDA 对自然对齐单次 load/store 的保持要求，与 CPU/GPU 共同 RMW 的支持是不同条件；不能因为 flags 可读写就假设 PCIe 原子加法安全。诊断 progress 的 atomicAdd **只作用于 cudaMalloc 的 device memory**，由 GPU 使用，CPU 在 event 完成后复制读取。[CUDA 12.8 mapped-memory 约定](https://docs.nvidia.com/cuda/archive/12.8.0/cuda-c-programming-guide/index.html#mapped-memory)
 
-## 样本分类
+该协议的真实传播/平台支持仍需目标机验证。前后各 1000 次 ping 校准记录 send、GPU timestamp、observed、RTT；没有把最小 RTT 当全程硬误差保证，也不从测量中直接减掉一个 overhead 常数。
 
-* `observed`：控制未报错、CPU marker 有效，且 INT start 不晚于 BG done；只是有效重叠样本。
-* `int_before_rm_issue`：INT 在请求前已被 observer 看见；不能归功于本次主动触发。
-* `int_after_bg_done`：没有观测到中途让路；保留为调度结果，不篡改为 active success。
-* `rm_error`、`invalid_observation`、`state_mismatch`：不进入成功分位数。
+## 五个独立维度
 
-“BG 马上被重选”只能由 heartbeat/timeline 相对 INT interval 的活动推断；不将其自动标为 bug。输出 correctness 不足以证明完整寄存器保存实现，结合同一长 CTA 跨越 INT、无重启/丢失、context 持续有效才能增强证据。
+- `application_valid`：有顺序有效的 host entry/done 观测；即使 BG 或恢复阶段使 trial 不完整，也保留已测 INT 区间。不因 RM 失败、before/ambiguous 或 correctness failure 静默删除时间数据。`trial_state=complete` 才表示整个 trial 流程结束。
+- `control_status`：NOT_ISSUED、CONTROL_RESULT_UNAVAILABLE、拒绝/错误类别，或 CONTROL_ACCEPTED_EFFECT_UNVERIFIED。后者要求 attempted + ioctl=0 + NV_STATUS=0。
+- `gpu_overlap`：lifetime_overlap / no_lifetime_overlap / unknown / not_applicable。
+- `ordering_relative_to_rm`：before_rm / ordering_ambiguous / not_applicable；离线显式启用模型后另可出现 after_rm_under_calibration_model。
+- `correctness_status`：PASS / CORRECTNESS_FAILURE / unknown，与能否确认中途抢占相互独立。
 
-async PREEMPT 没有在此次 API 中找到 completion token。本 harness 完成并验证每次 BG 工作后再试下一次，避免对同一个未完成 target 连发 async 请求；如果返回失败则停止，不重试制造虚假的低延迟。
+观察到 `entry_observed < rm_begin` 足以说明 CPU 在请求前已经看到 Graph 首节点。反向条件不能证明 GPU 晚于请求，默认 **ambiguous**。因此 K0 在 RM 前开始、K1 在 RM 后发布 main marker 的样本不能算作 RM 导致整个 Graph 开始。
+
+`bg_done_before_interaction` 与 `bg_done_before_control_observed` 分别记录 interaction 前和触发消息前 CPU 是否已看到 BG done。后者的 false 不能保证实际 syscall 时 BG 仍未完成。它们不代替 `control_target_running=unknown`：B 的目标是 BG，C 的目标是 INT channel，当前后端不能证明任一 target 正驻留在 engine。
+
+可选 `summarize.py --calibration-margin-ns N` 明确假设：offset 在前后最小 RTT brackets 间线性变化，另加用户选择的 N ns margin，不允许外推。只有映射后的 entry 下界晚于 RM begin 才标 after_rm_under_calibration_model。该模型仍有未证明的漂移/误差假设；一次最小 RTT 不赋予全时段保证。默认不使用模型；after-RM 仍不等于 causal preemption。
+
+统计同时输出全部有效应用样本、结果正确子集、时间条件满足子集，以及各维度数量。默认模型下时间条件子集可为 0，这不是把实验删掉。RM 错误、incomplete trial、缺失观测、状态错误与晚到/提前开始样本均保留。paired 比较是 **M3 vs M1** 和 **M5 vs M4**，不能把 M5 vs M1 全部收益归因于 restart。
+
+## 控制日志、超时和恢复
+
+每 worker 在测量前预分配 `*_control_events.bin` 的固定 mmap 槽位；每次 control 发出前记录 input identity/generation、参数原始字节、操作序号，返回后立即填 syscall/errno/NV_STATUS 并发布 RETURNED。热路径不写 JSON 或同步磁盘；正常 trial 后导出 `*_control_events.jsonl`，异常先导出再做可能阻塞的恢复。达到容量会拒绝后续 control，不丢事件继续测试。
+
+进程中途退出时 binary 仍可由 **同版本** `event_dump` 恢复；IN_FLIGHT 的 end/status 写 null。未收到 owner ack 的 trial 不假装 control 没有发生，而是 CONTROL_RESULT_UNAVAILABLE；已知返回即使 INT timeout 也留在独立 journal。JSON 导出失败报 CONTROL_LOG_EXPORT_FAILED，保留 binary，不阻止 owner 恢复。此机制针对进程退出，不保证掉电后数据落盘。SIGKILL/内核挂起无法保证用户清理函数运行，不能把未确认恢复写成成功。
+
+controller/BG 都处理 SIGTERM；BG 设置 parent-death signal。runner 创建独立 process group，先 SIGTERM 给 owner 清理机会，再有界等待，必要时 SIGKILL 整组并标 RECOVERY_UNCONFIRMED，停止后续组。正常路径 D enable、RT demote、timeslice restore 在 owner 完成；dirty flags 在修改前设置，返回错误也保留恢复责任。配置 restore 接受与 GPU 状态正确是不同检查。context destruction 只在进程清理使用，不作为正常 preemption/resume 操作。
+
+## 工作量和正确性
+
+arithmetic 只有固定、记录的 iterations；暂停时间不算已完成计算，不按墙钟提前退出。每 CTA 的 register/shared-memory 递推和所有 node 的输出与 solo reference bit-exact 比较。host deadline 是错误/恢复触发器，不能保证一个被永久 deschedule 的 TSG 自行结束。
+
+W2 用低 waves、较长每 CTA 工作；W1 用更多 waves、较短每 CTA 工作。`*_identity.txt` 记录 iterations、grid/block、registers、static/dynamic shared memory、CUDA occupancy **估计**、solo / instrumented 时长。runner 在小矩阵内冻结已校准 iterations；跨 invocation 比较必须显式复用数值，不能每组重新校准后宣称工作完全相同。`bg_ctas.csv` 的 CTA wall intervals 包含可能的暂停。
+
+`configuration.json` 保存规范 mode、graph/run kind、force/bypass、waves、heartbeat、timeslice 请求、实际 iterations/grid、GPU UUID 与 profile。1 → 10 的 smoke 准入逐项核对配置，并继承相同的固定 iterations；更大样本要求显式指定且与 smoke 一致。更换 GPU、驱动或编译配置时应重新 smoke；目前配置核对不能替代操作者核实硬件/二进制身份。
+
+`--diagnostic-progress` 是独立诊断组：每 CTA 每 256 次递推之后，在独立 device memory 记录计数和序号和；Graph 每节点各有计数，reset 只在前一 launch 完成后。无补偿的遗漏/重复执行会改变计数，部分同数量替换由序号和发现。它不是无碰撞的完整执行证明，计数/和巧合抵消、连同全局内存一起回滚等未覆盖；确定性输出本身仍不能排除重算。诊断 atomics/内存流量会扰动时延，不混入 performance 分布。
+
+## 观测扩展与范围
+
+本轮仅探测 CUPTI 可用性，未实现强制 trace 后端。将来的 backend 应另存 process/context/kernel/graph-node correlation、timestamp 域、丢事件数，并核查 context-switch START/END 的实际语义；官方类型描述的是 switch operation 起止，不直接定义 BG-out/INT-in 或“所有 execution state 已写回”。[官方 activity 类型](https://docs.nvidia.com/cupti/api/structCUpti__ActivityComputeEngineCtxSwitch.html)
+
+尚未覆盖：prequeue 1/4/16、连续 interaction、旧 INT 的 demote/promote 复用、latest-request-wins、取消/回滚与 buffer 回收。当前只编译了单次 launch 的 Graph preempt/resume 路径，没有实机执行；旧队列不会因 PREEMPT 被删除。旧工作可能访问的内存在排空或可靠回收以前不能复用。

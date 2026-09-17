@@ -1,77 +1,124 @@
 #!/usr/bin/env python3
-"""Summarize measured rows only; exact hardware preempt/resume remains unobserved."""
+"""Schema 2 only. Application latency, ordering, correctness and control state stay independent."""
 import argparse
 from collections import Counter
 import csv
+from fractions import Fraction
+import json
 from pathlib import Path
 
+SCHEMA_VERSION = '2'
+ACCEPTED = 'CONTROL_ACCEPTED_EFFECT_UNVERIFIED'
+
 def quantiles(values):
-    if not values:
-        return None
+    if not values: return None
     values = sorted(values)
     def q(p):
-        i = (len(values) - 1) * p
-        a = int(i)
-        return values[a] + (values[min(a + 1, len(values)-1)] - values[a]) * (i-a)
-    return [q(.50), q(.95), q(.99), values[-1]]
+        i=(len(values)-1)*p; a=int(i)
+        return values[a]+(values[min(a+1,len(values)-1)]-values[a])*(i-a)
+    return [q(.5),q(.95),q(.99),values[-1]]
 
-def delta(row, end, begin):
-    if not row.get(end) or not row.get(begin):
-        return None
-    x = int(row[end]) - int(row[begin])
-    return x / 1000 if x >= 0 else None
+def number(row,key):
+    value=row.get(key,'')
+    return int(value) if value not in ('',None,'unknown','null') else None
 
-def summarize(directory):
-    directory = Path(directory)
-    with (directory / "raw.csv").open() as f:
-        reader = csv.DictReader(f)
-        rows = list(reader)
-    if not rows:
-        raise ValueError("No measured rows; refusing synthetic summary")
-    if any(None in r or any(v is None for v in r.values()) for r in rows):
-        raise ValueError("Malformed CSV field count")
-    good = [r for r in rows if r["bg_correct"] == r["int_correct"] == "1"
-            and r["classification"] in {"observed", "int_before_rm_issue", "int_after_bg_done"}
-            and (not r["T_rm_call_begin"] or (r["rm_syscall_result"] == "0" and r["rm_status"] == "0"))]
-    trigger_subset = [r for r in good if r["classification"] == "observed"]
-    lines = ["# Measured microbenchmark summary", "", f"Rows: {len(rows)}; valid application/observation rows: {len(good)}; rejected: {len(rows)-len(good)}.",
-             f"Classifications: {dict(Counter(r['classification'] for r in rows))}.", "",
-             "GPU overlap alone does not establish that a particular RM request caused preemption. The no-explicit-preemption control and timeline are still required.", "",
-             "| Measurement (μs) | n | p50 | p95 | p99 | max |", "|---|---:|---:|---:|---:|---:|"]
-    metrics = [
-        ("Interaction → INT start observed (all valid)", good, "T_int_gpu_start_observed", "T_cpu_trigger"),
-        ("Interaction → INT start (observed classification only)", trigger_subset, "T_int_gpu_start_observed", "T_cpu_trigger"),
-        ("RM syscall wall time, including transport/waits", good, "T_rm_call_end", "T_rm_call_begin"),
-        ("Host launch API wall time", good, "T_int_submit_end", "T_cpu_trigger"),
-        ("INT GPU marker interval", good, "T_int_gpu_done_ns", "T_int_gpu_start_ns"),
-        ("Re-enable syscall wall time", good, "T_reenable_end", "T_reenable_begin"),
-        ("BG sentinel gap enclosing INT start (proxy only)", good, "T_bg_gap_end_gpu_proxy", "T_bg_gap_begin_gpu_proxy"),
-    ]
-    for name, source, end, begin in metrics:
-        values = [x for r in source if (x := delta(r, end, begin)) is not None]
-        q = quantiles(values)
-        lines.append(f"| {name} | {len(values)} | " + (" | ".join(f"{v:.3f}" for v in q) if q else "N/A | N/A | N/A | N/A") + " |")
-    lines += ["", "Exact preemption completion latency, context-switch duration, and BG resume latency: **unmeasured**. Synchronous control return is at most an interface-contract completion bound, including CPU/RPC overhead. Empty exact-event fields are intentional.",
-              "", "The heartbeat gap is from one CTA; it neither proves full-TSG inactivity nor distinguishes scheduler rotation from the explicit request. No constant overhead is subtracted.", ""]
-    for f in sorted(directory.glob("*_calibration_*.csv")):
-        with f.open() as stream:
-            samples = list(csv.DictReader(stream))
-        if not samples:
-            continue
-        rtts = [(int(s["cpu_observed_ns"]) - int(s["cpu_send_ns"])) / 1000 for s in samples]
-        best = min(samples, key=lambda s: int(s["rtt_ns"]))
-        low = int(best["cpu_send_ns"]) - int(best["gpu_ns"])
-        high = int(best["cpu_observed_ns"]) - int(best["gpu_ns"])
-        lines += [f"{f.name}: mapped ping RTT p50/p95/p99/max μs = {quantiles(rtts)}; best CPU−GPU offset bracket ns = [{low}, {high}]. This brackets transport/observation; it is not a one-way latency measurement.", ""]
-    polling = [int(r["observer_max_poll_gap_ns"]) / 1000 for r in good]
-    lines += [f"Observer maximum polling gaps per trial, p50/p95/p99/max μs: {quantiles(polling)}.", "",
-              "Check calibration drift (before vs after), heartbeat perturbation in identity files, CTA duration distribution, and any overflow before interpreting microsecond differences."]
-    output = directory / "summary.md"
-    output.write_text("\n".join(lines) + "\n")
-    return output
+def delta(row,end,begin):
+    e,b=number(row,end),number(row,begin)
+    return (e-b)/1000 if e is not None and b is not None and e>=b else None
 
-if __name__ == "__main__":
-    p = argparse.ArgumentParser(description=__doc__)
-    p.add_argument("directory", type=Path)
-    a = p.parse_args()
-    print(summarize(a.directory))
+class CalibrationModel:
+    """Optional affine offset assumption, NOT a measured hard error guarantee."""
+    def __init__(self,before,after,margin_ns):
+        if margin_ns<0: raise ValueError('negative calibration margin')
+        def endpoint(path):
+            with Path(path).open() as f: rows=list(csv.DictReader(f))
+            if not rows: raise ValueError('empty calibration')
+            if any(int(r['cpu_observed_ns'])<int(r['cpu_send_ns']) for r in rows): raise ValueError('invalid calibration bracket')
+            r=min(rows,key=lambda r:int(r['cpu_observed_ns'])-int(r['cpu_send_ns']))
+            g=int(r['gpu_ns'])
+            return g,int(r['cpu_send_ns'])-g,int(r['cpu_observed_ns'])-g
+        self.a,self.b=endpoint(before),endpoint(after);self.margin=margin_ns
+        if self.a[0]>=self.b[0]: raise ValueError('calibration clock order invalid')
+    def interval(self,gpu_ns):
+        if not self.a[0]<=gpu_ns<=self.b[0]: return None
+        w=Fraction(gpu_ns-self.a[0],self.b[0]-self.a[0])
+        low=Fraction(gpu_ns)+self.a[1]*(1-w)+self.b[1]*w-self.margin
+        high=Fraction(gpu_ns)+self.a[2]*(1-w)+self.b[2]*w+self.margin
+        return low,high
+
+def ordering(row,model=None):
+    rm=number(row,'T_rm_call_begin');observed=number(row,'T_int_graph_entry_observed')
+    if rm is None:return 'ordering_ambiguous' if row.get('control_status')=='CONTROL_RESULT_UNAVAILABLE' else 'not_applicable'
+    if observed is not None and observed<rm:return 'before_rm'
+    gpu=number(row,'T_int_graph_entry_gpu_ns')
+    if model is not None and gpu is not None:
+        interval=model.interval(gpu)
+        if interval and interval[0]>rm:return 'after_rm_under_calibration_model'
+    return 'ordering_ambiguous'
+
+def read_rows(path):
+    with Path(path).open() as f:
+        reader=csv.DictReader(f); rows=list(reader);fields=reader.fieldnames or []
+    if not rows: raise ValueError('No measured rows; refusing synthetic summary')
+    required=set('schema_version trial mode run_kind graph trial_state T_cpu_trigger T_int_submit_begin T_int_submit_end T_ipc_send T_ipc_received T_ipc_ack T_rm_call_begin T_rm_call_end rm_syscall_result rm_status T_int_graph_entry_observed T_int_main_entry_observed T_int_graph_done_observed T_int_graph_entry_gpu_ns T_int_graph_done_gpu_ns bg_done_before_interaction bg_done_before_control_observed control_target_running application_valid control_status gpu_overlap correctness_status'.split())
+    if len(set(fields))!=len(fields) or not required<=set(fields):raise ValueError('Missing/duplicate schema 2 columns; refuse ambiguous field semantics')
+    if any(None in r or any(v is None for v in r.values()) for r in rows):raise ValueError('Malformed CSV field count')
+    if {r.get('schema_version') for r in rows}!={SCHEMA_VERSION}:raise ValueError('Schema 2 required; legacy schema 1 has main-entry semantics and must not be mixed')
+    if len({r['run_kind'] for r in rows})!=1:raise ValueError('Diagnostic and performance samples must not be mixed')
+    return rows
+
+def summarize(directory,calibration_margin_ns=None):
+    directory=Path(directory);rows=read_rows(directory/'raw.csv');model=None
+    if calibration_margin_ns is not None:
+        model=CalibrationModel(directory/'int_calibration_before.csv',directory/'int_calibration_after.csv',calibration_margin_ns)
+    for r in rows:
+        if r['control_status']==ACCEPTED and (r['rm_syscall_result']!='0' or r['rm_status']!='0'):
+            r['control_status']='INCONSISTENT_CONTROL_RECORD'
+        r['derived_ordering']=ordering(r,model)
+    # Do not filter RM errors, before-RM, late BG, or ambiguous samples out of
+    # the application distribution. Correctness is reported as another dimension.
+    valid=[r for r in rows if r['application_valid']=='1' and delta(r,'T_int_graph_entry_observed','T_cpu_trigger') is not None]
+    correct=[r for r in valid if r['correctness_status']=='PASS']
+    subset=[r for r in correct if r['control_status']==ACCEPTED and r['derived_ordering']=='after_rm_under_calibration_model'
+            and r['gpu_overlap']=='lifetime_overlap' and r['bg_done_before_interaction']=='0'
+            and r['bg_done_before_control_observed']=='0' and r['trial_state']=='complete']
+    dimensions={k:dict(Counter(r[k] for r in rows)) for k in ('trial_state','application_valid','control_status','gpu_overlap','derived_ordering','correctness_status','control_target_running','bg_done_before_interaction','bg_done_before_control_observed')}
+    stats={'schema_version':2,'rows':len(rows),'application_valid':len(valid),'correct_application_rows':len(correct),'timing_eligible_subset':len(subset),
+           'preemption_confirmed':0,'dimensions':dimensions,'calibration_model':None if model is None else {
+               'name':'affine offset between minimum-RTT endpoint brackets plus explicit margin','margin_ns':calibration_margin_ns,
+               'status':'assumption; empirical brackets are not a whole-run error guarantee'}}
+    stats['timeout_rows']=sum('timeout' in r.get('failure','').lower() or 'deadline' in r.get('failure','').lower() or r['control_status']=='CONTROL_TIMEOUT' for r in rows)
+    stats['missing_entry_or_done_observation']=sum(not r['T_int_graph_entry_observed'] or not r['T_int_graph_done_observed'] for r in rows)
+    stats['failure_messages']=dict(Counter(r.get('failure','') for r in rows if r.get('failure','')))
+    lines=['# Schema 2 measurement summary','',f"Run kind: {rows[0]['run_kind']}. Rows: {len(rows)}; valid application observations: {len(valid)}; timing-eligible subset: {len(subset)}.",'',
+           'All valid application observations include RM failures and ambiguous/before-RM ordering. Correctness and control outcomes are reported independently. No hardware preemption is confirmed by this summary.','']
+    for key,value in dimensions.items():lines.append(f'- {key}: {value}')
+    lines+=[f"- timeout_rows: {stats['timeout_rows']}",f"- missing_entry_or_done_observation: {stats['missing_entry_or_done_observation']}",f"- failure_messages: {stats['failure_messages']}"]
+    lines+=['','| Metric (μs) | n | p50 | p95 | p99 | max |','|---|---:|---:|---:|---:|---:|']
+    metrics=[('Interaction → graph entry observed, all application-valid',valid,'T_int_graph_entry_observed','T_cpu_trigger'),
+             ('Interaction → graph entry, correct application rows',correct,'T_int_graph_entry_observed','T_cpu_trigger'),
+             ('Interaction → graph entry, timing-eligible subset',subset,'T_int_graph_entry_observed','T_cpu_trigger'),
+             ('Interaction → main entry observed',valid,'T_int_main_entry_observed','T_cpu_trigger'),
+             ('Host submission',valid,'T_int_submit_end','T_int_submit_begin'),
+             ('IPC request → owner receipt',rows,'T_ipc_received','T_ipc_send'),
+             ('IPC round trip (includes owner control when present)',rows,'T_ipc_ack','T_ipc_send'),
+             ('RM syscall wall time (including failures)',rows,'T_rm_call_end','T_rm_call_begin'),
+             ('GPU graph marker interval',valid,'T_int_graph_done_gpu_ns','T_int_graph_entry_gpu_ns')]
+    for title,source,end,begin in metrics:
+        values=[v for r in source if (v:=delta(r,end,begin)) is not None];q=quantiles(values)
+        lines.append(f'| {title} | {len(values)} | '+(' | '.join(f'{x:.3f}' for x in q) if q else 'N/A | N/A | N/A | N/A')+' |')
+    lines+=['','Exact BG preempt completion, context-save duration, and BG resume latency: **unmeasured**.',
+            '', 'Graph entry is K0 block0/thread0; main entry is the main arithmetic node. Neither is an exact first-warp timestamp. Lifetime overlap and an after-RM ordering hypothesis do not establish causation. Target residency stays unknown without another backend.',
+            '', 'Ordering model: '+('none; observations at/after RM are ambiguous' if model is None else f'explicit affine-offset assumption with {calibration_margin_ns} ns margin; not a guaranteed bound'),
+            '', 'Decisive paired comparisons: preempt-wait vs none; realtime-restart vs realtime-only. Compare identical fixed work/configurations and separate diagnostic runs.']
+    for path in sorted(directory.glob('*_calibration_*.csv')):
+        with path.open() as f: samples=list(csv.DictReader(f))
+        rtt=[(int(s['cpu_observed_ns'])-int(s['cpu_send_ns']))/1000 for s in samples]
+        lines+=['',f'{path.name}: ping RTT p50/p95/p99/max μs {quantiles(rtt)}. Minimum RTT is not a full-run hard error bound.']
+    (directory/'analysis.json').write_text(json.dumps(stats,indent=2)+'\n')
+    output=directory/'summary.md';output.write_text('\n'.join(lines)+'\n');return output
+
+if __name__=='__main__':
+    p=argparse.ArgumentParser(description=__doc__);p.add_argument('directory',type=Path)
+    p.add_argument('--calibration-margin-ns',type=int,help='Opt in to an explicitly assumed affine clock model; this margin is not an observed guarantee')
+    a=p.parse_args();print(summarize(a.directory,a.calibration_margin_ns))

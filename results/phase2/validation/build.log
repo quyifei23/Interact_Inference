@@ -1,0 +1,18 @@
+Consolidate compiler generated dependencies of target preflight_cuda
+Consolidate compiler generated dependencies of target rm_control
+[ 12%] Built target preflight_cuda
+[ 37%] Built target rm_control
+Consolidate compiler generated dependencies of target event_dump
+Consolidate compiler generated dependencies of target bg_worker
+Consolidate compiler generated dependencies of target phase2_contract_test
+Consolidate compiler generated dependencies of target int_worker
+[ 50%] Built target event_dump
+[ 56%] Building CUDA object CMakeFiles/bg_worker.dir/src/bg_worker.cu.o
+[ 68%] Built target phase2_contract_test
+[ 75%] Building CUDA object CMakeFiles/int_worker.dir/src/int_worker.cu.o
+Consolidate compiler generated dependencies of target rm_contract_test
+[ 87%] Built target rm_contract_test
+[ 93%] Linking CUDA executable bg_worker
+[ 93%] Built target bg_worker
+[100%] Linking CUDA executable int_worker
+[100%] Built target int_worker

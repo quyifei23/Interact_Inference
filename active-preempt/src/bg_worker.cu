@@ -1,66 +1,78 @@
 #include "worker_common.cuh"
+#include "recovery.h"
 #include <memory>
-#include <csignal>
-namespace { volatile std::sig_atomic_t stopping=0; void on_stop(int){stopping=1;} }
+#include <sys/prctl.h>
 int main(int argc,char** argv){
-    std::unique_ptr<ap::Mapping> mapping;
-    try {
-        auto o=ap::parse(argc,argv);
-        std::signal(SIGTERM,on_stop);std::signal(SIGINT,on_stop);
-        if(o.shared_path.empty())throw std::invalid_argument("bg_worker is launched by int_worker; --shared required");
+    std::unique_ptr<ap::Mapping> mapping;std::unique_ptr<ap::GpuWorker> gpu;std::unique_ptr<ap::RmControl> rm;
+    ap::Recovery recovery;std::string run_dir;
+    auto cleanup=[&](){
+        ap::save_control_journal(); // persist evidence before potentially blocking cleanup
+        ap::stop_requested=0;
+        std::ofstream f(run_dir+"/bg_recovery.txt",std::ios::app);
+        bool restored=!rm||recovery.restore(*rm,f);f<<(restored?"CONFIGURATION_RESTORED":"RECOVERY_FAILED")<<std::endl;
+        ap::save_control_journal();return restored;
+    };
+    try{
+        auto o=ap::parse(argc,argv);run_dir=o.run_dir;auto plan=ap::mode_plan(o.mode);
+        std::signal(SIGTERM,ap::on_stop);std::signal(SIGINT,ap::on_stop);
+        if(o.shared_path.empty())throw std::runtime_error("bg_worker needs controller shared mapping");
         mapping=std::make_unique<ap::Mapping>(o.shared_path.c_str());auto& s=*mapping->shared;
-        ap::GpuWorker gpu(s.bg,o.bg_us,o.waves,o.heartbeat_ns,o.graph);
-        gpu.calibrate_observation(o.run_dir+"/bg_calibration_before.csv");
-        std::ofstream inventory(o.run_dir+"/bg_capture.txt");inventory<<ap::capture_inventory();inventory.close();
-        ap::RmControl rm(ap::discover_owned_compute_group());
-        std::ofstream identity(o.run_dir+"/bg_identity.txt");ap::write_identity(identity,gpu,rm);
-        uint64_t original_ts=0;bool changed_ts=false,disabled=false;
-        if(o.mode=="timeslice"){
-            ap::require_ok(rm.get_timeslice(original_ts),"BG get timeslice");
-            ap::require_ok(rm.timeslice(o.timeslice_us),"BG set timeslice");changed_ts=true;
-            uint64_t cached=0;auto result=rm.get_timeslice(cached);
-            identity<<"timeslice_requested_us="<<o.timeslice_us<<" cached_us="<<cached<<" get_status="<<result.describe()<<" hardware_quantum_us=unknown\n";
+        if(prctl(PR_SET_PDEATHSIG,SIGTERM)!=0)throw std::runtime_error("PR_SET_PDEATHSIG failed");
+        if(getppid()!=pid_t(s.host.controller_pid))throw std::runtime_error("Controller exited before BG startup");
+        ap::open_control_journal(run_dir,"bg");
+        if(plan.identity&&!ap::baseline_driver_loaded())throw std::runtime_error("ABI_UNVERIFIED: active RM profile is 550.120");
+        gpu=std::make_unique<ap::GpuWorker>(s.bg,o.bg_us,o.waves,o.heartbeat_ns,o.graph,o.bg_iterations,o.diagnostic);
+        gpu->cleanup_log=run_dir+"/bg_cuda_cleanup.log";
+        gpu->calibrate_observation(run_dir+"/bg_calibration_before.csv");
+        std::ofstream(run_dir+"/bg_capture.txt")<<ap::capture_inventory();
+        if(plan.identity)rm=std::make_unique<ap::RmControl>(ap::discover_owned_compute_group());
+        std::ofstream identity(run_dir+"/bg_identity.txt");ap::write_identity(identity,*gpu,rm.get());
+        if(plan.timeslice){
+            ap::require_ok(rm->get_timeslice(recovery.original_timeslice),"BG GET_TIMESLICE");
+            recovery.timeslice=true;ap::require_ok(rm->timeslice(o.timeslice_us),"BG SET_TIMESLICE");
+            uint64_t readback=0;auto r=rm->get_timeslice(readback);
+            identity<<"timeslice_requested_us="<<o.timeslice_us<<" readback_us="<<(r.ok()?std::to_string(readback):"unknown")<<" get_status="<<r.describe()<<" hardware_quantum_us=unknown\n";
         }
-        auto mode_result=rm.get_preemption_mode(s.host.bg_mode_before);s.host.bg_mode_status_before=mode_result.rm_status;
-        identity<<"mode_before="<<s.host.bg_mode_before<<" status="<<mode_result.describe()<<"\n";identity.flush();
-        s.host.bg_pid=getpid();s.host.bg_context=reinterpret_cast<uintptr_t>(gpu.context);
-        s.host.bg_tsg=rm.identity().tsg_id;s.host.bg_client=rm.identity().client;s.host.bg_group=rm.identity().group;s.host.bg_engine=rm.identity().engine;
-        s.host.bg_iterations=gpu.iterations;s.host.bg_solo_us=gpu.solo_us;s.host.bg_uninstrumented_us=gpu.uninstrumented_us;
-        std::strncpy(s.host.bg_uuid,ap::uuid_string(gpu.prop.uuid).c_str(),sizeof(s.host.bg_uuid)-1);
-        ap::release(&s.host.ready,1);
-        uint32_t seen=0;bool running=true;
-        try {
-            while(running){
-                uint64_t deadline=ap::monotonic_ns()+60ull*1000000000;
-                while(ap::acquire(&s.host.command_seq)==seen && !stopping){if(ap::monotonic_ns()>deadline)throw std::runtime_error("Coordinator disappeared");ap::relax();}
-                if(stopping)break;
-                uint32_t seq=ap::acquire(&s.host.command_seq);s.host.result={};s.host.preliminary_result={};
-                switch(s.host.command){
-                case ap::Command::Launch:
-                    gpu.reset();s.host.bg_correct=0;s.host.bg_submit_begin=ap::monotonic_ns();gpu.launch();s.host.bg_submit_end=ap::monotonic_ns();break;
-                case ap::Command::Drain:
-                    s.host.bg_correct=gpu.correct();break;
-                case ap::Command::PreemptWait:s.host.result=rm.preempt(true);break;
-                case ap::Command::PreemptAsync:s.host.result=rm.preempt(false);break;
-                case ap::Command::Disable:
-                    disabled=true;s.host.result=rm.disable(true,false);break;
-                case ap::Command::DisableScheduling:
-                    disabled=true;s.host.preliminary_result=rm.disable(true,true);
-                    if(s.host.preliminary_result.ok())s.host.result=rm.preempt(true);else s.host.result=s.host.preliminary_result;break;
-                case ap::Command::Enable:
-                    s.host.result=rm.disable(false);if(s.host.result.ok())disabled=false;break;
-                case ap::Command::ReadMode:
-                    s.host.result=rm.get_preemption_mode(s.host.bg_mode_after);s.host.bg_mode_status_after=s.host.result.rm_status;
-                    identity<<"mode_after_INT_init="<<s.host.bg_mode_after<<" status="<<s.host.result.describe()<<"\n";identity.flush();break;
-                case ap::Command::Exit:running=false;break;
-                default:throw std::runtime_error("Unexpected command");
-                }
-                seen=seq;ap::release(&s.host.ack_seq,seen);
+        if(rm){auto r=rm->get_preemption_mode(s.host.bg_mode_before);s.host.bg_mode_status_before=r.rm_status;identity<<"mode_before="<<s.host.bg_mode_before<<" status="<<r.describe()<<'\n';}
+        s.host.bg_pid=getpid();s.host.bg_context=reinterpret_cast<uintptr_t>(gpu->context);s.host.bg_blocks=gpu->blocks;
+        if(rm){s.host.bg_identity_valid=1;s.host.bg_tsg=rm->identity().tsg_id;s.host.bg_client=rm->identity().client;s.host.bg_group=rm->identity().group;s.host.bg_engine=rm->identity().engine;}
+        s.host.bg_iterations=gpu->iterations;s.host.bg_solo_us=gpu->solo_us;s.host.bg_uninstrumented_us=gpu->uninstrumented_us;
+        std::strncpy(s.host.bg_uuid,ap::uuid_string(gpu->prop.uuid).c_str(),sizeof(s.host.bg_uuid)-1);identity.flush();ap::save_control_journal();
+        ap::release(&s.host.ready,1);uint32_t seen=0;bool running=true;
+        while(running){
+            uint64_t deadline=ap::monotonic_ns()+60ull*1000000000;
+            while(ap::acquire(&s.host.command_seq)==seen){ap::check_stop();if(ap::monotonic_ns()>deadline)throw std::runtime_error("Controller disappeared");ap::relax();}
+            s.host.command_received_ns=ap::monotonic_ns();uint32_t seq=ap::acquire(&s.host.command_seq);
+            s.host.result={};s.host.preliminary_result={};ap::record_trial(s.host.trial_id);
+            auto need_rm=[&](){if(!rm)throw std::runtime_error("OBJECT_BINDING_UNAVAILABLE: command needs RM identity");};
+            switch(s.host.command){
+            case ap::Command::None:break;
+            case ap::Command::Launch:gpu->reset();gpu->host->launch_id=s.host.trial_id;s.host.bg_correct=0;s.host.bg_submit_begin=ap::monotonic_ns();gpu->launch();s.host.bg_submit_end=ap::monotonic_ns();break;
+            case ap::Command::Drain:s.host.bg_correct=gpu->correct();s.host.bg_progress_correct=gpu->progress_correct;if(rm)rm->mark_work_drained();ap::save_control_journal();break;
+            case ap::Command::PreemptWait:need_rm();s.host.result=rm->preempt(true);break;
+            case ap::Command::PreemptAsync:need_rm();s.host.result=rm->preempt(false);break;
+            case ap::Command::Disable:need_rm();recovery.disabled=true;s.host.result=rm->disable(true,false);break;
+            case ap::Command::DisableScheduling:
+                need_rm();recovery.disabled=true;s.host.preliminary_result=rm->disable(true,true);
+                s.host.result=s.host.preliminary_result.ok()?rm->preempt(true):s.host.preliminary_result;break;
+            case ap::Command::Enable:need_rm();s.host.result=rm->disable(false);if(s.host.result.ok())recovery.disabled=false;break;
+            case ap::Command::ReadMode:
+                if(rm){s.host.result=rm->get_preemption_mode(s.host.bg_mode_after);s.host.bg_mode_status_after=s.host.result.rm_status;identity<<"mode_after_INT_init="<<s.host.bg_mode_after<<" status="<<s.host.result.describe()<<'\n';identity.flush();}break;
+            case ap::Command::Exit:running=false;break;
             }
-        }catch(...){if(disabled){auto r=rm.disable(false);std::cerr<<"Emergency owner-side enable: "<<r.describe()<<'\n';}if(changed_ts)rm.timeslice(original_ts);throw;}
-        if(disabled)ap::require_ok(rm.disable(false),"final BG enable");
-        if(changed_ts)ap::require_ok(rm.timeslice(original_ts),"restore BG timeslice");
-        gpu.calibrate_observation(o.run_dir+"/bg_calibration_after.csv");
-        return 0;
-    }catch(const std::exception& e){if(mapping)ap::report_error(*mapping->shared,e.what());std::cerr<<"BG error: "<<e.what()<<'\n';return 1;}
+            seen=seq;ap::release(&s.host.ack_seq,seen);
+        }
+        if(!cleanup())throw std::runtime_error("RECOVERY_FAILED: BG configuration restoration");
+        gpu->calibrate_observation(run_dir+"/bg_calibration_after.csv");
+        if(!gpu->shutdown())throw std::runtime_error("CUDA_CLEANUP_FAILURE");
+        std::ofstream(run_dir+"/bg_status.txt")<<"COMPLETED\n";return 0;
+    }catch(const std::exception& e){
+        if(!run_dir.empty()){
+            std::ofstream(run_dir+"/bg_failure.txt")<<e.what()<<'\n';
+            std::ofstream(run_dir+"/bg_capture.txt")<<ap::capture_inventory();
+        }
+        if(mapping)ap::report_error(*mapping->shared,e.what());
+        try{cleanup();}catch(const std::exception& recovery_error){std::cerr<<"RECOVERY_FAILED: "<<recovery_error.what()<<'\n';}
+        std::cerr<<"BG error: "<<e.what()<<'\n';return 1;
+    }
 }

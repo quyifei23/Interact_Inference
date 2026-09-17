@@ -1,0 +1,128 @@
+[
+  {
+    "name": "configure",
+    "command": [
+      "cmake",
+      "-S",
+      "active-preempt",
+      "-B",
+      "active-preempt/build",
+      "-DCMAKE_BUILD_TYPE=RelWithDebInfo",
+      "-DCMAKE_CUDA_ARCHITECTURES=80"
+    ],
+    "returncode": 0
+  },
+  {
+    "name": "build",
+    "command": [
+      "cmake",
+      "--build",
+      "active-preempt/build",
+      "-j4"
+    ],
+    "returncode": 0
+  },
+  {
+    "name": "ctest",
+    "command": [
+      "ctest",
+      "--test-dir",
+      "active-preempt/build",
+      "--output-on-failure"
+    ],
+    "returncode": 0
+  },
+  {
+    "name": "python_analysis",
+    "command": [
+      "python3",
+      "active-preempt/scripts/test_analysis.py"
+    ],
+    "returncode": 0
+  },
+  {
+    "name": "python_runner",
+    "command": [
+      "python3",
+      "active-preempt/scripts/test_runner.py"
+    ],
+    "returncode": 0
+  },
+  {
+    "name": "help",
+    "command": [
+      "active-preempt/build/int_worker",
+      "--help"
+    ],
+    "returncode": 0
+  },
+  {
+    "name": "invalid_mode",
+    "command": [
+      "active-preempt/build/int_worker",
+      "--mode",
+      "invalid"
+    ],
+    "returncode": 1
+  },
+  {
+    "name": "cuda_probe",
+    "command": [
+      "active-preempt/build/int_worker",
+      "--probe-cuda"
+    ],
+    "returncode": 77
+  },
+  {
+    "name": "probe_alias",
+    "command": [
+      "active-preempt/build/int_worker",
+      "--probe"
+    ],
+    "returncode": 77
+  },
+  {
+    "name": "identity_probe",
+    "command": [
+      "active-preempt/build/int_worker",
+      "--probe-rm-identity",
+      "--run-dir",
+      "results/phase2/identity-probe"
+    ],
+    "returncode": 77
+  },
+  {
+    "name": "readonly_probe",
+    "command": [
+      "active-preempt/build/int_worker",
+      "--probe-rm-readonly",
+      "--run-dir",
+      "results/phase2/readonly-probe"
+    ],
+    "returncode": 77
+  },
+  {
+    "name": "matrix_gate",
+    "command": [
+      "python3",
+      "active-preempt/scripts/run_matrix.py",
+      "--output",
+      "results/phase2/matrix-readiness",
+      "--trials",
+      "1",
+      "--modes",
+      "int-only",
+      "none"
+    ],
+    "returncode": 77
+  },
+  {
+    "name": "cuda_resources",
+    "command": [
+      "/usr/local/cuda/bin/cuobjdump",
+      "--dump-resource-usage",
+      "active-preempt/build/bg_worker"
+    ],
+    "returncode": 0
+  }
+]

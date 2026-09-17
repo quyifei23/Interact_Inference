@@ -30,3 +30,7 @@
 编译和离线单元测试不证明 GPU 抢占可行。精确 HW completion 和完整 TSG resident 状态本身也不是当前 heartbeat 所能直接观测的，详见 [measurement.md](../active-preempt/docs/measurement.md)。
 
 目标 disposable A100/550.120/GSP host 的复现步骤见 [prototype README](../active-preempt/README.md)。实机运行脚本只在工作实际执行后生成 raw samples；默认每配置 1000 trials，失败不冒充成功。
+
+## 阶段二补充（保留以上阶段一历史记录）
+
+后续实现与验证见 [phase2/summary.md](phase2/summary.md)。当前 runner 已改为默认 **1 trial**，先逐阶段 probe，再 1 → 约 10 → 统计；旧段落中的默认 1000 与 schema 1 统计口径仅描述阶段一版本，不适用于当前代码。当前离线 CTest 5/5 通过，GPU trials 仍为 0。

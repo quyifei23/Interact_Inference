@@ -1,86 +1,109 @@
-# Active preemption prototype (NVIDIA 550.120 / sm_80)
+# Active preemption prototype — phase 2
 
-两个独立 process 各自显式 `cuCtxCreate`，BG 使用约 80 ms 的有限 arithmetic kernel，INT 使用约 300 μs 的同类计算。没有 sleep kernel；寄存器和 shared-memory 状态参与最终 bit-exact 输出校验。所有 GPU 路径**只编译验证，尚未在 GPU 上执行**。
+在原 prototype 上修复对象生命周期、增加分阶段 probe、对照模式、Graph entry/main 区分和异常证据保存。**CUDA/GPU 抢占尚未实机验证，当前 GPU trials=0。** 本轮只允许固定 550.120 RM profile；CUDA-only probe/baseline 不被该版本门槛阻止。595.58.03 的静态对照与未适配缺口见 [runtime_readiness](../docs/runtime_readiness.md)。
 
-已实现原生 `PREEMPT`、`MAKE_REALTIME + RESTART_RUNLIST`、`DISABLE_CHANNELS` 和原 GPreempt 的 timeslice 数值配置。没有修改/安装驱动，没有使用 QUERY_GROUP、硬编码 NVIDIA 资源 handle 或全局 SecInfo bypass。
+## 构建与离线检查
 
-## Build
-
-仓库布局需要同级 `open-gpu-kernel-modules/`，固定为 550.120 commit `5e52edb2034de7db4d8ae368dbc7c26b416bfa16`。使用官方 SDK header，避免手抄 ABI。需要 CMake≥3.22、C++17、CUDA toolkit、Linux x86-64。当前 CUDA 12.8.61 已成功生成 sm_80 cubin；目标主机 runtime compatibility 仍待检查。
+从项目根目录执行（沿用现有 build 目录，不修改驱动）：
 
 ```bash
 cmake -S active-preempt -B active-preempt/build \
   -DCMAKE_BUILD_TYPE=RelWithDebInfo -DCMAKE_CUDA_ARCHITECTURES=80
 cmake --build active-preempt/build -j4
 ctest --test-dir active-preempt/build --output-on-failure
-active-preempt/build/int_worker --probe
 ```
 
-`--probe` 没有可用控制设备或版本不是 550.120 时退出 77，不创建 raw.csv。probe 成功只表示 CUDA 可以初始化；完整句柄捕获、TSG 验证在 worker 初始化执行。
+依赖同级 NVIDIA submodule 的 550.120 commit `5e52edb2034de7db4d8ae368dbc7c26b416bfa16`、CUDA Toolkit、C++17、CMake 3.22、Linux x86-64。控制 ABI 使用官方头文件。工作量针对 A100/sm_80；其他 GPU 的 CUDA probe 可独立尝试，主调度 workload 仍限制 A100。
 
-## 目标测试环境
+5 个 CTest：原 ABI/errno/空身份、注册表与 mode/恢复/async gate、Python 分析、runner admission/进程树、实际 C++ CSV/journal 与 Python parser 集成。所有 synthetic 数据只在临时目录，测试结果不是 GPU measurements。
 
-使用 disposable、无其他任务的 A100；正常多 context compute mode；MPS/MIG 关闭。prototype 检查 sm_80/default compute mode、同 GPU UUID、不同 PID 和不同 GET_INFO hardware TSG ID。它不是完整的 MPS/MIG 管理器，主机配置还需实验管理员预先核实。C 需要当前 worker 的合法 NICE 权限（通常 CAP_SYS_NICE；管理员也是 RS 权限路径），脚本不会自动 sudo、设置 capabilities 或改 runlist policy。
+## 分阶段探测
 
-身份来自 `librm_control.so` 对**本进程**成功的 NVOS21/NVOS64 allocation/free/bind ioctl 的捕获；根据 parent-child 关系找到 compute object → channel → A06C group，以及同 device 的 subdevice。保留原 `/dev/nvidiactl` open-file 的 dup。只有唯一 compute TSG 才继续；记录完整 inventory。libcuda 若使用 hidden/direct syscall 或不支持的 serialized allocation，捕获可能失败；此时拒绝执行，不能猜 child[1]、TSG、FD 或 subdevice。
-
-## 普通 kernel 的实验顺序
-
-先小样本 smoke，再每配置 1000 trials。每个配置新进程，初始化与 solo reference 不计入测量。无显式 preempt 的 baseline 仍受 NVIDIA 正常 time-slicing，不等于关掉硬件抢占。
+输出目录必须是新的，原记录不会被覆写：
 
 ```bash
-# 只做 no-explicit-preemption smoke；output 必须是新目录。
-python3 active-preempt/scripts/run_matrix.py --output results/smoke-none \
-  --trials 10 --modes none
+python3 active-preempt/scripts/preflight.py --output results/preflight-new
+# 独立 CUDA JSONL；--probe 是兼容别名
+active-preempt/build/int_worker --probe-cuda
 
-# 原生 timeslice 与 direct PREEMPT 对照
-python3 active-preempt/scripts/run_matrix.py --output results/plain-ab \
-  --trials 1000 --modes none timeslice preempt-wait preempt-async
-
-# C：自动展开 force × bypass 四种组合；需要预先获得合法 NICE 权限。
-python3 active-preempt/scripts/run_matrix.py --output results/plain-c \
-  --trials 1000 --modes realtime
-
-# D：一次 disable+preempt，或 scheduling-disable 后单独 PREEMPT。
-python3 active-preempt/scripts/run_matrix.py --output results/plain-d \
-  --trials 1000 --modes disable disable-split
-
-# CTA 粒度判别：固定总时长，增加 CTA 波次数、缩短每 CTA。
-python3 active-preempt/scripts/run_matrix.py --output results/short-cta \
-  --trials 1000 --cta-waves 8 --modes none preempt-wait realtime disable
-```
-
-timeslice mode 复现 GPreempt `set_priority` 的 **BG request=1 μs、INT request=1,000,000 μs**，通过安全的原生 wrapper 发相同 RM control；未调用其不安全 QUERY/新开 FD wrapper，**不是完整论文 hint/GDRCopy reservation baseline**。原 artifact 的完整实验可作为另外一个结果集，但本项目没有运行或复制它的历史结果。GET 缓存值写到 identity 文件，不称 hardware quantum；变化参数可直接用 `int_worker --timeslice-us`。
-
-手动单配置方式（便于 Nsight 包装）:
-
-```bash
+# 仅在 profile 匹配时捕获/验证；失败仍保存 inventory
 LD_PRELOAD="$PWD/active-preempt/build/librm_control.so" \
-  active-preempt/build/int_worker --run-dir results/one-c \
-  --mode realtime --force 0 --bypass 0 --trials 1000
-python3 active-preempt/scripts/summarize.py results/one-c
+  active-preempt/build/int_worker --probe-rm-identity --run-dir results/identity-new
+LD_PRELOAD="$PWD/active-preempt/build/librm_control.so" \
+  active-preempt/build/int_worker --probe-rm-readonly --run-dir results/readonly-new
 ```
 
-先 `submit INT`，再发主动 RM 请求；B/D 的 request 通过共享内存交给 BG **自己的 CPU worker** 执行。额外 IPC 调度延迟包含在 interaction→start 中，RM begin/end 在实际 ioctl 执行进程记录。CUDA launch return 仅表示 host enqueue，不能证明 GPU 已看到 runnable work；`int_before_rm_issue` 单独分类。
+CUDA probe 不先检查 550.120，不依赖 nvidia-smi 成功；最小 workload 有限。RM probe 使用 1 CTA / 256 iterations，不先校准 80 ms BG。GET_INFO 成功后，GET_TIMESLICE / GR_GET_CTXSW_MODES 的可选错误分别保存。没有 reliable binding 则拒绝 active controls，不向 stock driver 发 GPreempt QUERY_GROUP。
 
-D always 使用 `rewind=false, event=NULL`；`onlyScheduling=false` 请求禁止再调度且立即 preempt，INT done 后 enable。split mode 额外记录第一条 scheduling-disable control 的时间。错误/退出路径尝试 owner-side enable；不把异常恢复当测试通过。B async 每 trial 只发一次，排空工作并验证输出后才发下一次；不通过重复 async preempt 来轮询完成。
+[对象绑定](../docs/object_binding.md) 解释原 FD、generation、父子关系、唯一候选、捕获不完整与 hidden ioctl 的限制。普通 CUDA `none/int-only` 不要求捕获成功；主动模式必须验证本进程对象，同 GPU UUID、不同 process/context 与 hardware TSG ID。CUPTI channel ID 从未当作 RM handle。
 
-## Graph 阶段
+## 最小对照矩阵
 
-Graph 代码已编译，当前未执行。只有普通 kernel active primitive 在目标 GPU 工作后才运行 graph 测试。runner 要求提供对应 primitive 的已完成普通-kernel结果，并检查 overlap、RM success 和输出正确性；这是最低自动门槛，仍需人工根据 no-preemption 对照/时间线确认因果，不能仅凭 overlap 宣称证明。
+| 组 | mode | init / interaction |
+|---|---|---|
+| M0 | int-only | 无 BG process/work；同一 INT launch、observer、marker、correctness 路径 |
+| M1 | none | BG+INT，自然跨 context 调度；INT enqueue 后给 BG 一个 no-op CPU 消息 |
+| M2 | timeslice | BG request=1 μs、INT request=1,000,000 μs；无 reservation，非完整 GPreempt hint baseline |
+| M3 | preempt-wait | INT enqueue → BG owner PREEMPT(wait=true) |
+| M4 | realtime-only | init MAKE_REALTIME(INT)，interaction 不调用 restart |
+| M5 | realtime-restart | 同 M4 init；interaction 追加 RESTART_RUNLIST(INT channel) |
+
+`realtime` 是 M5 的兼容别名，raw 中统一写 `realtime-restart`。重点比较 **M3−M1**、**M5−M4**。no-op 与 B/D 尽量共用一次 CPU 消息路径；C 在本进程执行 control，不能声称全部路径 CPU 开销完全相同。IPC send/receipt/ack 与实际 RM ioctl 分开记录。每配置是全新进程/context，防止状态污染；不擅自改 runlist policy，未知值写 unknown。
+
+先 CUDA/identity/readonly，再在隔离且获授权的 A100/550.120 主机做 1 次：
 
 ```bash
-python3 active-preempt/scripts/run_matrix.py --output results/graph-c \
-  --trials 1000 --modes none realtime --graph \
-  --primitive-evidence results/plain-c/realtime-f0-b0
+python3 active-preempt/scripts/run_matrix.py --output results/plain-first \
+  --trials 1 --modes int-only none
+
+python3 active-preempt/scripts/run_matrix.py --output results/b-first \
+  --trials 1 --modes preempt-wait --test-host-confirmed
+
+# 仅在 worker 已有合法 NICE 权限时；工具不会 setcap/sudo
+python3 active-preempt/scripts/run_matrix.py --output results/c-first \
+  --trials 1 --modes realtime-only realtime-restart --test-host-confirmed
 ```
 
-BG/INT graph 都是三个相同 topology 的 arithmetic 节点 + 完成 marker。BG 中间节点是主要长 kernel，CPU 等待该节点的 GPU marker 才触发；每节点写独立 output slice，全部与 solo reference 比较，不能用末尾节点覆盖中间节点错误。每 trial 重复 launch 同一个 graph exec，从而同时检查后续有效性。没有 graph cancellation 或 context destruction 抢占。
+`--test-host-confirmed` 表示操作者已确认是隔离测试主机、没有需要保护的任务，并核实 MPS/MIG/GSP/虚拟化等前提；不是授予权限。发现其他 compute processes 或任意 probe/试验错误，runner 保存证据并停止后续组。
 
-## 数据与边界
+从 smoke 的 `*_identity.txt` 读取真实 iterations；跨 invocation 配对时使用同一数值，而不是把各自校准的不同工作量混为一组。一个矩阵内部会冻结已校准工作供后续配置使用。下面的变量应设置为上述实际记录值，不能随意填造：
 
-每配置输出 `raw.csv`、`heartbeats.csv`、`bg_ctas.csv`、前后 calibration、捕获 inventory、identity、status/failure 和 `summary.md`。详见 [measurement.md](docs/measurement.md)。用户指定的 exact BG preempt/resume 列保留为空：单 CTA heartbeat 不足以标定完整 TSG 切出/恢复。
+```bash
+# BG_ITERS / INT_ITERS 来自已完成 smoke 的 identity 文件
+python3 active-preempt/scripts/run_matrix.py --output results/b-ten \
+  --trials 10 --modes preempt-wait --test-host-confirmed \
+  --smoke-evidence results/b-first/preempt-wait-f0-b0 \
+  --bg-iterations "$BG_ITERS" --int-iterations "$INT_ITERS"
 
-GPU loop 有固定 iteration ceiling，每 CTA 有 2 秒 globaltimer watchdog；触发 watchdog 是无效结果并中止。它能限制正常执行的 kernel，不能恢复 GPU 硬件故障或永久未被重新调度的 channel。脚本对进程有超时，不 reset GPU。构造/测量阶段都不调用 `cudaDeviceSynchronize()`；仅在测量前后/每 trial 排空后使用 event query 和结果复制。
+# 只有正确性、观测与恢复通过后，才运行 >=1000 trials
+python3 active-preempt/scripts/run_matrix.py --output results/b-statistics \
+  --trials 1000 --modes preempt-wait --test-host-confirmed \
+  --smoke-evidence results/b-ten/preempt-wait-f0-b0 \
+  --bg-iterations "$BG_ITERS" --int-iterations "$INT_ITERS"
+```
 
-`STOP_CHANNEL` 与直接 CHRAM/runlist register write 不在可执行模式中。候选 E 仅有 [接口提案](../docs/minimal_kmd_interface.md)。
+其他组也各自经过 1 → 约 10 → 统计，并保留匹配的对照。`configuration.json` 保存实际配置；runner 核对 mode、Graph、diagnostic/performance、force/bypass、waves、heartbeat、timeslice 和 iterations。1 → 10 未显式给 iterations 时继承 smoke 数值，不重新校准；1000 次仍要求显式给出匹配数值。更换 GPU/驱动/编译配置后重新 smoke。较大样本要求一个 mode / invocation 与其匹配 smoke、完成/恢复证据；不会仅因 NV_OK 自动升级实验。
+
+## 条件性扩展
+
+- `preempt-async` 保留，但默认不运行；须 `--allow-extended`，在同步路径与完成/恢复边界审查后使用。每次最多一个 pending async，请求之后必须 CUDA drain 才可重发。
+- `--force 0|1 --bypass 0|1` 只对 restart 有意义；非默认值也要求 `--allow-extended`，不默认展开四组合。
+- `disable` / `disable-split` 保留，默认不运行；同样要求 `--allow-extended`，操作者必须先审查其 owner-side enable、部分失败和 timeout 恢复。始终 rewind=false / event=NULL。
+- W2：`--cta-waves 1`；W1：例如 `--cta-waves 8`。分别记录并固定 iterations，实际资源与 occupancy estimate 在 identity 中；只有短 CTA 延迟低不能证明 instruction-level preemption。
+- `--diagnostic-progress` 单独运行 device counters/sequence-sum 校验，无 cancellation polling。诊断额外开销不混入 performance 样本。
+
+Graph 入口在第一个真实计算节点，main 在中间节点；详见 [测量契约](docs/measurement.md)。只有普通 primitive 与对照存在可解释证据后，才显式给 `--graph-evidence-reviewed` 和已完成 plain-active `--primitive-evidence`，再加 `--graph`。自动门槛只是数据完整性检查，标志代表操作者已审阅额外机制证据，不能由 RM 返回成功代替。当前只覆盖单次 graph launch 的代码路径；prequeue 1/4/16、连续交互、latest-request-wins、取消及 buffer 回收未实现。
+
+## 证据与异常恢复
+
+每组输出 `raw.csv`（schema 2）、`configuration.json`、identity/inventory、calibration、必要时 BG CTA/heartbeat、`*_control_events.jsonl` / `.bin`、recovery/CUDA cleanup/status 或 failure。没有 GPU 时 runner 停在 preflight，不生成 GPU raw.csv。
+
+控制返回先存入预分配 mmap 槽，再等待完整 trial。CTRL 接受、GPU 行为、延迟变化和正确性分开；CPU 在 RM 后看到 marker 默认 **ordering_ambiguous**。`summarize.py RUN` 输出全部有效应用样本和各维度数量；如需假设性的时钟映射，可显式 `--calibration-margin-ns N`，其 margin 不是测得的硬保证。
+
+```bash
+python3 active-preempt/scripts/summarize.py results/b-first/preempt-wait-f0-b0
+# 异常/被杀后的日志恢复（使用匹配该 binary 格式的 event_dump）
+active-preempt/build/event_dump RUN/bg_control_events.bin RUN/bg_control_events.jsonl
+```
+
+错误时先保存证据，再尝试 owner-side enable/demote/timeslice restore；runner 对整棵进程组做有界退出，强杀会明确标记恢复未确认并停止后续测试。有限计算不保证永久 deschedule 后自行完成；没有 GPU reset 或 context destruction 充当正常抢占。

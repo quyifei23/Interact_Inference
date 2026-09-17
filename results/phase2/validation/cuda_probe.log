@@ -1,0 +1,19 @@
+{"call":"dladdr(cuInit)","returncode":0,"detail":"/lib/x86_64-linux-gnu/libcuda.so.1"}
+{"call":"compile_versions","returncode":0,"detail":"CUDA_VERSION=12080 CUDART_VERSION=12080"}
+{"call":"cuDriverGetVersion","returncode":0,"detail":"CUDA_SUCCESS: no error"}
+{"call":"driver_api_version","returncode":0,"detail":"13020"}
+{"call":"cudaRuntimeGetVersion","returncode":0,"detail":"cudaSuccess: no error"}
+{"call":"runtime_version","returncode":0,"detail":"12080"}
+{"call":"cuInit(0)","returncode":100,"detail":"CUDA_ERROR_NO_DEVICE: no CUDA-capable device is detected"}
+{"call":"cuDeviceGetCount","returncode":3,"detail":"CUDA_ERROR_NOT_INITIALIZED: initialization error"}
+{"call":"device_count","returncode":77,"detail":"unknown (enumeration failed)"}
+{"call":"loaded_library_mapping","returncode":0,"detail":"7fe947000000-7fe9470ad000 r-xp 00000000 103:04 5769154                   /usr/local/cuda-12.8/targets/x86_64-linux/lib/libcudart.so.12.8.57"}
+{"call":"loaded_library_mapping","returncode":0,"detail":"7fe9470ad000-7fe9472ad000 ---p 000ad000 103:04 5769154                   /usr/local/cuda-12.8/targets/x86_64-linux/lib/libcudart.so.12.8.57"}
+{"call":"loaded_library_mapping","returncode":0,"detail":"7fe9472ad000-7fe9472b1000 r--p 000ad000 103:04 5769154                   /usr/local/cuda-12.8/targets/x86_64-linux/lib/libcudart.so.12.8.57"}
+{"call":"loaded_library_mapping","returncode":0,"detail":"7fe9472b1000-7fe9472b2000 rw-p 000b1000 103:04 5769154                   /usr/local/cuda-12.8/targets/x86_64-linux/lib/libcudart.so.12.8.57"}
+{"call":"loaded_library_mapping","returncode":0,"detail":"7fe947352000-7fe9474b4000 r--p 00000000 103:04 5411939                   /usr/lib/x86_64-linux-gnu/libcuda.so.595.58.03"}
+{"call":"loaded_library_mapping","returncode":0,"detail":"7fe9474b4000-7fe94858d000 r-xp 00162000 103:04 5411939                   /usr/lib/x86_64-linux-gnu/libcuda.so.595.58.03"}
+{"call":"loaded_library_mapping","returncode":0,"detail":"7fe94858d000-7fe94c92d000 r--p 0123b000 103:04 5411939                   /usr/lib/x86_64-linux-gnu/libcuda.so.595.58.03"}
+{"call":"loaded_library_mapping","returncode":0,"detail":"7fe94c92d000-7fe94ca65000 r--p 055da000 103:04 5411939                   /usr/lib/x86_64-linux-gnu/libcuda.so.595.58.03"}
+{"call":"loaded_library_mapping","returncode":0,"detail":"7fe94ca65000-7fe94ca6a000 rw-p 05712000 103:04 5411939                   /usr/lib/x86_64-linux-gnu/libcuda.so.595.58.03"}
+{"call":"minimal_kernel","returncode":77,"detail":"NOT_RUN: CUDA initialization/enumeration unavailable"}

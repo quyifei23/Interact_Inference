@@ -1,0 +1,50 @@
+# RM 对象绑定与生命周期（阶段二）
+
+**适用代码 profile：550.120 / Linux x86-64。当前只有离线测试通过；没有实机捕获成功记录。** 本轮基于 Interact_Inference `9d578f24fdaa102ad94e6db2093ec14386416138` 修复；实现见 `active-preempt/src/object_registry.{h,cpp}`、`rm_control.cpp` 的 `observe`、`remember`、`discover_owned_compute_group`、`issue`。
+
+## 绑定方法和证据边界
+
+```text
+每个独立 process 显式 cuCtxCreate，预热本次实际 kernel / graph
+  → 捕获本进程成功的 NV_ESC_RM_ALLOC (NVOS21 / 未序列化 NVOS64)
+  → 保留原 /dev/nvidiactl open-file 的 F_DUPFD_CLOEXEC 引用
+  → 当前 client → device(0x80)
+                  ├ subdevice(0x2080)
+                  └ group(0xa06c) → channel → compute object
+  → 唯一候选快照（含各对象 generation、父 generation、FD/client generation）
+  → 原 FD 上 A06C GET_INFO → hardware TSG ID
+  → 之后每条自有 control 在锁内重新验证快照，再走标准 ioctl / SecInfo / RM 检查
+```
+
+数值 class 是固定 SDK class ID，**不是硬编码 hClient/hObject**。没有 QUERY_GROUP、自定义 escape、TID 查询、child[1]、固定 channel 数量、CUPTI channel ID 转 RM handle、全局 SecInfo 放宽或需要安装的 patch。hardware channel ID / runlist ID 尚不可得，写 unknown；engine 来自已观察的 alloc/BIND，零表示 unspecified，不能当成已验证的 GR engine。
+
+**源码证据（NVIDIA 550.120 `5e52edb2034de7db4d8ae368dbc7c26b416bfa16`）：** `src/nvidia/src/kernel/gpu/fifo/kernel_channel.c:kchannelConstruct_IMPL` 解析 channel 的 parent；若 parent 不是公开 TSG，驱动可内部创建包装 TSG。这样的内部对象不一定经过用户 ioctl，prototype 不支持，不能从 device-parent channel 猜 group。`CliGetKernelChannelWithDevice` 同时支持 device/group parent，并不意味着二者可以在本绑定器中互换。`kernel_channel_group_api.c:kchangrpapiCtrlCmdGetInfo_IMPL` 返回 TSG ID；`rmapi/client.c:rmclientValidate_IMPL` 的严格路径比较原 open-file OS identity。调用链与权限含义见 [源码考古](source_archaeology.md)。
+
+**运行证据：** 本机 `cuInit` 失败，没有已验证的 context → TSG 实例。GET_INFO 成功的真实 FD/ownership 行为仍待目标 host 测试；synthetic 对象不是 CUDA 资源。
+
+## 当前表与历史表
+
+原 `remember()` 将旧同 handle 条目标为 dead 后追加，新 FREE 会扫描所有历史 dead parent。这会让复用 handle 后的新孩子被旧 tombstone 污染。现在：
+
+- `current_[(client,handle)]` 仅保存当前节点，其 parent 是 `(handle,generation)`；handle 再分配得到新的 generation，并递归移除旧节点的当前后代。
+- FREE 沿当前 generation 关系遍历；历史事件只供 inventory 阅读，从不参与存活判断。释放无关 X 不会删除新 H 的 C2。
+- client 释放只删除该 client 的当前节点并关闭其保留 FD。重建同值 client 得到新的 client generation；其他 client 不受影响。
+- BIND 使被绑定节点 generation 前进，更新当前孩子的 parent generation；旧快照即使又绑回相同 engine 也无效。
+- 同一 group 多个 compute channel、多个可用 TSG、多 subdevice、缺失 device/compute 祖先、未知序列化/捕获 ABI、捕获异常或容量耗尽均拒绝。容量是资源上限，不是 channel 数量假设。
+- `RmControl` 验证 identity 的公开数值与 Binding 一致；每次控制在 capture 锁内验证全部 token、当前 channel 集合和候选唯一性。观测到新的相关 channel / compute object 或销毁/重绑后不继续使用缓存身份。
+
+真实观察入口把 RM alloc/free/bind 的 ioctl **及其账本更新**与自有 controls 串行化，避免仅锁事后记录的 TOCTOU。控制关键路径的快照验证不再重新分配向量或发 GET_INFO；初始化阶段做查询。
+
+## 限制与权限
+
+这仍是受限的用户态观测方案，不是通用 CUDA context 查询 API。适用前提为每进程一个目标 context、单 GPU、可捕获的 550.120 allocation ABI。库内部隐藏/direct syscall、未知复制/迁移/导入、未观察到的内部对象或平台代理均可能使观察不完整；检测到不完整即 `OBJECT_BINDING_UNAVAILABLE`，但仅凭 hook 没报错无法证明没有遗漏。没有通用多 context 映射或自动重新绑定。
+
+未审查的驱动 profile 下，hook 仍转发原 ioctl，但禁用私有 allocation payload 解码，inventory 记 ABI_UNVERIFIED；因此 CUDA baseline 无需使用 550 结构体猜测其他版本的对象。
+
+进程内捕获锁只能覆盖经此入口观察的调用；最终 object type、owner、access rights 仍由 stock RM 在 ioctl 内验证。原 FD 的 dup 保留 open-file 身份，不能赋予 NICE 权限。GET_INFO 接受不等于 PREEMPT / MAKE_REALTIME 权限或当前运行状态已通过。`NV_ERR_INVALID_CLIENT` 分类为 OWNERSHIP_REJECTED，但 raw status 保留；仅凭这个状态不能断言唯一原因就是 FD mismatch。
+
+若实机显示 hook 无法可靠绑定，最小缺口是 **self-object 查询/绑定**。先设计在原 RM FD、原 SecInfo 下返回带 generation/ref 生命周期的 owner-scoped opaque cookie，并在 RM 锁内验证 parent、GPU、engine；保留标准 control 权限。不要先新增 preempt primitive。条件方案与回滚边界见 [minimal_kmd_interface.md](minimal_kmd_interface.md)，本轮未生成/安装 patch。
+
+## 离线验证
+
+`phase2_contract_test` 覆盖唯一成功发现、多 TSG、多 compute channel、无 compute child、递归 FREE、H/C1 → free → H/C2 → unrelated FREE、旧 token 拒绝、重绑/新增 channel、client 隔离及复用、容量/不完整/不支持 ABI 拒绝。`rm_contract_test` 保留官方 ABI、EBADF、未更新 status 不能当成功与空身份拒绝。它们证明账本算法和拒绝逻辑，不证明实际 libcuda 的 interposition 完整性。

@@ -1,0 +1,78 @@
+[
+  {
+    "name": "build",
+    "command": [
+      "cmake",
+      "--build",
+      "active-preempt/build",
+      "-j4"
+    ],
+    "returncode": 0
+  },
+  {
+    "name": "ctest",
+    "command": [
+      "ctest",
+      "--test-dir",
+      "active-preempt/build",
+      "--output-on-failure"
+    ],
+    "returncode": 0
+  },
+  {
+    "name": "python_analysis",
+    "command": [
+      "python3",
+      "active-preempt/scripts/test_analysis.py"
+    ],
+    "returncode": 0
+  },
+  {
+    "name": "python_runner",
+    "command": [
+      "python3",
+      "active-preempt/scripts/test_runner.py"
+    ],
+    "returncode": 0
+  },
+  {
+    "name": "readback_build",
+    "command": [
+      "cmake",
+      "--build",
+      "active-preempt/build",
+      "-j4"
+    ],
+    "returncode": 0
+  },
+  {
+    "name": "readback_ctest",
+    "command": [
+      "ctest",
+      "--test-dir",
+      "active-preempt/build",
+      "--output-on-failure"
+    ],
+    "returncode": 0
+  },
+  {
+    "name": "profile_guard_build",
+    "command": [
+      "cmake",
+      "--build",
+      "active-preempt/build",
+      "-j4"
+    ],
+    "returncode": 0
+  },
+  {
+    "name": "profile_guard_ctest",
+    "command": [
+      "ctest",
+      "--test-dir",
+      "active-preempt/build",
+      "--output-on-failure"
+    ],
+    "returncode": 0
+  }
+]

@@ -1,0 +1,16 @@
+[ 12%] Built target preflight_cuda
+[ 18%] Building CXX object CMakeFiles/rm_control.dir/src/rm_control.cpp.o
+[ 25%] Linking CXX shared library librm_control.so
+[ 37%] Built target rm_control
+Consolidate compiler generated dependencies of target int_worker
+Consolidate compiler generated dependencies of target bg_worker
+[ 43%] Linking CXX executable phase2_contract_test
+[ 50%] Linking CUDA executable bg_worker
+[ 56%] Linking CXX executable event_dump
+[ 62%] Linking CUDA executable int_worker
+[ 68%] Built target event_dump
+[ 75%] Built target phase2_contract_test
+[ 81%] Built target bg_worker
+[ 87%] Built target int_worker
+[ 93%] Linking CXX executable rm_contract_test
+[100%] Built target rm_contract_test

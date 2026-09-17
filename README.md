@@ -3,9 +3,12 @@
 先读 [推荐结论](docs/recommendation.md)，再看 [完整源码考古](docs/source_archaeology.md) 和 [候选设计对比](docs/candidate_designs.md)。
 
 * [最小用户态 prototype 与运行方法](active-preempt/README.md)
+* [阶段二实际修改与测试](docs/phase2_changes.md)
+* [分阶段运行准备及 550/595 版本边界](docs/runtime_readiness.md)
+* [RM 对象绑定与生命周期](docs/object_binding.md)
 * [测量口径与无法观测的边界](active-preempt/docs/measurement.md)
 * [条件性的最小 KMD 接口提案](docs/minimal_kmd_interface.md)
-* [实际验证/未执行结果](results/summary.md)
+* [阶段一记录](results/summary.md) / [阶段二实际验证结果](results/phase2/summary.md)
 * [版本、调用点、历史及 NVOC 元数据证据](docs/evidence/)
 
 `GPreempt/` 和 `open-gpu-kernel-modules/` 以 Git submodule 固定源码版本；后者保持未修改的 550.120 checkout。没有安装或卸载驱动，没有生成虚假的 GPU benchmark 数据。

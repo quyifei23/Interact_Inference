@@ -1,0 +1,867 @@
+{
+  "baseline_550_120": {
+    "commit": "5e52edb2034de7db4d8ae368dbc7c26b416bfa16",
+    "host_abi": "Linux x86-64",
+    "layouts": {
+      "NVOS00_PARAMETERS": {
+        "sizeof": 16,
+        "alignof": 4,
+        "members": {
+          "hRoot": {
+            "offset": 0,
+            "size": 4
+          },
+          "hObjectParent": {
+            "offset": 4,
+            "size": 4
+          },
+          "hObjectOld": {
+            "offset": 8,
+            "size": 4
+          },
+          "status": {
+            "offset": 12,
+            "size": 4
+          }
+        }
+      },
+      "NVOS21_PARAMETERS": {
+        "sizeof": 32,
+        "alignof": 8,
+        "members": {
+          "hRoot": {
+            "offset": 0,
+            "size": 4
+          },
+          "hObjectParent": {
+            "offset": 4,
+            "size": 4
+          },
+          "hObjectNew": {
+            "offset": 8,
+            "size": 4
+          },
+          "hClass": {
+            "offset": 12,
+            "size": 4
+          },
+          "pAllocParms": {
+            "offset": 16,
+            "size": 8
+          },
+          "paramsSize": {
+            "offset": 24,
+            "size": 4
+          },
+          "status": {
+            "offset": 28,
+            "size": 4
+          }
+        }
+      },
+      "NVOS64_PARAMETERS": {
+        "sizeof": 48,
+        "alignof": 8,
+        "members": {
+          "hRoot": {
+            "offset": 0,
+            "size": 4
+          },
+          "hObjectParent": {
+            "offset": 4,
+            "size": 4
+          },
+          "hObjectNew": {
+            "offset": 8,
+            "size": 4
+          },
+          "hClass": {
+            "offset": 12,
+            "size": 4
+          },
+          "pAllocParms": {
+            "offset": 16,
+            "size": 8
+          },
+          "pRightsRequested": {
+            "offset": 24,
+            "size": 8
+          },
+          "paramsSize": {
+            "offset": 32,
+            "size": 4
+          },
+          "flags": {
+            "offset": 36,
+            "size": 4
+          },
+          "status": {
+            "offset": 40,
+            "size": 4
+          }
+        }
+      },
+      "NVOS54_PARAMETERS": {
+        "sizeof": 32,
+        "alignof": 8,
+        "members": {
+          "hClient": {
+            "offset": 0,
+            "size": 4
+          },
+          "hObject": {
+            "offset": 4,
+            "size": 4
+          },
+          "cmd": {
+            "offset": 8,
+            "size": 4
+          },
+          "flags": {
+            "offset": 12,
+            "size": 4
+          },
+          "params": {
+            "offset": 16,
+            "size": 8
+          },
+          "paramsSize": {
+            "offset": 24,
+            "size": 4
+          },
+          "status": {
+            "offset": 28,
+            "size": 4
+          }
+        }
+      },
+      "NV_CHANNEL_GROUP_ALLOCATION_PARAMETERS": {
+        "sizeof": 20,
+        "alignof": 4,
+        "members": {
+          "hObjectError": {
+            "offset": 0,
+            "size": 4
+          },
+          "hObjectEccError": {
+            "offset": 4,
+            "size": 4
+          },
+          "hVASpace": {
+            "offset": 8,
+            "size": 4
+          },
+          "engineType": {
+            "offset": 12,
+            "size": 4
+          },
+          "bIsCallingContextVgpuPlugin": {
+            "offset": 16,
+            "size": 1
+          }
+        }
+      },
+      "NVA06C_CTRL_PREEMPT_PARAMS": {
+        "sizeof": 8,
+        "alignof": 4,
+        "members": {
+          "bWait": {
+            "offset": 0,
+            "size": 1
+          },
+          "bManualTimeout": {
+            "offset": 1,
+            "size": 1
+          },
+          "timeoutUs": {
+            "offset": 4,
+            "size": 4
+          }
+        }
+      },
+      "NVA06C_CTRL_MAKE_REALTIME_PARAMS": {
+        "sizeof": 1,
+        "alignof": 1,
+        "members": {
+          "bRealtime": {
+            "offset": 0,
+            "size": 1
+          }
+        }
+      },
+      "NVA06F_CTRL_RESTART_RUNLIST_PARAMS": {
+        "sizeof": 2,
+        "alignof": 1,
+        "members": {
+          "bForceRestart": {
+            "offset": 0,
+            "size": 1
+          },
+          "bBypassWait": {
+            "offset": 1,
+            "size": 1
+          }
+        }
+      },
+      "NVA06C_CTRL_TIMESLICE_PARAMS": {
+        "sizeof": 8,
+        "alignof": 8,
+        "members": {
+          "timesliceUs": {
+            "offset": 0,
+            "size": 8
+          }
+        }
+      },
+      "NVA06C_CTRL_GET_INFO_PARAMS": {
+        "sizeof": 4,
+        "alignof": 4,
+        "members": {
+          "tsgID": {
+            "offset": 0,
+            "size": 4
+          }
+        }
+      },
+      "NVA06F_CTRL_BIND_PARAMS": {
+        "sizeof": 4,
+        "alignof": 4,
+        "members": {
+          "engineType": {
+            "offset": 0,
+            "size": 4
+          }
+        }
+      },
+      "NV2080_CTRL_GR_GET_CTXSW_MODES_PARAMS": {
+        "sizeof": 24,
+        "alignof": 4,
+        "members": {
+          "hChannel": {
+            "offset": 0,
+            "size": 4
+          },
+          "zcullMode": {
+            "offset": 4,
+            "size": 4
+          },
+          "pmMode": {
+            "offset": 8,
+            "size": 4
+          },
+          "smpcMode": {
+            "offset": 12,
+            "size": 4
+          },
+          "cilpPreemptMode": {
+            "offset": 16,
+            "size": 4
+          },
+          "gfxpPreemptMode": {
+            "offset": 20,
+            "size": 4
+          }
+        }
+      },
+      "NV2080_CTRL_FIFO_DISABLE_CHANNELS_PARAMS": {
+        "sizeof": 536,
+        "alignof": 8,
+        "members": {
+          "bDisable": {
+            "offset": 0,
+            "size": 1
+          },
+          "bOnlyDisableScheduling": {
+            "offset": 8,
+            "size": 1
+          },
+          "bRewindGpPut": {
+            "offset": 9,
+            "size": 1
+          },
+          "numChannels": {
+            "offset": 4,
+            "size": 4
+          },
+          "hClientList": {
+            "offset": 24,
+            "size": 256
+          },
+          "hChannelList": {
+            "offset": 280,
+            "size": 256
+          },
+          "pRunlistPreemptEvent": {
+            "offset": 16,
+            "size": 8
+          }
+        }
+      }
+    },
+    "commands": {
+      "NVA06C_CTRL_CMD_PREEMPT": 2691432709,
+      "NVA06C_CTRL_CMD_MAKE_REALTIME": 2691432720,
+      "NVA06F_CTRL_CMD_RESTART_RUNLIST": 2691629329,
+      "NVA06C_CTRL_CMD_SET_TIMESLICE": 2691432707,
+      "NVA06C_CTRL_CMD_GET_TIMESLICE": 2691432708,
+      "NVA06C_CTRL_CMD_GET_INFO": 2691432710,
+      "NVA06C_CTRL_CMD_BIND": 2691432706,
+      "NVA06F_CTRL_CMD_BIND": 2691629316,
+      "NV2080_CTRL_CMD_GR_GET_CTXSW_MODES": 545264181,
+      "NV2080_CTRL_CMD_FIFO_DISABLE_CHANNELS": 545263883
+    },
+    "metadata": {
+      "0xa06c0102": {
+        "file": "src/nvidia/generated/g_kernel_channel_group_api_nvoc.c",
+        "function": "kchangrpapiCtrlCmdBind",
+        "flags": "0x10",
+        "accessRight_mask": "0x0",
+        "decoded_flags": [
+          "RMCTRL_FLAGS_NON_PRIVILEGED"
+        ]
+      },
+      "0xa06c0103": {
+        "file": "src/nvidia/generated/g_kernel_channel_group_api_nvoc.c",
+        "function": "kchangrpapiCtrlCmdSetTimeslice",
+        "flags": "0x10",
+        "accessRight_mask": "0x0",
+        "decoded_flags": [
+          "RMCTRL_FLAGS_NON_PRIVILEGED"
+        ]
+      },
+      "0xa06c0104": {
+        "file": "src/nvidia/generated/g_kernel_channel_group_api_nvoc.c",
+        "function": "kchangrpapiCtrlCmdGetTimeslice",
+        "flags": "0x10",
+        "accessRight_mask": "0x0",
+        "decoded_flags": [
+          "RMCTRL_FLAGS_NON_PRIVILEGED"
+        ]
+      },
+      "0xa06c0105": {
+        "file": "src/nvidia/generated/g_kernel_channel_group_api_nvoc.c",
+        "function": "kchangrpapiCtrlCmdPreempt",
+        "flags": "0x2210",
+        "accessRight_mask": "0x0",
+        "decoded_flags": [
+          "RMCTRL_FLAGS_NON_PRIVILEGED",
+          "RMCTRL_FLAGS_ROUTE_TO_PHYSICAL",
+          "RMCTRL_FLAGS_ROUTE_TO_VGPU_HOST"
+        ]
+      },
+      "0xa06c0106": {
+        "file": "src/nvidia/generated/g_kernel_channel_group_api_nvoc.c",
+        "function": "kchangrpapiCtrlCmdGetInfo",
+        "flags": "0x10",
+        "accessRight_mask": "0x0",
+        "decoded_flags": [
+          "RMCTRL_FLAGS_NON_PRIVILEGED"
+        ]
+      },
+      "0xa06c0110": {
+        "file": "src/nvidia/generated/g_kernel_channel_group_api_nvoc.c",
+        "function": "kchangrpapiCtrlCmdMakeRealtime",
+        "flags": "0x210",
+        "accessRight_mask": "0x2",
+        "decoded_flags": [
+          "RMCTRL_FLAGS_NON_PRIVILEGED",
+          "RMCTRL_FLAGS_ROUTE_TO_PHYSICAL"
+        ]
+      },
+      "0xa06f0104": {
+        "file": "src/nvidia/generated/g_kernel_channel_nvoc.c",
+        "function": "kchannelCtrlCmdBind",
+        "flags": "0x10",
+        "accessRight_mask": "0x0",
+        "decoded_flags": [
+          "RMCTRL_FLAGS_NON_PRIVILEGED"
+        ]
+      },
+      "0xa06f0111": {
+        "file": "src/nvidia/generated/g_kernel_channel_nvoc.c",
+        "function": "kchannelCtrlCmdRestartRunlist",
+        "flags": "0x2210",
+        "accessRight_mask": "0x2",
+        "decoded_flags": [
+          "RMCTRL_FLAGS_NON_PRIVILEGED",
+          "RMCTRL_FLAGS_ROUTE_TO_PHYSICAL",
+          "RMCTRL_FLAGS_ROUTE_TO_VGPU_HOST"
+        ]
+      },
+      "0x2080110b": {
+        "file": "src/nvidia/generated/g_subdevice_nvoc.c",
+        "function": "subdeviceCtrlCmdFifoDisableChannels",
+        "flags": "0x810",
+        "accessRight_mask": "0x0",
+        "decoded_flags": [
+          "RMCTRL_FLAGS_NON_PRIVILEGED",
+          "RMCTRL_FLAGS_API_LOCK_READONLY"
+        ]
+      },
+      "0x20801235": {
+        "file": "src/nvidia/generated/g_subdevice_nvoc.c",
+        "function": "subdeviceCtrlCmdKGrGetCtxswModes",
+        "flags": "0x2210",
+        "accessRight_mask": "0x0",
+        "decoded_flags": [
+          "RMCTRL_FLAGS_NON_PRIVILEGED",
+          "RMCTRL_FLAGS_ROUTE_TO_PHYSICAL",
+          "RMCTRL_FLAGS_ROUTE_TO_VGPU_HOST"
+        ]
+      }
+    },
+    "source_sha256": {
+      "src/common/sdk/nvidia/inc/ctrl/ctrla06c.h": "3ebd22b3d471e4242497e063fd8bbf678f283fa6ec479af4e1f7faad315ff56a",
+      "src/common/sdk/nvidia/inc/ctrl/ctrla06f/ctrla06fgpfifo.h": "2fd1e6e97a9c2cd97abbffdef380be9b343987b6194edc72778bb6110f5fa8ce",
+      "src/common/sdk/nvidia/inc/ctrl/ctrl2080/ctrl2080gr.h": "6d3046641e5c64c09f5526248d1287b7d123fd37ce731fbc660d151990bf298a",
+      "src/common/sdk/nvidia/inc/ctrl/ctrl2080/ctrl2080fifo.h": "760f63793f5e469d396197247fd3aae8a9eb973c6eea71ed307f8a5b599f8845",
+      "src/common/sdk/nvidia/inc/nvos.h": "9c61543399859e3f759b27c0421c27cd124200b8f2044b97e414b125a0410874",
+      "src/nvidia/src/kernel/rmapi/client.c": "e024b0772cb3f3940c34a0d67896580e25d7f98253071a175d206f5d26b84947",
+      "src/nvidia/src/kernel/rmapi/client_resource.c": "1c697d30b12d13584a2f411834b9622b8af5c94858dbd49404246f51b0a2747f",
+      "src/nvidia/src/kernel/rmapi/resource.c": "45a1650192f54dd876a4cb0a36ea1e98cede9797bf203cc199cce7167e57f2f4",
+      "src/nvidia/src/kernel/rmapi/control.c": "163cc998bb6c67bb1c0a437d30c890e63c50b3bec0ff866467d653aeb5053e72",
+      "src/nvidia/arch/nvalloc/unix/src/escape.c": "aad3065135ea6a06084828ab6ec63dedb96101fa69a20b7e9dc71c0bc38959f8",
+      "src/nvidia/inc/kernel/rmapi/control.h": "26e0bb440d75b5a1a5e822cb569d0626367ade79edd810073247ec0179a6230a",
+      "src/common/sdk/nvidia/inc/rs_access.h": "75de8cb7d5c6e7d4010135e8257b36dccbb1172adeb1d76fdcdcecc2d252616f",
+      "kernel-open/nvidia/os-interface.c": "6a0d5247fc772624b5ed0d7a25edeab93981faf6876a6af40617e5c1e05ef8a9",
+      "src/nvidia/src/kernel/gpu/fifo/kernel_channel.c": "9edf8e9e15fa18d9570bdd967e82a0ad2b1e15efd93e551690e9e3190b8c05dd",
+      "src/nvidia/src/kernel/gpu/fifo/kernel_channel_group_api.c": "443bc52f8d261291b39e439a5cba46f50c402e901f82dbdb5eb8404894a4a861",
+      "src/nvidia/kernel/vgpu/nv/rpc.c": "31c4c90276399a2d83a6b1a8c14b4b36d9d21aabf9829b37fb16dc2cdda4d59c"
+    }
+  },
+  "comparison_595_58_03": {
+    "commit": "db0c4e65c8e34c678d745ddb1317f53f90d1072b",
+    "host_abi": "Linux x86-64",
+    "layouts": {
+      "NVOS00_PARAMETERS": {
+        "sizeof": 16,
+        "alignof": 4,
+        "members": {
+          "hRoot": {
+            "offset": 0,
+            "size": 4
+          },
+          "hObjectParent": {
+            "offset": 4,
+            "size": 4
+          },
+          "hObjectOld": {
+            "offset": 8,
+            "size": 4
+          },
+          "status": {
+            "offset": 12,
+            "size": 4
+          }
+        }
+      },
+      "NVOS21_PARAMETERS": {
+        "sizeof": 32,
+        "alignof": 8,
+        "members": {
+          "hRoot": {
+            "offset": 0,
+            "size": 4
+          },
+          "hObjectParent": {
+            "offset": 4,
+            "size": 4
+          },
+          "hObjectNew": {
+            "offset": 8,
+            "size": 4
+          },
+          "hClass": {
+            "offset": 12,
+            "size": 4
+          },
+          "pAllocParms": {
+            "offset": 16,
+            "size": 8
+          },
+          "paramsSize": {
+            "offset": 24,
+            "size": 4
+          },
+          "status": {
+            "offset": 28,
+            "size": 4
+          }
+        }
+      },
+      "NVOS64_PARAMETERS": {
+        "sizeof": 48,
+        "alignof": 8,
+        "members": {
+          "hRoot": {
+            "offset": 0,
+            "size": 4
+          },
+          "hObjectParent": {
+            "offset": 4,
+            "size": 4
+          },
+          "hObjectNew": {
+            "offset": 8,
+            "size": 4
+          },
+          "hClass": {
+            "offset": 12,
+            "size": 4
+          },
+          "pAllocParms": {
+            "offset": 16,
+            "size": 8
+          },
+          "pRightsRequested": {
+            "offset": 24,
+            "size": 8
+          },
+          "paramsSize": {
+            "offset": 32,
+            "size": 4
+          },
+          "flags": {
+            "offset": 36,
+            "size": 4
+          },
+          "status": {
+            "offset": 40,
+            "size": 4
+          }
+        }
+      },
+      "NVOS54_PARAMETERS": {
+        "sizeof": 32,
+        "alignof": 8,
+        "members": {
+          "hClient": {
+            "offset": 0,
+            "size": 4
+          },
+          "hObject": {
+            "offset": 4,
+            "size": 4
+          },
+          "cmd": {
+            "offset": 8,
+            "size": 4
+          },
+          "flags": {
+            "offset": 12,
+            "size": 4
+          },
+          "params": {
+            "offset": 16,
+            "size": 8
+          },
+          "paramsSize": {
+            "offset": 24,
+            "size": 4
+          },
+          "status": {
+            "offset": 28,
+            "size": 4
+          }
+        }
+      },
+      "NV_CHANNEL_GROUP_ALLOCATION_PARAMETERS": {
+        "sizeof": 20,
+        "alignof": 4,
+        "members": {
+          "hObjectError": {
+            "offset": 0,
+            "size": 4
+          },
+          "hObjectEccError": {
+            "offset": 4,
+            "size": 4
+          },
+          "hVASpace": {
+            "offset": 8,
+            "size": 4
+          },
+          "engineType": {
+            "offset": 12,
+            "size": 4
+          },
+          "bIsCallingContextVgpuPlugin": {
+            "offset": 16,
+            "size": 1
+          }
+        }
+      },
+      "NVA06C_CTRL_PREEMPT_PARAMS": {
+        "sizeof": 8,
+        "alignof": 4,
+        "members": {
+          "bWait": {
+            "offset": 0,
+            "size": 1
+          },
+          "bManualTimeout": {
+            "offset": 1,
+            "size": 1
+          },
+          "timeoutUs": {
+            "offset": 4,
+            "size": 4
+          }
+        }
+      },
+      "NVA06C_CTRL_MAKE_REALTIME_PARAMS": {
+        "sizeof": 1,
+        "alignof": 1,
+        "members": {
+          "bRealtime": {
+            "offset": 0,
+            "size": 1
+          }
+        }
+      },
+      "NVA06F_CTRL_RESTART_RUNLIST_PARAMS": {
+        "sizeof": 2,
+        "alignof": 1,
+        "members": {
+          "bForceRestart": {
+            "offset": 0,
+            "size": 1
+          },
+          "bBypassWait": {
+            "offset": 1,
+            "size": 1
+          }
+        }
+      },
+      "NVA06C_CTRL_TIMESLICE_PARAMS": {
+        "sizeof": 8,
+        "alignof": 8,
+        "members": {
+          "timesliceUs": {
+            "offset": 0,
+            "size": 8
+          }
+        }
+      },
+      "NVA06C_CTRL_GET_INFO_PARAMS": {
+        "sizeof": 4,
+        "alignof": 4,
+        "members": {
+          "tsgID": {
+            "offset": 0,
+            "size": 4
+          }
+        }
+      },
+      "NVA06F_CTRL_BIND_PARAMS": {
+        "sizeof": 4,
+        "alignof": 4,
+        "members": {
+          "engineType": {
+            "offset": 0,
+            "size": 4
+          }
+        }
+      },
+      "NV2080_CTRL_GR_GET_CTXSW_MODES_PARAMS": {
+        "sizeof": 24,
+        "alignof": 4,
+        "members": {
+          "hChannel": {
+            "offset": 0,
+            "size": 4
+          },
+          "zcullMode": {
+            "offset": 4,
+            "size": 4
+          },
+          "pmMode": {
+            "offset": 8,
+            "size": 4
+          },
+          "smpcMode": {
+            "offset": 12,
+            "size": 4
+          },
+          "cilpPreemptMode": {
+            "offset": 16,
+            "size": 4
+          },
+          "gfxpPreemptMode": {
+            "offset": 20,
+            "size": 4
+          }
+        }
+      },
+      "NV2080_CTRL_FIFO_DISABLE_CHANNELS_PARAMS": {
+        "sizeof": 536,
+        "alignof": 8,
+        "members": {
+          "bDisable": {
+            "offset": 0,
+            "size": 1
+          },
+          "bOnlyDisableScheduling": {
+            "offset": 8,
+            "size": 1
+          },
+          "bRewindGpPut": {
+            "offset": 9,
+            "size": 1
+          },
+          "numChannels": {
+            "offset": 4,
+            "size": 4
+          },
+          "hClientList": {
+            "offset": 24,
+            "size": 256
+          },
+          "hChannelList": {
+            "offset": 280,
+            "size": 256
+          },
+          "pRunlistPreemptEvent": {
+            "offset": 16,
+            "size": 8
+          }
+        }
+      }
+    },
+    "commands": {
+      "NVA06C_CTRL_CMD_PREEMPT": 2691432709,
+      "NVA06C_CTRL_CMD_MAKE_REALTIME": 2691432720,
+      "NVA06F_CTRL_CMD_RESTART_RUNLIST": 2691629329,
+      "NVA06C_CTRL_CMD_SET_TIMESLICE": 2691432707,
+      "NVA06C_CTRL_CMD_GET_TIMESLICE": 2691432708,
+      "NVA06C_CTRL_CMD_GET_INFO": 2691432710,
+      "NVA06C_CTRL_CMD_BIND": 2691432706,
+      "NVA06F_CTRL_CMD_BIND": 2691629316,
+      "NV2080_CTRL_CMD_GR_GET_CTXSW_MODES": 545264181,
+      "NV2080_CTRL_CMD_FIFO_DISABLE_CHANNELS": 545263883
+    },
+    "metadata": {
+      "0xa06c0102": {
+        "file": "src/nvidia/generated/g_kernel_channel_group_api_nvoc.c",
+        "function": "kchangrpapiCtrlCmdBind",
+        "flags": "0x8",
+        "accessRight_mask": "0x0",
+        "decoded_flags": [
+          "RMCTRL_FLAGS_NON_PRIVILEGED"
+        ]
+      },
+      "0xa06c0103": {
+        "file": "src/nvidia/generated/g_kernel_channel_group_api_nvoc.c",
+        "function": "kchangrpapiCtrlCmdSetTimeslice",
+        "flags": "0x10008",
+        "accessRight_mask": "0x0",
+        "decoded_flags": [
+          "RMCTRL_FLAGS_NON_PRIVILEGED",
+          "RMCTRL_FLAGS_GSP_PLUGIN_FOR_VGPU_GSP"
+        ]
+      },
+      "0xa06c0104": {
+        "file": "src/nvidia/generated/g_kernel_channel_group_api_nvoc.c",
+        "function": "kchangrpapiCtrlCmdGetTimeslice",
+        "flags": "0x8",
+        "accessRight_mask": "0x0",
+        "decoded_flags": [
+          "RMCTRL_FLAGS_NON_PRIVILEGED"
+        ]
+      },
+      "0xa06c0105": {
+        "file": "src/nvidia/generated/g_kernel_channel_group_api_nvoc.c",
+        "function": "kchangrpapiCtrlCmdPreempt",
+        "flags": "0x10248",
+        "accessRight_mask": "0x0",
+        "decoded_flags": [
+          "RMCTRL_FLAGS_NON_PRIVILEGED",
+          "RMCTRL_FLAGS_ROUTE_TO_PHYSICAL",
+          "RMCTRL_FLAGS_ROUTE_TO_VGPU_HOST",
+          "RMCTRL_FLAGS_GSP_PLUGIN_FOR_VGPU_GSP"
+        ]
+      },
+      "0xa06c0106": {
+        "file": "src/nvidia/generated/g_kernel_channel_group_api_nvoc.c",
+        "function": "kchangrpapiCtrlCmdGetInfo",
+        "flags": "0x8",
+        "accessRight_mask": "0x0",
+        "decoded_flags": [
+          "RMCTRL_FLAGS_NON_PRIVILEGED"
+        ]
+      },
+      "0xa06c0110": {
+        "file": "src/nvidia/generated/g_kernel_channel_group_api_nvoc.c",
+        "function": "kchangrpapiCtrlCmdMakeRealtime",
+        "flags": "0x48",
+        "accessRight_mask": "0x2",
+        "decoded_flags": [
+          "RMCTRL_FLAGS_NON_PRIVILEGED",
+          "RMCTRL_FLAGS_ROUTE_TO_PHYSICAL"
+        ]
+      },
+      "0xa06f0104": {
+        "file": "src/nvidia/generated/g_kernel_channel_nvoc.c",
+        "function": "kchannelCtrlCmdBind",
+        "flags": "0x10008",
+        "accessRight_mask": "0x0",
+        "decoded_flags": [
+          "RMCTRL_FLAGS_NON_PRIVILEGED",
+          "RMCTRL_FLAGS_GSP_PLUGIN_FOR_VGPU_GSP"
+        ]
+      },
+      "0xa06f0111": {
+        "file": "src/nvidia/generated/g_kernel_channel_nvoc.c",
+        "function": "kchannelCtrlCmdRestartRunlist",
+        "flags": "0x48",
+        "accessRight_mask": "0x2",
+        "decoded_flags": [
+          "RMCTRL_FLAGS_NON_PRIVILEGED",
+          "RMCTRL_FLAGS_ROUTE_TO_PHYSICAL"
+        ]
+      },
+      "0x2080110b": {
+        "file": "src/nvidia/generated/g_subdevice_nvoc.c",
+        "function": "subdeviceCtrlCmdFifoDisableChannels",
+        "flags": "0x10108",
+        "accessRight_mask": "0x0",
+        "decoded_flags": [
+          "RMCTRL_FLAGS_NON_PRIVILEGED",
+          "RMCTRL_FLAGS_API_LOCK_READONLY",
+          "RMCTRL_FLAGS_GSP_PLUGIN_FOR_VGPU_GSP"
+        ]
+      },
+      "0x20801235": {
+        "file": "src/nvidia/generated/g_subdevice_nvoc.c",
+        "function": "subdeviceCtrlCmdKGrGetCtxswModes",
+        "flags": "0x48",
+        "accessRight_mask": "0x0",
+        "decoded_flags": [
+          "RMCTRL_FLAGS_NON_PRIVILEGED",
+          "RMCTRL_FLAGS_ROUTE_TO_PHYSICAL"
+        ]
+      }
+    },
+    "source_sha256": {
+      "src/common/sdk/nvidia/inc/ctrl/ctrla06c.h": "e3a92aa6db7774e5cbf1f672089532e5e3ce05d22dc54e330c8132889171a11f",
+      "src/common/sdk/nvidia/inc/ctrl/ctrla06f/ctrla06fgpfifo.h": "0364c6aa445dec859c8889017e91351de66345d82f09e2dfcef9892b0ed3f63d",
+      "src/common/sdk/nvidia/inc/ctrl/ctrl2080/ctrl2080gr.h": "23e6eb351162dca855327906756b94517dffc3bfe8200ab6e5bbb042cb539a6d",
+      "src/common/sdk/nvidia/inc/ctrl/ctrl2080/ctrl2080fifo.h": "11228344ef57ddb8e648b95b774eb3aaf6da3675c918f0d0dd1353fc12faf6da",
+      "src/common/sdk/nvidia/inc/nvos.h": "5786e4c046f08dd627f13760474599624d578325938fe269cb4321c2e3502c02",
+      "src/nvidia/src/kernel/rmapi/client.c": "349ace71a9cf2a70214e8cbf95738a5ecaa5c3de9bc79695fa4d8cc75d41e4e8",
+      "src/nvidia/src/kernel/rmapi/client_resource.c": "267664e4a8b05766c0cd29f4c2a396b882d234c46fb8d06df27d2254aa4fe8a8",
+      "src/nvidia/src/kernel/rmapi/resource.c": "97d2faff44b579da4d5cb16058611051ff6c6668d671fbfa45894b55ebc1f818",
+      "src/nvidia/src/kernel/rmapi/control.c": "0c686e045845dda879194024c09f33434563b586bfddf9a435db36d5a4f38ff1",
+      "src/nvidia/arch/nvalloc/unix/src/escape.c": "72d7414c07715eb62f33a32168c6d243ad64cf5ed7750ae1e6f496a4cc6cfe51",
+      "src/nvidia/inc/kernel/rmapi/control.h": "97ad0672655e41a8599c5f7ca74dc90b6fbac7df809507239f0d180cc0684bfa",
+      "src/common/sdk/nvidia/inc/rs_access.h": "ee3174aa565a08594f66c325b06d24bd8e798d933bf74ff12c803cf3614bb117",
+      "kernel-open/nvidia/os-interface.c": "09453a527422772e8575797c45ddc589dcedebb1a12e26b9b1ed270b4f5f7efb",
+      "src/nvidia/src/kernel/gpu/fifo/kernel_channel.c": "6439e820908ded60cdf2ebc04fb8ac82785ef6fa4a217134c8fc642c702fab3e",
+      "src/nvidia/src/kernel/gpu/fifo/kernel_channel_group_api.c": "7554c2879e3b943010281c3717a88ad8a2d2bb0f6318270d45e8a088c7709b9e",
+      "src/nvidia/src/kernel/vgpu/rpc.c": "85865ef48f5239e588b21238f73c1cade5669235972429c1a9f2b94fe9b99226"
+    }
+  },
+  "layout_changes": {},
+  "control_id_changes": {},
+  "runtime_profile_enabled_by_this_audit": false
+}

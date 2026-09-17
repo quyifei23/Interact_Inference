@@ -1,0 +1,18 @@
+{
+  "utc": "2026-09-17T05:16:11.256250+00:00",
+  "argv": [
+    "active-preempt/scripts/run_matrix.py",
+    "--output",
+    "results/phase2/matrix-readiness",
+    "--trials",
+    "1",
+    "--modes",
+    "int-only",
+    "none"
+  ],
+  "canonical_modes": [
+    "int-only",
+    "none"
+  ],
+  "run_kind": "performance"
+}

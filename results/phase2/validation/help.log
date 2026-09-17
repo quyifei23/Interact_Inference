@@ -1,0 +1,6 @@
+int_worker --probe-cuda | --probe-rm-identity | --probe-rm-readonly [--run-dir DIR]
+int_worker --run-dir DIR --mode int-only|none|timeslice|preempt-wait|preempt-async|realtime-only|realtime-restart|realtime|disable|disable-split
+[--trials 1] [--cta-waves 1..16] [--bg-iterations N] [--int-iterations N] [--bg-us 80000] [--int-us 300]
+[--heartbeat-ns 2000] [--timeslice-us 1] [--force 0|1] [--bypass 0|1] [--diagnostic-progress]
+Active modes require --test-host-confirmed. Async/force/bypass/D also require --allow-extended.
+Graph requires --graph --graph-evidence-reviewed after independent plain-kernel evidence review. --probe aliases --probe-cuda.

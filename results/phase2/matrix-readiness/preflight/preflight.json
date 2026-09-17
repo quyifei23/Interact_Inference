@@ -1,0 +1,189 @@
+{
+  "utc": "2026-09-17T05:16:11.302779+00:00",
+  "uid": 1004,
+  "euid": 1004,
+  "gid": 2000,
+  "groups": [
+    65534,
+    65534,
+    2000
+  ],
+  "scheduling_controls_issued": 0,
+  "performance_samples": 0,
+  "commands": [
+    {
+      "call": [
+        "git",
+        "rev-parse",
+        "HEAD"
+      ],
+      "returncode": 0,
+      "stdout": "9d578f24fdaa102ad94e6db2093ec14386416138\n",
+      "stderr": ""
+    },
+    {
+      "call": [
+        "git",
+        "status",
+        "--porcelain"
+      ],
+      "returncode": 0,
+      "stdout": " M active-preempt/CMakeLists.txt\n M active-preempt/README.md\n M active-preempt/docs/measurement.md\n M active-preempt/scripts/run_matrix.py\n M active-preempt/scripts/summarize.py\n M active-preempt/scripts/test_analysis.py\n M active-preempt/src/bg_worker.cu\n M active-preempt/src/int_worker.cu\n M active-preempt/src/protocol.h\n M active-preempt/src/rm_control.cpp\n M active-preempt/src/rm_control.h\n M active-preempt/src/worker_common.cuh\n M docs/recommendation.md\n?? active-preempt/scripts/audit_profiles.py\n?? active-preempt/scripts/preflight.py\n?? active-preempt/scripts/test_runner.py\n?? active-preempt/scripts/test_schema_integration.py\n?? active-preempt/src/control_events.cpp\n?? active-preempt/src/control_events.h\n?? active-preempt/src/event_dump.cpp\n?? active-preempt/src/json_log.h\n?? active-preempt/src/mode_plan.h\n?? active-preempt/src/object_registry.cpp\n?? active-preempt/src/object_registry.h\n?? active-preempt/src/options.h\n?? active-preempt/src/phase2_contract_test.cpp\n?? active-preempt/src/preflight.cu\n?? active-preempt/src/recovery.h\n?? active-preempt/src/trial_record.h\n?? docs/evidence/phase2/\n?? docs/object_binding.md\n?? docs/runtime_readiness.md\n?? results/phase2/\n",
+      "stderr": ""
+    },
+    {
+      "call": [
+        "uname",
+        "-a"
+      ],
+      "returncode": 0,
+      "stdout": "Linux JY-R308-E03-8 5.15.0-186-generic #196-Ubuntu SMP Sat Jun 20 16:09:34 UTC 2026 x86_64 x86_64 x86_64 GNU/Linux\n",
+      "stderr": ""
+    },
+    {
+      "call": [
+        "cat",
+        "/proc/driver/nvidia/version"
+      ],
+      "returncode": 0,
+      "stdout": "NVRM version: NVIDIA UNIX x86_64 Kernel Module  595.58.03  Tue Mar 17 19:54:55 UTC 2026\nGCC version:  gcc version 11.4.0 (Ubuntu 11.4.0-1ubuntu1~22.04.3) \n",
+      "stderr": ""
+    },
+    {
+      "call": [
+        "nvidia-smi",
+        "-q"
+      ],
+      "returncode": 9,
+      "stdout": "NVIDIA-SMI has failed because it couldn't communicate with the NVIDIA driver. Make sure that the latest NVIDIA driver is installed and running.\n\n",
+      "stderr": ""
+    },
+    {
+      "call": [
+        "nvidia-smi",
+        "-L"
+      ],
+      "returncode": 9,
+      "stdout": "NVIDIA-SMI has failed because it couldn't communicate with the NVIDIA driver. Make sure that the latest NVIDIA driver is installed and running.\n\n",
+      "stderr": ""
+    },
+    {
+      "call": [
+        "nvidia-smi",
+        "--query-compute-apps=pid,process_name,gpu_uuid",
+        "--format=csv,noheader"
+      ],
+      "returncode": 9,
+      "stdout": "NVIDIA-SMI has failed because it couldn't communicate with the NVIDIA driver. Make sure that the latest NVIDIA driver is installed and running.\n\n",
+      "stderr": ""
+    },
+    {
+      "call": [
+        "nvcc",
+        "--version"
+      ],
+      "returncode": 0,
+      "stdout": "nvcc: NVIDIA (R) Cuda compiler driver\nCopyright (c) 2005-2025 NVIDIA Corporation\nBuilt on Wed_Jan_15_19:20:09_PST_2025\nCuda compilation tools, release 12.8, V12.8.61\nBuild cuda_12.8.r12.8/compiler.35404655_0\n",
+      "stderr": ""
+    },
+    {
+      "call": [
+        "capsh",
+        "--print"
+      ],
+      "returncode": 0,
+      "stdout": "Current: =\nBounding set =\nAmbient set =\nCurrent IAB: !cap_chown,!cap_dac_override,!cap_dac_read_search,!cap_fowner,!cap_fsetid,!cap_kill,!cap_setgid,!cap_setuid,!cap_setpcap,!cap_linux_immutable,!cap_net_bind_service,!cap_net_broadcast,!cap_net_admin,!cap_net_raw,!cap_ipc_lock,!cap_ipc_owner,!cap_sys_module,!cap_sys_rawio,!cap_sys_chroot,!cap_sys_ptrace,!cap_sys_pacct,!cap_sys_admin,!cap_sys_boot,!cap_sys_nice,!cap_sys_resource,!cap_sys_time,!cap_sys_tty_config,!cap_mknod,!cap_lease,!cap_audit_write,!cap_audit_control,!cap_setfcap,!cap_mac_override,!cap_mac_admin,!cap_syslog,!cap_wake_alarm,!cap_block_suspend,!cap_audit_read,!cap_perfmon,!cap_bpf,!cap_checkpoint_restore\nSecurebits: 00/0x0/1'b0\n secure-noroot: no (unlocked)\n secure-no-suid-fixup: no (unlocked)\n secure-keep-caps: no (unlocked)\n secure-no-ambient-raise: no (unlocked)\nuid=1004(quyifei) euid=1004(quyifei)\ngid=2000(AMS-Group)\ngroups=65534(nogroup),65534(nogroup),2000(AMS-Group)\nGuessed mode: UNCERTAIN (0)\n",
+      "stderr": ""
+    },
+    {
+      "call": [
+        "systemd-detect-virt"
+      ],
+      "returncode": 1,
+      "stdout": "none\n",
+      "stderr": ""
+    },
+    {
+      "call": [
+        "ps",
+        "-eo",
+        "pid,comm"
+      ],
+      "returncode": 0,
+      "stdout": "    PID COMMAND\n      1 codex\n      2 bash\n      4 python3\n    168 python3\n    169 python3\n    200 ps\n",
+      "stderr": ""
+    },
+    {
+      "call": [
+        "cat",
+        "/proc/driver/nvidia/params"
+      ],
+      "returncode": 0,
+      "stdout": "ResmanDebugLevel: 4294967295\nRmLogonRC: 1\nModifyDeviceFiles: 1\nDeviceFileUID: 0\nDeviceFileGID: 0\nDeviceFileMode: 438\nInitializeSystemMemoryAllocations: 1\nUsePageAttributeTable: 4294967295\nEnableMSI: 1\nEnablePCIeGen3: 0\nMemoryPoolSize: 0\nKMallocHeapMaxSize: 0\nVMallocHeapMaxSize: 0\nIgnoreMMIOCheck: 0\nEnableStreamMemOPs: 0\nEnableUserNUMAManagement: 1\nNvLinkDisable: 0\nRmProfilingAdminOnly: 0\nPreserveVideoMemoryAllocations: 2\nUseKernelSuspendNotifiers: 0\nEnableS0ixPowerManagement: 0\nS0ixPowerManagementVideoMemoryThreshold: 256\nDynamicPowerManagement: 3\nDynamicPowerManagementVideoMemoryThreshold: 200\nTegraGpuPgMask: 4294967295\nRegisterPCIDriver: 1\nEnablePCIERelaxedOrderingMode: 0\nEnableResizableBar: 0\nEnableGpuFirmware: 18\nEnableGpuFirmwareLogs: 2\nRmNvlinkBandwidthLinkCount: 0\nEnableDbgBreakpoint: 0\nOpenRmEnableUnsupportedGpus: 1\nDmaRemapPeerMmio: 1\nImexChannelCount: 2048\nCreateImexChannel0: 0\nGrdmaPciTopoCheckOverride: 0\nEnableSystemMemoryPools: 529\nCoherentGPUMemoryMode: \"\"\nRegistryDwords: \"\"\nRegistryDwordsPerDevice: \"\"\nRmMsg: \"\"\nGpuBlacklist: \"\"\nTemporaryFilePath: \"\"\nExcludedGpus: \"\"\n",
+      "stderr": ""
+    }
+  ],
+  "process_security": [
+    "Uid:\t1004\t1004\t1004\t1004",
+    "Gid:\t2000\t2000\t2000\t2000",
+    "CapInh:\t0000000000000000",
+    "CapPrm:\t0000000000000000",
+    "CapEff:\t0000000000000000",
+    "CapBnd:\t0000000000000000",
+    "CapAmb:\t0000000000000000",
+    "NoNewPrivs:\t1",
+    "Seccomp:\t2"
+  ],
+  "cuda_environment": {},
+  "nodes": [
+    {
+      "path": "/dev/nvidia-caps",
+      "mode": "0o40755",
+      "uid": 1004,
+      "gid": 2000
+    },
+    {
+      "path": "/dev/nvidia-uvm",
+      "open_returncode": -1,
+      "errno": 2,
+      "error": "[Errno 2] No such file or directory: '/dev/nvidia-uvm'"
+    },
+    {
+      "path": "/dev/nvidia0",
+      "open_returncode": -1,
+      "errno": 2,
+      "error": "[Errno 2] No such file or directory: '/dev/nvidia0'"
+    },
+    {
+      "path": "/dev/nvidiactl",
+      "open_returncode": -1,
+      "errno": 2,
+      "error": "[Errno 2] No such file or directory: '/dev/nvidiactl'"
+    }
+  ],
+  "cuda_probe": {
+    "call": [
+      "/home/quyifei/multimodal/workspace/Interception/active-preempt/build/preflight_cuda"
+    ],
+    "returncode": 77,
+    "stdout": "{\"call\":\"dladdr(cuInit)\",\"returncode\":0,\"detail\":\"/lib/x86_64-linux-gnu/libcuda.so.1\"}\n{\"call\":\"compile_versions\",\"returncode\":0,\"detail\":\"CUDA_VERSION=12080 CUDART_VERSION=12080\"}\n{\"call\":\"cuDriverGetVersion\",\"returncode\":0,\"detail\":\"CUDA_SUCCESS: no error\"}\n{\"call\":\"driver_api_version\",\"returncode\":0,\"detail\":\"13020\"}\n{\"call\":\"cudaRuntimeGetVersion\",\"returncode\":0,\"detail\":\"cudaSuccess: no error\"}\n{\"call\":\"runtime_version\",\"returncode\":0,\"detail\":\"12080\"}\n{\"call\":\"cuInit(0)\",\"returncode\":100,\"detail\":\"CUDA_ERROR_NO_DEVICE: no CUDA-capable device is detected\"}\n{\"call\":\"cuDeviceGetCount\",\"returncode\":3,\"detail\":\"CUDA_ERROR_NOT_INITIALIZED: initialization error\"}\n{\"call\":\"device_count\",\"returncode\":77,\"detail\":\"unknown (enumeration failed)\"}\n{\"call\":\"loaded_library_mapping\",\"returncode\":0,\"detail\":\"7f8848600000-7f88486ad000 r-xp 00000000 103:04 5769154                   /usr/local/cuda-12.8/targets/x86_64-linux/lib/libcudart.so.12.8.57\"}\n{\"call\":\"loaded_library_mapping\",\"returncode\":0,\"detail\":\"7f88486ad000-7f88488ad000 ---p 000ad000 103:04 5769154                   /usr/local/cuda-12.8/targets/x86_64-linux/lib/libcudart.so.12.8.57\"}\n{\"call\":\"loaded_library_mapping\",\"returncode\":0,\"detail\":\"7f88488ad000-7f88488b1000 r--p 000ad000 103:04 5769154                   /usr/local/cuda-12.8/targets/x86_64-linux/lib/libcudart.so.12.8.57\"}\n{\"call\":\"loaded_library_mapping\",\"returncode\":0,\"detail\":\"7f88488b1000-7f88488b2000 rw-p 000b1000 103:04 5769154                   /usr/local/cuda-12.8/targets/x86_64-linux/lib/libcudart.so.12.8.57\"}\n{\"call\":\"loaded_library_mapping\",\"returncode\":0,\"detail\":\"7f8848a0e000-7f8848b70000 r--p 00000000 103:04 5411939                   /usr/lib/x86_64-linux-gnu/libcuda.so.595.58.03\"}\n{\"call\":\"loaded_library_mapping\",\"returncode\":0,\"detail\":\"7f8848b70000-7f8849c49000 r-xp 00162000 103:04 5411939                   /usr/lib/x86_64-linux-gnu/libcuda.so.595.58.03\"}\n{\"call\":\"loaded_library_mapping\",\"returncode\":0,\"detail\":\"7f8849c49000-7f884dfe9000 r--p 0123b000 103:04 5411939                   /usr/lib/x86_64-linux-gnu/libcuda.so.595.58.03\"}\n{\"call\":\"loaded_library_mapping\",\"returncode\":0,\"detail\":\"7f884dfe9000-7f884e121000 r--p 055da000 103:04 5411939                   /usr/lib/x86_64-linux-gnu/libcuda.so.595.58.03\"}\n{\"call\":\"loaded_library_mapping\",\"returncode\":0,\"detail\":\"7f884e121000-7f884e126000 rw-p 05712000 103:04 5411939                   /usr/lib/x86_64-linux-gnu/libcuda.so.595.58.03\"}\n{\"call\":\"minimal_kernel\",\"returncode\":77,\"detail\":\"NOT_RUN: CUDA initialization/enumeration unavailable\"}\n",
+    "stderr": ""
+  },
+  "cupti": {
+    "call": "cuptiGetVersion",
+    "library": "/usr/local/cuda/extras/CUPTI/lib64/libcupti.so",
+    "returncode": 0,
+    "api_version": 26,
+    "loaded_paths": [
+      "/usr/local/cuda-12.8/extras/CUPTI/lib64/libcupti.so.2025.1.0"
+    ],
+    "header": "/usr/local/cuda/extras/CUPTI/include/cupti_activity.h",
+    "header_has_compute_engine_ctx_switch": false,
+    "trace_backend": "not_enabled_in_phase2"
+  },
+  "gsp_mig_virtualization": "See nvidia-smi -q fields; unknown if query failed",
+  "mps": "process/environment hints only; absence is not proof MPS is off",
+  "cuda_usable": false,
+  "rm_device_accessible": false,
+  "readiness": "DEVICE_NOT_ACCESSIBLE"
+}

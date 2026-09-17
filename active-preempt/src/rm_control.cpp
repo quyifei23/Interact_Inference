@@ -1,4 +1,5 @@
 #include "rm_control.h"
+#include "control_events.h"
 #include <nvos.h>
 #include <nv_escape.h>
 #include <ctrl/ctrla06c.h>
@@ -13,7 +14,7 @@
 #include <sstream>
 #include <stdexcept>
 #include <mutex>
-#include <algorithm>
+#include <regex>
 #include <dlfcn.h>
 #include <fcntl.h>
 #include <sys/ioctl.h>
@@ -22,180 +23,169 @@
 #include <unistd.h>
 
 namespace {
-struct Object { uint32_t client, handle, parent, cls, engine; bool live; };
-struct Client { uint32_t handle; int fd; bool live; };
-struct Registry {
-    std::mutex mutex;
-    Object objects[4096]{};
-    Client clients[128]{};
-    size_t count = 0, clients_count = 0;
-    bool overflow = false;
+struct Capture {
+    std::recursive_mutex mutex;
+    ap::ObjectRegistry objects;
+    pid_t pid=getpid();
+    ap::ControlJournal journal;
+    bool journaling=false;
+    bool profile_verified=false;
+    const bool capture_abi_supported=ap::baseline_driver_loaded();
+    std::string journal_path;
+    int64_t trial=-1;
+    Capture(){if(!capture_abi_supported)objects.incomplete("ABI_UNVERIFIED: ioctl observation disabled for unreviewed driver profile");}
 };
-// Keep the registry alive through libcuda's process-exit destructors, which can
-// still issue RM_FREE ioctls. The OS releases remaining FD references on exit.
-Registry& registry() { static Registry* r=new Registry; return *r; }
-bool relevant(uint32_t cls) {
-    return cls == 0xa06c || cls == 0x2080 || cls == 0xc56f ||
-           cls == 0xc36f || cls == 0xc46f || cls == 0xc86f ||
-           cls == 0xc5c0 || cls == 0xc6c0 || cls == 0xc7c0;
-}
-bool compute_class(uint32_t cls) { return cls == 0xc5c0 || cls == 0xc6c0 || cls == 0xc7c0; }
-bool channel_class(uint32_t cls) { return cls == 0xc36f || cls == 0xc46f || cls == 0xc56f || cls == 0xc86f; }
-void remember(int fd, uint32_t client, uint32_t handle, uint32_t parent,
-              uint32_t cls, void* params, uint32_t size, bool serialized) {
-    if (!relevant(cls)) return;
-    auto& r = registry();
-    std::lock_guard<std::mutex> guard(r.mutex);
-    if (r.count == 4096) { r.overflow = true; return; }
-    bool known = false;
-    for (size_t i=0; i<r.clients_count; ++i) if (r.clients[i].live && r.clients[i].handle == client) known = true;
-    if (!known) {
-        if (r.clients_count == 128) { r.overflow = true; return; }
-        char fd_path[64],target[256];
-        std::snprintf(fd_path,sizeof(fd_path),"/proc/self/fd/%d",fd);
-        ssize_t n=readlink(fd_path,target,sizeof(target)-1);
-        if(n<0) {r.overflow=true;return;}
-        target[n]='\0';
-        if(std::strcmp(target,"/dev/nvidiactl")!=0) {r.overflow=true;return;}
-        // fcntl dup retains open-file identity used by secInfo.clientOSInfo.
-        int held = fcntl(fd, F_DUPFD_CLOEXEC, 3);
-        if (held < 0) { r.overflow = true; return; }
-        r.clients[r.clients_count++] = {client, held, true};
+// Process lifetime avoids destruction before libcuda's exit-time RM_FREE calls.
+Capture& capture(){static Capture* c=new Capture;return *c;}
+void remember(int fd,uint32_t client,uint32_t handle,uint32_t parent,uint32_t cls,
+              void* params,uint32_t size,bool serialized){
+    auto& r=capture().objects;
+    if(serialized){r.incomplete("unsupported FINN serialized allocation ABI");return;}
+    if(!client)client=handle; // root-client allocation returns its handle in hObjectNew
+    if(!r.has_client(client)){
+        char path[64],target[256];std::snprintf(path,sizeof(path),"/proc/self/fd/%d",fd);
+        auto n=readlink(path,target,sizeof(target)-1);
+        if(n<0){r.incomplete("cannot inspect allocating FD");return;}target[n]='\0';
+        if(std::strcmp(target,"/dev/nvidiactl")!=0){r.incomplete("allocation not observed on original nvidiactl FD");return;}
+        int held=fcntl(fd,F_DUPFD_CLOEXEC,3);
+        if(held<0){r.incomplete("cannot retain allocating open-file");return;}
+        r.client(client,held);
     }
-    uint32_t engine = 0;
-    if (cls == 0xa06c && params && !serialized &&
-        (size == 0 || size >= sizeof(NV_CHANNEL_GROUP_ALLOCATION_PARAMETERS)))
-        engine = static_cast<NV_CHANNEL_GROUP_ALLOCATION_PARAMETERS*>(params)->engineType;
-    for (size_t i=0; i<r.count; ++i)
-        if (r.objects[i].client == client && r.objects[i].handle == handle) r.objects[i].live = false;
-    r.objects[r.count++] = {client,handle,parent,cls,engine,true};
-}
-void observe(int fd, unsigned long request, void* arg, int rc) {
-    if (rc != 0 || _IOC_TYPE(request) != 'F' || arg == nullptr) return;
-    if (_IOC_NR(request) == NV_ESC_RM_ALLOC) {
-        if (_IOC_SIZE(request) == sizeof(NVOS21_PARAMETERS)) {
-            auto& a = *static_cast<NVOS21_PARAMETERS*>(arg);
-            if (a.status == 0) remember(fd,a.hRoot,a.hObjectNew,a.hObjectParent,a.hClass,a.pAllocParms,a.paramsSize,false);
-        } else if (_IOC_SIZE(request) == sizeof(NVOS64_PARAMETERS)) {
-            auto& a = *static_cast<NVOS64_PARAMETERS*>(arg);
-            if (a.status == 0) remember(fd,a.hRoot,a.hObjectNew,a.hObjectParent,a.hClass,a.pAllocParms,a.paramsSize,a.flags != 0);
-        }
-    } else if (_IOC_NR(request) == NV_ESC_RM_FREE && _IOC_SIZE(request) == sizeof(NVOS00_PARAMETERS)) {
-        const auto& a = *static_cast<NVOS00_PARAMETERS*>(arg);
-        if (a.status != 0) return;
-        auto& r=registry(); std::lock_guard<std::mutex> guard(r.mutex);
-        // Invalidate descendants as well: group/device free can recursively free children.
-        for (size_t pass=0; pass<=r.count; ++pass) {
-            bool changed=false;
-            for (size_t i=0;i<r.count;++i) {
-                auto& o=r.objects[i];
-                if (!o.live || o.client!=a.hRoot) continue;
-                bool dead = a.hRoot==a.hObjectOld || o.handle==a.hObjectOld || o.parent==a.hObjectOld;
-                for(size_t j=0;j<r.count && !dead;++j)
-                    if(r.objects[j].client==o.client && r.objects[j].handle==o.parent && !r.objects[j].live) dead=true;
-                if(dead) {o.live=false; changed=true;}
-            }
-            if(!changed) break;
-        }
-        if(a.hRoot==a.hObjectOld) for(size_t i=0;i<r.clients_count;++i)
-            if(r.clients[i].live && r.clients[i].handle==a.hRoot) {close(r.clients[i].fd);r.clients[i].live=false;}
-    } else if (_IOC_NR(request) == NV_ESC_RM_CONTROL && _IOC_SIZE(request) == sizeof(NVOS54_PARAMETERS)) {
-        auto& a=*static_cast<NVOS54_PARAMETERS*>(arg);
-        if(a.status != 0 || (a.cmd != NVA06C_CTRL_CMD_BIND && a.cmd != NVA06F_CTRL_CMD_BIND) ||
-           a.paramsSize != sizeof(NVA06F_CTRL_BIND_PARAMS) || !a.params || a.flags) return;
-        auto& r=registry(); std::lock_guard<std::mutex> guard(r.mutex);
-        for(size_t i=0;i<r.count;++i) if(r.objects[i].live && r.objects[i].client==a.hClient && r.objects[i].handle==a.hObject)
-            r.objects[i].engine=static_cast<NVA06F_CTRL_BIND_PARAMS*>(a.params)->engineType;
+    uint32_t engine=0;
+    if(cls==0xa06c){
+        if(!params||(size!=0&&size!=sizeof(NV_CHANNEL_GROUP_ALLOCATION_PARAMETERS))){r.incomplete("unknown TSG allocation layout");return;}
+        // paramsSize=0 is the legacy NVOS21 class-sized allocation convention.
+        engine=static_cast<NV_CHANNEL_GROUP_ALLOCATION_PARAMETERS*>(params)->engineType;
     }
+    r.allocate(client,handle,parent,cls,engine);
 }
-ap::ControlResult issue(int fd,uint32_t client,uint32_t object,uint32_t cmd,void* params,uint32_t size) {
-    NVOS54_PARAMETERS a{};
-    a.hClient=client; a.hObject=object; a.cmd=cmd; a.params=params; a.paramsSize=size; a.status=0xffffffff;
+void observe(int fd,unsigned long request,void* arg,int rc){
+    if(rc!=0||_IOC_TYPE(request)!='F'||!arg)return;
+    // CUDA baselines may run on other versions, but must not decode private
+    // allocation payloads using 550 headers on those versions.
+    if(!capture().capture_abi_supported)return;
+    auto& r=capture().objects;
+    if(_IOC_NR(request)==NV_ESC_RM_ALLOC){
+        if(_IOC_SIZE(request)==sizeof(NVOS21_PARAMETERS)){
+            auto& a=*static_cast<NVOS21_PARAMETERS*>(arg);
+            if(a.status==0)remember(fd,a.hRoot,a.hObjectNew,a.hObjectParent,a.hClass,a.pAllocParms,a.paramsSize,false);
+        }else if(_IOC_SIZE(request)==sizeof(NVOS64_PARAMETERS)){
+            auto& a=*static_cast<NVOS64_PARAMETERS*>(arg);
+            if(a.status==0)remember(fd,a.hRoot,a.hObjectNew,a.hObjectParent,a.hClass,a.pAllocParms,a.paramsSize,a.flags!=0);
+        }else r.incomplete("unsupported allocation ioctl layout");
+    }else if(_IOC_NR(request)==NV_ESC_RM_FREE){
+        if(_IOC_SIZE(request)!=sizeof(NVOS00_PARAMETERS)){r.incomplete("unsupported FREE layout");return;}
+        auto& a=*static_cast<NVOS00_PARAMETERS*>(arg);if(a.status)return;
+        int held=a.hRoot==a.hObjectOld?r.client_fd(a.hRoot):-1;
+        r.free(a.hRoot,a.hObjectOld);if(held>=0)close(held);
+    }else if(_IOC_NR(request)==NV_ESC_RM_CONTROL){
+        if(_IOC_SIZE(request)!=sizeof(NVOS54_PARAMETERS)){r.incomplete("unsupported control observation layout");return;}
+        auto& a=*static_cast<NVOS54_PARAMETERS*>(arg);if(a.status)return;
+        if(a.cmd==NVA06C_CTRL_CMD_BIND||a.cmd==NVA06F_CTRL_CMD_BIND){
+            if(a.paramsSize!=sizeof(NVA06F_CTRL_BIND_PARAMS)||!a.params||a.flags){r.incomplete("unsupported BIND ABI");return;}
+            r.bind(a.hClient,a.hObject,static_cast<NVA06F_CTRL_BIND_PARAMS*>(a.params)->engineType);
+        }
+    }else if(_IOC_NR(request)==NV_ESC_RM_DUP_OBJECT)r.incomplete("RM_DUP_OBJECT relationship not captured");
+}
+ap::ControlResult issue(int fd,uint32_t client,uint32_t object,uint32_t cmd,void* params,uint32_t size,
+                        const ap::Identity* id=nullptr,ap::ControlResult::Rejection rejection=ap::ControlResult::Rejection::None){
+    auto& c=capture();std::lock_guard<std::recursive_mutex> lock(c.mutex);
     ap::ControlResult result;
-    result.begin_ns=ap::monotonic_ns();
-    errno=0;
-    result.syscall_result=static_cast<int>(syscall(SYS_ioctl,fd,_IOWR('F',NV_ESC_RM_CONTROL,NVOS54_PARAMETERS),&a));
-    result.syscall_errno=result.syscall_result<0 ? errno : 0;
-    result.end_ns=ap::monotonic_ns(); result.rm_status=a.status;
-    return result;
-}
-}
-
-// Linux x86-64 CUDA ioctl interposition. It is deliberately best-effort:
-// libcuda may use a hidden/direct syscall; discovery then fails closed.
-extern "C" int ioctl(int fd, unsigned long request, ...) noexcept {
-    va_list args; va_start(args,request); void* arg=va_arg(args,void*); va_end(args);
-    using Fn=int(*)(int,unsigned long,...);
-    static Fn real=reinterpret_cast<Fn>(dlsym(RTLD_NEXT,"ioctl"));
-    int rc=real ? real(fd,request,arg) : static_cast<int>(syscall(SYS_ioctl,fd,request,arg));
-    int saved=errno;
-    try { observe(fd,request,arg,rc); } catch (...) { /* no exception crosses C ABI */ }
-    errno=saved; return rc;
-}
-
-namespace ap {
-uint64_t monotonic_ns() { timespec t{}; clock_gettime(CLOCK_MONOTONIC_RAW,&t); return uint64_t(t.tv_sec)*1000000000ull+t.tv_nsec; }
-std::string ControlResult::describe() const { std::ostringstream s; s<<"ioctl="<<syscall_result<<" errno="<<syscall_errno<<" rm_status=0x"<<std::hex<<rm_status;return s.str(); }
-bool baseline_driver_loaded() { std::ifstream f("/proc/driver/nvidia/version");std::stringstream s;s<<f.rdbuf();return s.str().find("550.120")!=std::string::npos; }
-std::string capture_inventory() {
-    auto& r=registry();std::lock_guard<std::mutex> g(r.mutex);std::ostringstream s;
-    s<<"capture_count="<<r.count<<" overflow="<<r.overflow<<"\n";
-    for(size_t i=0;i<r.count;++i) {auto& o=r.objects[i];if(o.live)s<<std::hex<<"client="<<o.client<<" handle="<<o.handle<<" parent="<<o.parent<<" class="<<o.cls<<" engine="<<o.engine<<"\n";}
-    return s.str();
-}
-Identity discover_owned_compute_group() {
-    Identity id;
-    {
-        auto& r=registry();std::lock_guard<std::mutex> guard(r.mutex);
-        if(r.overflow) throw std::runtime_error("RM allocation registry overflow; refusing guessed handles");
-        int matches=0;
-        for(size_t i=0;i<r.count;++i) {
-            const auto& group=r.objects[i];if(!group.live || group.cls!=0xa06c) continue;
-            Identity candidate;candidate.client=group.client;candidate.group=group.handle;candidate.engine=group.engine;
-            for(size_t j=0;j<r.count;++j) {
-                const auto& channel=r.objects[j];
-                if(!channel.live || channel.client!=group.client || channel.parent!=group.handle || !channel_class(channel.cls)) continue;
-                candidate.channels.push_back(channel.handle);
-                for(size_t k=0;k<r.count;++k) {
-                    const auto& object=r.objects[k];
-                    if(object.live && object.client==group.client && object.parent==channel.handle && compute_class(object.cls)) {
-                        candidate.compute_channel=channel.handle;
-                        if(!candidate.engine) candidate.engine=channel.engine;
-                    }
-                }
-            }
-            if(!candidate.compute_channel) continue;
-            // A compute engine object child proves this is a compute group;
-            // engine 0 is unspecified, never silently treated as a copy engine.
-            if(candidate.engine && !NV2080_ENGINE_TYPE_IS_GR(candidate.engine)) continue;
-            for(size_t j=0;j<r.count;++j) {const auto& o=r.objects[j];
-                if(o.live && o.client==group.client && o.cls==0x2080 && o.parent==group.parent) {
-                    if(candidate.subdevice) throw std::runtime_error("Multiple subdevices: prototype requires one physical GPU");
-                    candidate.subdevice=o.handle;
-                }
-            }
-            for(size_t j=0;j<r.clients_count;++j) if(r.clients[j].live && r.clients[j].handle==group.client) candidate.fd=r.clients[j].fd;
-            id=candidate; ++matches;
-        }
-        if(matches!=1 || id.fd<0 || !id.subdevice || id.channels.empty())
-            throw std::runtime_error("No unique captured owned compute TSG/subdevice. Direct/hidden ioctl, unsupported allocation ABI, MPS, or multiple contexts; no unsafe fallback.");
+    ap::ControlEvent* event=c.journaling?c.journal.begin(id,object,cmd,params,size,c.trial):nullptr;
+    if(c.journaling&&!event)rejection=ap::ControlResult::Rejection::LogFull;
+    if(id){
+        if(!c.profile_verified)rejection=ap::ControlResult::Rejection::Abi;
+        else if(c.pid!=getpid()||!c.objects.valid(id->binding))rejection=ap::ControlResult::Rejection::Binding;
     }
-    NVA06C_CTRL_GET_INFO_PARAMS p{};
-    auto result=issue(id.fd,id.client,id.group,NVA06C_CTRL_CMD_GET_INFO,&p,sizeof(p));
-    if(!result.ok()) throw std::runtime_error("GET_INFO rejected on original owned FD: "+result.describe());
+    result.operation_seq=event?event->sequence:0;
+    if(rejection!=ap::ControlResult::Rejection::None){result.rejection=rejection;c.journal.complete(event,result);return result;}
+    NVOS54_PARAMETERS a{};a.hClient=client;a.hObject=object;a.cmd=cmd;a.params=params;a.paramsSize=size;a.status=0xffffffff;
+    result.begin_ns=ap::monotonic_ns();result.attempted=true;
+    if(event)event->result.begin_ns=result.begin_ns;
+    errno=0;result.syscall_result=static_cast<int>(syscall(SYS_ioctl,fd,_IOWR('F',NV_ESC_RM_CONTROL,NVOS54_PARAMETERS),&a));
+    result.syscall_errno=result.syscall_result<0?errno:0;result.end_ns=ap::monotonic_ns();result.rm_status=a.status;
+    // Persist to preallocated shared backing immediately, BEFORE any CUDA wait.
+    c.journal.complete(event,result);return result;
+}
+}
+extern "C" int ioctl(int fd,unsigned long request,...) noexcept {
+    va_list args;va_start(args,request);void* arg=va_arg(args,void*);va_end(args);
+    using Fn=int(*)(int,unsigned long,...);static Fn real=reinterpret_cast<Fn>(dlsym(RTLD_NEXT,"ioctl"));
+    if(_IOC_TYPE(request)!='F')return real?real(fd,request,arg):static_cast<int>(syscall(SYS_ioctl,fd,request,arg));
+    // Serialize observed alloc/free/bind syscalls and own controls, not only the
+    // post-ioctl bookkeeping. Direct/hidden syscalls remain an explicit limitation.
+    auto& c=capture();std::lock_guard<std::recursive_mutex> lock(c.mutex);
+    int rc=real?real(fd,request,arg):static_cast<int>(syscall(SYS_ioctl,fd,request,arg));int saved=errno;
+    try{observe(fd,request,arg,rc);}catch(...){try{c.objects.incomplete("exception in ioctl capture");}catch(...){std::terminate();}}
+    errno=saved;return rc;
+}
+namespace ap {
+uint64_t monotonic_ns(){timespec t{};clock_gettime(CLOCK_MONOTONIC_RAW,&t);return uint64_t(t.tv_sec)*1000000000ull+t.tv_nsec;}
+const char* ControlResult::category()const{
+    switch(rejection){
+    case Rejection::Device:return "DEVICE_NOT_ACCESSIBLE";
+    case Rejection::Abi:return "ABI_UNVERIFIED";
+    case Rejection::Binding:case Rejection::Incomplete:return "OBJECT_BINDING_UNAVAILABLE";
+    case Rejection::PendingAsync:return "INVALID_OBJECT_OR_STATE";
+    case Rejection::LogFull:return "OBSERVABILITY_UNAVAILABLE";
+    default:break;
+    }
+    if(ok())return "CONTROL_ACCEPTED_EFFECT_UNVERIFIED";
+    if(!attempted)return "NOT_ISSUED";
+    if(syscall_result<0){
+        if(syscall_errno==EBADF||syscall_errno==ENOENT||syscall_errno==ENODEV)return "DEVICE_NOT_ACCESSIBLE";
+        if(syscall_errno==EPERM||syscall_errno==EACCES)return "PERMISSION_DENIED";
+        if(syscall_errno==ENOTTY||syscall_errno==ENOSYS)return "CONTROL_NOT_SUPPORTED";
+        if(syscall_errno==ETIMEDOUT)return "CONTROL_TIMEOUT";
+        return "IOCTL_FAILURE";
+    }
+    if(rm_status==0x1b)return "PERMISSION_DENIED";
+    if(rm_status==0x23)return "OWNERSHIP_REJECTED"; // invalid client; exact rejecting branch unknown
+    if(rm_status==0x56)return "CONTROL_NOT_SUPPORTED";
+    if(rm_status==0x65||rm_status==0x66)return "CONTROL_TIMEOUT";
+    if(rm_status==0xffffffff)return "RM_STATUS_UNAVAILABLE";
+    return "INVALID_OBJECT_OR_STATE";
+}
+std::string ControlResult::describe()const{std::ostringstream s;s<<category()<<" attempted="<<attempted<<" ioctl="<<syscall_result<<" errno="<<syscall_errno<<" rm_status=0x"<<std::hex<<rm_status;return s.str();}
+bool profile_matches(const std::string& s){return std::regex_search(s,std::regex("(^|[[:space:]])550\\.120([[:space:]]|$)"));}
+std::string loaded_driver_version(){std::ifstream f("/proc/driver/nvidia/version");std::stringstream s;s<<f.rdbuf();return s.str();}
+bool baseline_driver_loaded(){return profile_matches(loaded_driver_version());}
+void record_trial(int64_t trial){auto& c=capture();std::lock_guard<std::recursive_mutex> lock(c.mutex);c.trial=trial;}
+void open_control_journal(const std::string& directory,const std::string& owner){auto& c=capture();std::lock_guard<std::recursive_mutex> lock(c.mutex);c.journal_path=directory+"/"+owner+"_control_events.jsonl";c.journal.open(directory+"/"+owner+"_control_events.bin",owner);c.journaling=true;}
+void save_control_journal(){
+    auto& c=capture();std::lock_guard<std::recursive_mutex> lock(c.mutex);
+    // Export is best effort; a full disk must not prevent owner-side restore.
+    // The already-published mmap records remain the primary crash evidence.
+    try{if(c.journaling)c.journal.save(c.journal_path);}
+    catch(const std::exception& e){std::fprintf(stderr,"CONTROL_LOG_EXPORT_FAILED: %s; retain binary journal\n",e.what());}
+}
+std::string capture_inventory(){auto& c=capture();std::lock_guard<std::recursive_mutex> lock(c.mutex);return c.objects.inventory();}
+Identity discover_owned_compute_group(){
+    auto& c=capture();std::lock_guard<std::recursive_mutex> lock(c.mutex);
+    c.profile_verified=baseline_driver_loaded();
+    Binding b=c.objects.discover();Identity id;id.binding=b;id.fd=b.fd;id.client=b.client;id.device=b.device.handle;
+    id.group=b.group.handle;id.subdevice=b.subdevice.handle;id.compute_channel=b.compute_channel.handle;id.engine=b.engine;
+    for(auto ch:b.channels)id.channels.push_back(ch.handle);
+    if(id.engine&&!NV2080_ENGINE_TYPE_IS_GR(id.engine))throw std::runtime_error("OBJECT_BINDING_UNAVAILABLE: non-GR engine");
+    NVA06C_CTRL_GET_INFO_PARAMS p{};auto r=issue(id.fd,id.client,id.group,NVA06C_CTRL_CMD_GET_INFO,&p,sizeof(p),&id);
+    if(!r.ok())throw std::runtime_error(std::string("GET_INFO: ")+r.describe());
     id.tsg_id=p.tsgID;return id;
 }
-RmControl::RmControl(Identity identity):id_(std::move(identity)) {
-    auto actual=discover_owned_compute_group();
-    if(id_.fd!=actual.fd || id_.client!=actual.client || id_.group!=actual.group ||
-       id_.subdevice!=actual.subdevice || id_.compute_channel!=actual.compute_channel || id_.channels!=actual.channels)
-        throw std::runtime_error("RmControl refuses externally supplied or stale identity");
+RmControl::RmControl(Identity id):id_(std::move(id)){
+    auto& c=capture();std::lock_guard<std::recursive_mutex> lock(c.mutex);
+    const auto& b=id_.binding;
+    bool mirrored=id_.fd==b.fd&&id_.client==b.client&&id_.device==b.device.handle&&id_.subdevice==b.subdevice.handle&&id_.group==b.group.handle&&id_.compute_channel==b.compute_channel.handle&&id_.engine==b.engine&&id_.channels.size()==b.channels.size();
+    for(size_t i=0;mirrored&&i<b.channels.size();++i)mirrored=id_.channels[i]==b.channels[i].handle;
+    if(!mirrored||!c.objects.valid(b)||id_.tsg_id==0xffffffff)throw std::runtime_error("OBJECT_BINDING_UNAVAILABLE: stale/unverified identity");
 }
-ControlResult RmControl::call(uint32_t object,uint32_t cmd,void* p,uint32_t n) {return issue(id_.fd,id_.client,object,cmd,p,n);}
+ControlResult RmControl::call(uint32_t object,uint32_t cmd,void* p,uint32_t n){return issue(id_.fd,id_.client,object,cmd,p,n,&id_);}
 ControlResult RmControl::preempt(bool wait,uint32_t timeout) {
     if(timeout==0 || timeout>NVA06C_CTRL_CMD_PREEMPT_MAX_MANUAL_TIMEOUT_US) throw std::invalid_argument("PREEMPT timeout outside (0,1s]");
     NVA06C_CTRL_PREEMPT_PARAMS p{};p.bWait=wait;p.bManualTimeout=wait;p.timeoutUs=wait?timeout:0;
-    return call(id_.group,NVA06C_CTRL_CMD_PREEMPT,&p,sizeof(p));
+    auto rejected=!async_gate_.may_issue()?ControlResult::Rejection::PendingAsync:ControlResult::Rejection::None;
+    auto r=issue(id_.fd,id_.client,id_.group,NVA06C_CTRL_CMD_PREEMPT,&p,sizeof(p),&id_,rejected);
+    if(!wait&&r.attempted)async_gate_.submitted();
+    return r;
 }
 ControlResult RmControl::realtime(bool enable) {NVA06C_CTRL_MAKE_REALTIME_PARAMS p{};p.bRealtime=enable;return call(id_.group,NVA06C_CTRL_CMD_MAKE_REALTIME,&p,sizeof(p));}
 ControlResult RmControl::restart(bool force,bool bypass) {NVA06F_CTRL_RESTART_RUNLIST_PARAMS p{};p.bForceRestart=force;p.bBypassWait=bypass;return call(id_.compute_channel,NVA06F_CTRL_CMD_RESTART_RUNLIST,&p,sizeof(p));}

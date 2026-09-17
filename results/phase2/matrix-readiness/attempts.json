@@ -1,0 +1,17 @@
+[
+  {
+    "configuration": "probe-cuda",
+    "command": [
+      "/usr/bin/python3",
+      "/home/quyifei/multimodal/workspace/Interception/active-preempt/scripts/preflight.py",
+      "--binary",
+      "/home/quyifei/multimodal/workspace/Interception/active-preempt/build/preflight_cuda",
+      "--output",
+      "/home/quyifei/multimodal/workspace/Interception/results/phase2/matrix-readiness/preflight"
+    ],
+    "returncode": 77,
+    "timed_out": false,
+    "termination": [],
+    "recovery": "inspect_owner_recovery_logs"
+  }
+]
