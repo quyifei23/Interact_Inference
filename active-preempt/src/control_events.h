@@ -17,7 +17,7 @@ struct ControlEvent {
 class ControlJournal {
 public:
     void open(const std::string& path,const std::string& owner);
-    ControlEvent* begin(const Identity* id,uint32_t object,uint32_t cmd,const void* params,uint32_t size,int64_t trial);
+    ControlEvent* begin(const Identity* id,uint32_t object,uint32_t cmd,const void* params,uint32_t size,int64_t trial,const GroupBinding* group=nullptr);
     void complete(ControlEvent* event,const ControlResult& result);
     void save(const std::string& jsonl)const;
     ~ControlJournal();

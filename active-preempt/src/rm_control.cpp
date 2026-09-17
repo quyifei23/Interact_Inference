@@ -2,6 +2,7 @@
 #include "control_events.h"
 #include "rm_observation.h"
 #include "json_log.h"
+#include "group_query_internal.h"
 #include <nvstatus.h>
 #include <nvos.h>
 #include <nv_escape.h>
@@ -30,12 +31,15 @@
 namespace {
 struct Capture {
     std::recursive_mutex mutex;
-    ap::ObjectRegistry objects;
+    ap::ObjectRegistry objects{65536,ap::build_profile().version,ap::build_profile().source_commit};
     pid_t pid=getpid();
     ap::ControlJournal journal;
     bool journaling=false;
     ap::ProfileState state;
     std::optional<ap::Binding> observed_binding,verified_binding;
+    std::optional<ap::GroupBinding> observed_group;
+    std::map<uint32_t,int> allocating_fds;
+    ap::detail::GroupInfoOnce group_query;
     std::vector<ap::IoctlObservation> observations;
     uint64_t early_ioctls=0;
     std::string journal_path;
@@ -60,12 +64,12 @@ void observe(int fd,unsigned long request,void* arg,int rc,int error){
             if(std::strcmp(target,"/dev/nvidiactl")!=0){r.incomplete("allocation not on original nvidiactl FD");return;}
             int held=fcntl(fd,F_DUPFD_CLOEXEC,3);
             if(held<0){r.incomplete("cannot retain allocating open-file");return;}
-            r.client(client,held);
+            r.client(client,held);c.allocating_fds[client]=fd;
         }
         r.allocate(client,e.object,e.parent,e.cls,e.engine);
     }else if(e.action==ap::ObservedAction::Free){
         int held=e.client==e.object?r.client_fd(e.client):-1;
-        r.free(e.client,e.object);if(held>=0)close(held);
+        r.free(e.client,e.object);if(held>=0){close(held);c.allocating_fds.erase(e.client);}
     }else if(e.action==ap::ObservedAction::Bind)r.bind(e.client,e.object,e.engine);
 }
 bool readonly_command(uint32_t cmd){return cmd==NVA06C_CTRL_CMD_GET_INFO||cmd==NVA06C_CTRL_CMD_GET_TIMESLICE||cmd==NV2080_CTRL_CMD_GR_GET_CTXSW_MODES;}
@@ -90,7 +94,7 @@ ap::ControlResult issue(int fd,uint32_t client,uint32_t object,uint32_t cmd,void
     if(rejection!=ap::ControlResult::Rejection::None){result.rejection=rejection;c.journal.complete(event,result);return result;}
     NVOS54_PARAMETERS a{};a.hClient=client;a.hObject=object;a.cmd=cmd;a.params=params;a.paramsSize=size;a.status=0xffffffff;
     result.begin_ns=ap::monotonic_ns();result.attempted=true;
-    ++c.state.project_controls_attempted;if(!readonly_command(cmd))++c.state.project_active_controls_attempted;
+    ++c.state.project_controls_attempted;if(!readonly_command(cmd))++c.state.project_active_controls_attempted;else ++c.state.project_readonly_controls_attempted;
     if(event)event->result.begin_ns=result.begin_ns;
     errno=0;result.syscall_result=static_cast<int>(syscall(SYS_ioctl,fd,_IOWR('F',NV_ESC_RM_CONTROL,NVOS54_PARAMETERS),&a));
     result.syscall_errno=result.syscall_result<0?errno:0;result.end_ns=ap::monotonic_ns();result.rm_status=a.status;
@@ -122,6 +126,7 @@ const char* ControlResult::category()const{
     case Rejection::Authorization:return "ACTIVE_NOT_AUTHORIZED";
     case Rejection::Readonly:return "READONLY_NOT_VERIFIED";
     case Rejection::GpuScope:return "WORKLOAD_GPU_UNREVIEWED";
+    case Rejection::AlreadyQueried:return "GROUP_INFO_ALREADY_QUERIED";
     default:break;
     }
     if(ok())return "CONTROL_ACCEPTED_EFFECT_UNVERIFIED";
@@ -156,11 +161,19 @@ void note_cuda_ready(int major,int minor){
     auto& c=capture();std::lock_guard<std::recursive_mutex> lock(c.mutex);
     c.state.cuda_minimal_workload_passed=true;c.state.workload_gpu_reviewed=major==8&&minor==0;
 }
+void note_group_cuda_scope(const std::string& uuid,int count){
+    auto& c=capture();std::lock_guard<std::recursive_mutex> lock(c.mutex);
+    const char* env=std::getenv("CUDA_VISIBLE_DEVICES");std::string visible=env?env:"";
+    if(c.state.stage!=RmStage::GroupInfo||!group_probe_visibility_matches(visible,uuid,count))
+        throw std::runtime_error("OBJECT_BINDING_UNAVAILABLE: group probe requires exactly one explicit full GPU UUID matching CUDA enumeration");
+    c.state.scope_gpu_uuid=uuid;c.state.scope_visible_devices=visible;c.state.single_gpu_scope_verified=true;
+}
 void note_active_result_measured(){
     auto& c=capture();std::lock_guard<std::recursive_mutex> lock(c.mutex);
     if(c.state.stage==RmStage::Active)c.state.active_result_measured=true;
 }
 void record_rm_stop_reason(const std::string& reason){auto& c=capture();std::lock_guard<std::recursive_mutex> lock(c.mutex);c.state.stop_reason=reason;}
+namespace {bool group_environment_current(const Capture&);bool retained_control_fd_valid(int);}
 std::string profile_state_json(){
     auto& c=capture();std::lock_guard<std::recursive_mutex> lock(c.mutex);const auto& s=c.state;const auto& p=build_profile();
     std::ostringstream out;out<<std::boolalpha<<"{\"build_profile\":"<<json_string(p.version)<<",\"source_commit\":"<<json_string(p.source_commit)
@@ -169,8 +182,14 @@ std::string profile_state_json(){
         <<",\"static_abi_reviewed\":"<<s.static_abi_reviewed<<",\"runtime_matches\":"<<s.runtime_matches<<",\"observation_enabled\":"<<s.observation_enabled
         <<",\"cuda_minimal_workload_passed\":"<<s.cuda_minimal_workload_passed<<",\"workload_gpu_reviewed\":"<<s.workload_gpu_reviewed
         <<",\"binding_observed\":"<<s.binding_observed<<",\"current_binding_valid\":"<<(c.observed_binding&&c.objects.valid(*c.observed_binding))
+        <<",\"channel_binding_observed\":"<<s.binding_observed<<",\"channel_binding_verified\":"<<s.readonly_verified
+        <<",\"group_binding_observed\":"<<s.group_binding_observed
+        <<",\"group_binding_valid\":"<<(c.observed_group&&group_environment_current(c)&&retained_control_fd_valid(c.observed_group->fd)&&c.objects.valid_group(*c.observed_group))
+        <<",\"group_get_info_verified\":"<<s.group_get_info_verified<<",\"single_gpu_scope_verified\":"<<s.single_gpu_scope_verified
+        <<",\"scope_gpu_uuid\":"<<json_string(s.scope_gpu_uuid)
         <<",\"readonly_verified\":"<<s.readonly_verified<<",\"active_experiment_authorized\":"<<s.active_experiment_authorized<<",\"active_result_measured\":"<<s.active_result_measured
         <<",\"application_rm_controls_observed\":"<<s.application_rm_controls_observed<<",\"project_controls_attempted\":"<<s.project_controls_attempted
+        <<",\"project_readonly_controls_attempted\":"<<s.project_readonly_controls_attempted
         <<",\"project_active_controls_attempted\":"<<s.project_active_controls_attempted<<",\"early_unobserved_ioctls\":"<<c.early_ioctls
         <<",\"stop_reason\":"<<json_string(s.stop_reason)<<",\"cuda_visible_devices\":";
     const char* visible=std::getenv("CUDA_VISIBLE_DEVICES");out<<(visible?json_string(visible):"null");
@@ -182,6 +201,7 @@ void save_rm_observation(const std::string& directory,const std::string& prefix)
     auto& c=capture();std::lock_guard<std::recursive_mutex> lock(c.mutex);
     std::ofstream state(directory+"/"+prefix+"profile_state.json");state<<profile_state_json()<<'\n';
     std::ofstream inventory(directory+"/"+prefix+"capture.txt");inventory<<c.objects.inventory();
+    std::ofstream graph(directory+"/"+prefix+"object_graph.json");graph<<c.objects.object_graph_json()<<'\n';
     std::ofstream events(directory+"/"+prefix+"observed_ioctls.jsonl");
     for(const auto& e:c.observations){
         events<<"{\"sequence\":"<<e.sequence<<",\"pid\":"<<c.pid<<",\"fd\":"<<e.fd<<",\"type\":"<<e.type<<",\"number\":"<<e.number<<",\"size\":"<<e.size
@@ -200,6 +220,50 @@ void save_control_journal(){
     catch(const std::exception& e){std::fprintf(stderr,"CONTROL_LOG_EXPORT_FAILED: %s; retain binary journal\n",e.what());}
 }
 std::string capture_inventory(){auto& c=capture();std::lock_guard<std::recursive_mutex> lock(c.mutex);return c.objects.inventory();}
+namespace {
+bool group_environment_current(const Capture& c){
+    const char* visible=std::getenv("CUDA_VISIBLE_DEVICES");
+    return c.pid==getpid()&&c.state.observation_enabled&&profile_matches(loaded_driver_version())&&c.state.single_gpu_scope_verified&&
+        visible&&c.state.scope_visible_devices==visible;
+}
+bool retained_control_fd_valid(int fd){
+    char path[64],target[256];std::snprintf(path,sizeof(path),"/proc/self/fd/%d",fd);
+    auto n=readlink(path,target,sizeof(target)-1);if(n<0||fcntl(fd,F_GETFD)<0)return false;
+    target[n]='\0';return std::strcmp(target,"/dev/nvidiactl")==0;
+}
+}
+GroupIdentity inspect_owned_tsg(){
+    auto& c=capture();std::lock_guard<std::recursive_mutex> lock(c.mutex);
+    if(!group_environment_current(c)||!c.state.cuda_minimal_workload_passed||c.state.stage!=RmStage::GroupInfo)
+        throw std::runtime_error("OBJECT_BINDING_UNAVAILABLE: current process/profile/CUDA scope not ready for group discovery");
+    auto b=c.objects.discover_group();
+    if(!detail::group_engine_reviewed(b)||!retained_control_fd_valid(b.fd)||!c.allocating_fds.count(b.client))
+        throw std::runtime_error("OBJECT_BINDING_UNAVAILABLE: group engine or retained allocating FD invalid");
+    c.observed_group=b;c.state.group_binding_observed=true;
+    return GroupIdentity(b,c.allocating_fds.at(b.client),c.state.scope_gpu_uuid,c.state.scope_visible_devices);
+}
+GroupInfoResult get_group_info(const GroupIdentity& id){
+    auto& c=capture();std::lock_guard<std::recursive_mutex> lock(c.mutex);
+    // The backend validates the complete snapshot under this same lock and has
+    // a one-command allowlist. It cannot use the strict/channel issue() path.
+    bool current=group_environment_current(c)&&id.gpu_uuid_==c.state.scope_gpu_uuid&&id.visible_devices_==c.state.scope_visible_devices&&
+        c.observed_group&&id.binding_==*c.observed_group;
+    if(!current){GroupInfoResult result;result.control.rejection=ControlResult::Rejection::Binding;return result;}
+    return c.group_query.query(c.objects,c.state,id.binding_,retained_control_fd_valid(id.binding_.fd),c.journal,c.trial,
+        [](int fd,unsigned long request,void* args,void*){return static_cast<int>(syscall(SYS_ioctl,fd,request,args));});
+}
+std::string GroupIdentity::json()const{
+    const auto& b=binding_;std::ostringstream s;
+    auto node=[&](const GroupObject& n){s<<"{\"handle\":"<<n.token.handle<<",\"generation\":"<<n.token.generation<<",\"parent\":"<<n.parent.handle<<",\"parent_generation\":"<<n.parent.generation<<",\"class\":"<<n.cls<<",\"observed_engine\":";if(n.engine)s<<n.engine;else s<<"null";s<<"}";};
+    s<<"{\"scope\":\"one captured compute TSG; not entire CUDA context\",\"owner_pid\":"<<b.owner_pid<<",\"registry_instance\":"<<b.registry_instance
+     <<",\"profile\":"<<json_string(b.profile_version)<<",\"source_commit\":"<<json_string(b.source_commit)<<",\"gpu_uuid_hex\":"<<json_string(gpu_uuid_)<<",\"cuda_visible_devices\":"<<json_string(visible_devices_)
+     <<",\"hClient\":"<<b.client<<",\"client_generation\":"<<b.client_generation<<",\"allocating_fd_at_capture\":"<<allocating_fd_<<",\"retained_fd\":"<<b.fd
+     <<",\"membership_revision\":"<<b.membership_revision<<",\"compute_candidates_revision\":"<<b.compute_candidates_revision
+     <<",\"fd_source\":\"F_DUPFD_CLOEXEC of original allocating nvidiactl open file\",\"device\":";node(b.device);s<<",\"subdevice\":";node(b.subdevice);s<<",\"group\":";node(b.group);
+    s<<",\"members\":[";bool first=true;for(const auto& m:b.members){if(!first)s<<',';first=false;s<<"{\"channel\":";node(m.channel);s<<",\"compute_children\":[";
+        bool child_first=true;for(const auto& e:m.compute_children){if(!child_first)s<<',';child_first=false;node(e);}s<<"]}";}
+    s<<"]}";return s.str();
+}
 Binding inspect_owned_compute_group(){
     auto& c=capture();std::lock_guard<std::recursive_mutex> lock(c.mutex);
     if(c.pid!=getpid()||!c.state.observation_enabled)throw std::runtime_error("ABI_UNVERIFIED: current observation profile unavailable");

@@ -6,7 +6,7 @@
 #include <iostream>
 #include <string>
 namespace ap {
-enum class Probe {None,Cuda,Observe,Identity,Readonly};
+enum class Probe {None,Cuda,Observe,Identity,Readonly,GroupInfo};
 struct Options {
     std::string mode="none",run_dir,shared_path;
     unsigned trials=1,waves=1;
@@ -15,8 +15,10 @@ struct Options {
     Probe probe=Probe::None;
 };
 inline Options parse(int argc,char** argv){
-    Options o;
+    Options o;unsigned probes_seen=0;
     for(int i=1;i<argc;++i){std::string key=argv[i];
+        if(key=="--probe"||key=="--probe-cuda"||key=="--probe-rm-observe"||key=="--probe-rm-identity"||key=="--probe-rm-readonly"||key=="--probe-rm-group-info")
+            if(++probes_seen>1)throw std::invalid_argument("Select exactly one probe stage");
         if(key=="--graph")o.graph=true;
         else if(key=="--diagnostic-progress")o.diagnostic=true;
         else if(key=="--test-host-confirmed")o.test_host=true;
@@ -26,8 +28,10 @@ inline Options parse(int argc,char** argv){
         else if(key=="--probe-rm-observe")o.probe=Probe::Observe;
         else if(key=="--probe-rm-identity")o.probe=Probe::Identity;
         else if(key=="--probe-rm-readonly")o.probe=Probe::Readonly;
+        else if(key=="--probe-rm-group-info")o.probe=Probe::GroupInfo;
         else if(key=="--help"){
-            std::cout<<"int_worker --probe-cuda | --probe-rm-observe | --probe-rm-identity | --probe-rm-readonly [--run-dir DIR]\n"
+            std::cout<<"int_worker --probe-cuda | --probe-rm-observe | --probe-rm-identity | --probe-rm-readonly | --probe-rm-group-info [--run-dir DIR]\n"
+                     <<"Group-info requires CUDA_VISIBLE_DEVICES=<one full GPU UUID>; adds GET_INFO once, no other controls.\n"
                      <<"int_worker --run-dir DIR --mode int-only|none|timeslice|preempt-wait|preempt-async|realtime-only|realtime-restart|realtime|disable|disable-split\n"
                      <<"[--trials 1] [--cta-waves 1..16] [--bg-iterations N] [--int-iterations N] [--bg-us 80000] [--int-us 300]\n"
                      <<"[--heartbeat-ns 2000] [--timeslice-us 1] [--force 0|1] [--bypass 0|1] [--diagnostic-progress]\n"
@@ -57,6 +61,8 @@ inline Options parse(int argc,char** argv){
         if((p.extended||o.force||o.bypass)&&!o.extended)throw std::invalid_argument("Extended modes require --allow-extended after recovery/wait-path validation");
         if(o.graph&&!o.graph_reviewed)throw std::invalid_argument("Graph requires --graph-evidence-reviewed; RM acceptance alone is insufficient");
     }
+    if(o.probe==Probe::GroupInfo&&(p.name!="none"||o.graph||o.diagnostic||o.force||o.bypass||o.test_host||o.extended||o.graph_reviewed||o.trials!=1))
+        throw std::invalid_argument("Group-info is a single readonly probe; benchmark/active options are not applicable");
     return o;
 }
 }

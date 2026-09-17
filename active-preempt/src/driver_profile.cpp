@@ -1,6 +1,7 @@
 #include "driver_profile.h"
 #include "build_profile.h"
 #include <sstream>
+#include <cctype>
 #include <class/cl0080.h>
 #include <class/cl2080.h>
 #include <class/cla06c.h>
@@ -31,4 +32,17 @@ void ProfileState::configure(const DriverProfile& p,const std::string& runtime,R
 }
 bool ProfileState::may_readonly()const{return observation_enabled&&cuda_minimal_workload_passed&&binding_observed&&(stage==RmStage::Readonly||stage==RmStage::Active);}
 bool ProfileState::may_active()const{return may_readonly()&&readonly_verified&&workload_gpu_reviewed&&active_experiment_authorized&&stage==RmStage::Active;}
+bool ProfileState::may_group_info()const{
+    return stage==RmStage::GroupInfo&&observation_enabled&&cuda_minimal_workload_passed&&single_gpu_scope_verified&&group_binding_observed;
+}
+bool group_probe_visibility_matches(const std::string& visible,const std::string& uuid_hex,int count){
+    if(count!=1||visible.size()!=40||visible.substr(0,4)!="GPU-"||uuid_hex.size()!=32)return false;
+    std::string compact;
+    for(size_t i=4;i<visible.size();++i){
+        if(i==12||i==17||i==22||i==27){if(visible[i]!='-')return false;continue;}
+        if(!std::isxdigit(static_cast<unsigned char>(visible[i])))return false;
+        compact+=char(std::tolower(static_cast<unsigned char>(visible[i])));
+    }
+    return compact==uuid_hex;
+}
 }

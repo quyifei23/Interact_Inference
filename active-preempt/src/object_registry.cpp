@@ -1,12 +1,26 @@
 #include "object_registry.h"
+#include "json_log.h"
+#include <atomic>
 #include <sstream>
 #include <stdexcept>
+#include <unistd.h>
 
 namespace ap {
 namespace {
 bool channel(uint32_t c){return c==0xc36f||c==0xc46f||c==0xc56f||c==0xc86f;}
 bool compute(uint32_t c){return c==0xc5c0||c==0xc6c0||c==0xc7c0;}
 [[noreturn]] void unavailable(const std::string& s){throw std::runtime_error("OBJECT_BINDING_UNAVAILABLE: "+s);}
+}
+ObjectRegistry::ObjectRegistry(size_t capacity,std::string profile,std::string source)
+    :capacity_(capacity),owner_pid_(getpid()),profile_(std::move(profile)),source_(std::move(source)){
+    static std::atomic<uint64_t> next_instance{1};instance_=next_instance.fetch_add(1);
+}
+bool GroupObject::operator==(const GroupObject& o)const{return token==o.token&&parent==o.parent&&cls==o.cls&&engine==o.engine;}
+bool GroupMember::operator==(const GroupMember& o)const{return channel==o.channel&&compute_children==o.compute_children;}
+bool GroupBinding::operator==(const GroupBinding& o)const{
+    return owner_pid==o.owner_pid&&registry_instance==o.registry_instance&&client==o.client&&fd==o.fd&&client_generation==o.client_generation&&
+        membership_revision==o.membership_revision&&compute_candidates_revision==o.compute_candidates_revision&&
+        profile_version==o.profile_version&&source_commit==o.source_commit&&device==o.device&&subdevice==o.subdevice&&group==o.group&&members==o.members;
 }
 bool Binding::operator==(const Binding& o)const {
     return client==o.client&&client_generation==o.client_generation&&fd==o.fd&&engine==o.engine&&
@@ -33,12 +47,21 @@ const ObjectRegistry::Node* ObjectRegistry::node(uint32_t c,uint32_t h)const{
 }
 bool ObjectRegistry::contains(uint32_t c,uint32_t h)const{return node(c,h)!=nullptr;}
 bool ObjectRegistry::child_of(const Node& c,const Node& p)const{return c.client==p.client&&c.parent==ObjectToken{p.handle,p.generation};}
+void ObjectRegistry::touch_topology(const Node& n){
+    const Node* ch=nullptr;
+    if(channel(n.cls))ch=&n;
+    if(compute(n.cls)){compute_candidates_revision_=next_topology_++;ch=node(n.client,n.parent.handle);}
+    if(!ch||!channel(ch->cls))return;
+    const auto* g=node(ch->client,ch->parent.handle);
+    if(g&&g->cls==0xa06c&&child_of(*ch,*g))membership_revisions_[{g->client,g->handle}]=next_topology_++;
+}
 void ObjectRegistry::erase_tree(uint32_t c,ObjectToken root){
     std::vector<ObjectToken> doomed{root};
     for(size_t i=0;i<doomed.size();++i)
         for(const auto& kv:current_)if(kv.second.client==c&&kv.second.parent==doomed[i])
             doomed.push_back({kv.second.handle,kv.second.generation});
-    for(const auto& t:doomed){auto i=current_.find({c,t.handle});if(i!=current_.end()&&i->second.generation==t.generation)current_.erase(i);}
+    for(const auto& t:doomed)if(const auto* n=node(c,t.handle))touch_topology(*n);
+    for(const auto& t:doomed){auto i=current_.find({c,t.handle});if(i!=current_.end()&&i->second.generation==t.generation){if(i->second.cls==0xa06c)membership_revisions_.erase(i->first);current_.erase(i);}}
 }
 void ObjectRegistry::allocate(uint32_t c,uint32_t h,uint32_t p,uint32_t cls,uint32_t engine){
     if(!has_client(c)){incomplete("allocation without observed client FD");return;}
@@ -46,10 +69,12 @@ void ObjectRegistry::allocate(uint32_t c,uint32_t h,uint32_t p,uint32_t cls,uint
     if(current_.size()>=capacity_){incomplete("object capacity exceeded");return;}
     const auto* parent=node(c,p);ObjectToken token{p,parent?parent->generation:0};
     Node n{c,h,cls,engine,next_++,token};current_[{c,h}]=n;
+    touch_topology(n);
     history("alloc client="+std::to_string(c)+" handle="+std::to_string(h)+" generation="+std::to_string(n.generation));
 }
 void ObjectRegistry::bind(uint32_t c,uint32_t h,uint32_t engine){
     auto i=current_.find({c,h});if(i==current_.end()){incomplete("bind to unobserved object");return;}
+    touch_topology(i->second);
     // Changing an engine invalidates snapshots even if later rebound to its old
     // value. Preserve children while advancing this parent's generation.
     auto old=i->second.generation;i->second.generation=next_++;i->second.engine=engine;
@@ -58,7 +83,9 @@ void ObjectRegistry::bind(uint32_t c,uint32_t h,uint32_t engine){
 }
 void ObjectRegistry::free(uint32_t c,uint32_t h){
     if(c==h){
+        for(const auto& kv:current_)if(kv.first.first==c)touch_topology(kv.second);
         for(auto i=current_.begin();i!=current_.end();)if(i->first.first==c)i=current_.erase(i);else ++i;
+        for(auto i=membership_revisions_.begin();i!=membership_revisions_.end();)if(i->first.first==c)i=membership_revisions_.erase(i);else ++i;
         clients_.erase(c);
     }else if(const auto* n=node(c,h))erase_tree(c,{h,n->generation});
     history("free client="+std::to_string(c)+" handle="+std::to_string(h));
@@ -114,6 +141,57 @@ bool ObjectRegistry::valid(const Binding& b)const{
         }
     }
     return subdevices==1&&channels==b.channels.size()&&objects==b.compute_objects.size();
+}
+GroupBinding ObjectRegistry::discover_group()const{
+    if(owner_pid_!=uint32_t(getpid()))unavailable("registry belongs to another process");
+    if(!incomplete_.empty())unavailable("incomplete registry: "+incomplete_);
+    // A dangling identified compute object must not silently disappear from
+    // candidate counting. This probe supports only explicit channel->TSG ancestry.
+    for(const auto& kv:current_){const auto& e=kv.second;if(!compute(e.cls))continue;
+        const auto* ch=node(e.client,e.parent.handle);
+        if(!ch||!channel(ch->cls)||!child_of(e,*ch))unavailable("compute child has invalid channel ancestry");
+        const auto* g=node(ch->client,ch->parent.handle);
+        if(!g||g->cls!=0xa06c||!child_of(*ch,*g))unavailable("compute channel has invalid group ancestry");
+    }
+    auto snapshot=[](const Node& n){return GroupObject{{n.handle,n.generation},n.parent,n.cls,n.engine};};
+    GroupBinding result;size_t candidates=0;
+    for(const auto& kv:current_){const auto& g=kv.second;if(g.cls!=0xa06c)continue;
+        GroupBinding b;b.owner_pid=owner_pid_;b.registry_instance=instance_;b.profile_version=profile_;b.source_commit=source_;
+        b.client=g.client;b.group=snapshot(g);size_t computes=0;
+        for(const auto& ck:current_){const auto& ch=ck.second;if(!channel(ch.cls)||!child_of(ch,g))continue;
+            GroupMember member;member.channel=snapshot(ch);
+            for(const auto& ek:current_){const auto& e=ek.second;if(compute(e.cls)&&child_of(e,ch)){member.compute_children.push_back(snapshot(e));++computes;}}
+            b.members.push_back(std::move(member));
+        }
+        if(!computes)continue; // copy-only TSGs do not become compute candidates
+        const auto* dev=node(g.client,g.parent.handle);
+        if(!dev||dev->cls!=0x80||!child_of(g,*dev))unavailable("device ancestry missing");
+        const auto* root=node(g.client,g.client);
+        if(!(dev->parent==ObjectToken{g.client,root?root->generation:0}))unavailable("device does not belong to current client");
+        b.device=snapshot(*dev);size_t subs=0;
+        for(const auto& sk:current_)if(sk.second.cls==0x2080&&child_of(sk.second,*dev)){b.subdevice=snapshot(sk.second);++subs;}
+        auto ci=clients_.find(g.client);
+        if(subs!=1||ci==clients_.end()||ci->second.fd<0)unavailable("no unique subdevice/owned client FD");
+        b.fd=ci->second.fd;b.client_generation=ci->second.generation;
+        auto revision=membership_revisions_.find({g.client,g.handle});
+        b.membership_revision=revision==membership_revisions_.end()?0:revision->second;
+        b.compute_candidates_revision=compute_candidates_revision_;
+        result=std::move(b);++candidates;
+    }
+    if(candidates!=1)unavailable("expected exactly one owned compute TSG; found "+std::to_string(candidates));
+    return result;
+}
+bool ObjectRegistry::valid_group(const GroupBinding& b)const{
+    // Probe path only, not the benchmark critical path. Re-discovery compares
+    // the entire current topology and detects a newly created second candidate.
+    try{return b==discover_group();}catch(const std::runtime_error&){return false;}
+}
+std::string ObjectRegistry::object_graph_json()const{
+    std::ostringstream s;s<<"{\"pid\":"<<owner_pid_<<",\"registry_instance\":"<<instance_<<",\"incomplete_reason\":"<<json_string(incomplete_)<<",\"nodes\":[";
+    bool first=true;for(const auto& kv:current_){const auto& n=kv.second;if(!first)s<<',';first=false;
+        s<<"{\"client\":"<<n.client<<",\"handle\":"<<n.handle<<",\"class\":"<<n.cls<<",\"generation\":"<<n.generation
+         <<",\"parent\":"<<n.parent.handle<<",\"parent_generation\":"<<n.parent.generation<<",\"engine\":"<<n.engine<<"}";}
+    s<<"]}";return s.str();
 }
 std::string ObjectRegistry::inventory()const{
     std::ostringstream s;s<<"incomplete="<<(incomplete_.empty()?"no":incomplete_)<<" current_objects="<<current_.size()<<"\n";

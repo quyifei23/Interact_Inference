@@ -1,0 +1,22 @@
+[
+  {
+    "argv": [
+      "nvidia-smi",
+      "--query-gpu=uuid,name,driver_version",
+      "--format=csv,noheader"
+    ],
+    "returncode": 0,
+    "stdout": "GPU-99e4e85f-1945-866c-9e00-130b51df7908, NVIDIA A100-PCIE-40GB, 595.58.03\nGPU-8ab7238c-a5f5-d99f-731e-ec9ac4232bb9, NVIDIA A100-PCIE-40GB, 595.58.03\nGPU-fb294fda-c72e-d6f4-1686-9c46ca6e3173, NVIDIA A100-PCIE-40GB, 595.58.03\nGPU-fe6b2bbb-6d40-6af4-d79c-d7ac14bd9378, NVIDIA A100-PCIE-40GB, 595.58.03\nGPU-c12f8126-444f-33b9-9370-3004faee0125, NVIDIA A100-PCIE-40GB, 595.58.03\nGPU-ce61d4a1-288f-1edb-b442-80a29ce57b9c, NVIDIA A100-PCIE-40GB, 595.58.03\nGPU-295e0368-09f2-86da-2a32-9f307548f7f7, NVIDIA A100-PCIE-40GB, 595.58.03\nGPU-7a41a4cd-bae6-ecf7-0d56-2441824a2ac7, NVIDIA A100-PCIE-40GB, 595.58.03\n",
+    "stderr": ""
+  },
+  {
+    "argv": [
+      "nvidia-smi",
+      "--query-compute-apps=pid,process_name,gpu_uuid",
+      "--format=csv,noheader"
+    ],
+    "returncode": 0,
+    "stdout": "2235325, VLLM::EngineCore, GPU-fb294fda-c72e-d6f4-1686-9c46ca6e3173\n",
+    "stderr": ""
+  }
+]

@@ -1,0 +1,59 @@
+{
+  "utc": "2026-09-17T06:40:33.470738+00:00",
+  "argv": [
+    "/home/quyifei/multimodal/workspace/Interception/active-preempt/build-595/int_worker",
+    "--probe-rm-group-info",
+    "--run-dir",
+    "/home/quyifei/multimodal/workspace/Interception/results/phase4/group_info595"
+  ],
+  "environment": {
+    "CUDA_VISIBLE_DEVICES": "GPU-99e4e85f-1945-866c-9e00-130b51df7908",
+    "LD_PRELOAD": "/home/quyifei/multimodal/workspace/Interception/active-preempt/build-595/librm_control.so"
+  },
+  "head": "4f4cd179965d08f547d36ddd2d0b68ce3ec7ae71",
+  "git_status": " M active-preempt/CMakeLists.txt\n M active-preempt/src/control_events.cpp\n M active-preempt/src/control_events.h\n M active-preempt/src/driver_profile.cpp\n M active-preempt/src/driver_profile.h\n M active-preempt/src/int_worker.cu\n M active-preempt/src/object_registry.cpp\n M active-preempt/src/object_registry.h\n M active-preempt/src/options.h\n M active-preempt/src/rm_control.cpp\n M active-preempt/src/rm_control.h\n?? active-preempt/src/group_binding_test.cpp\n?? active-preempt/src/group_query_internal.cpp\n?? active-preempt/src/group_query_internal.h\n?? results/phase4/\n",
+  "source_sha256": {
+    "active-preempt/src/bg_worker.cu": "c392734ec1686e88093786da4f517a6b08e61c5a21fdeed42bb07c9f8887c64e",
+    "active-preempt/src/build_profile.h.in": "f1963bd04bacd9f4309fe10cb2acfd1e62304abcdd412a8f80b62758e9c0e9fb",
+    "active-preempt/src/control_events.cpp": "c506b134fae983251ff91f41d51b870fc4a0ba069c64f81c315b349ab7b7414b",
+    "active-preempt/src/control_events.h": "d01c09508d13f813025599a6eafb6e7c48b913dbece6cf45fe03310c07467d4b",
+    "active-preempt/src/driver_profile.cpp": "54703ba568615130758a3eac98ed81da67967dd81007583c25c41c8c04e3a5ad",
+    "active-preempt/src/driver_profile.h": "7d42002332474688fad4a9497ddf94972fc896bfe3001e645d922fe4ec0874de",
+    "active-preempt/src/event_dump.cpp": "5951d3f1e5e68bffa4d0f108d9136cbcbdee7e794e27334ab618281262009186",
+    "active-preempt/src/group_binding_test.cpp": "79b16f8e4b75845a9313fb122ecd8d40b70f2af656408e0e45dd0a783f8d1165",
+    "active-preempt/src/group_query_internal.cpp": "a36210ff0d56c2a7d3f6721ca82eb33791e75f2c6faa019d370acfe22bc68b4a",
+    "active-preempt/src/group_query_internal.h": "0aab914fba45724b2b946d90e4b414d5dae0cdd848fbdae250fa9f046b8fdacb",
+    "active-preempt/src/int_worker.cu": "c0ba795784a8cd239cc341df8d320ebd9b7b9d35499198466741bf67c3b6959c",
+    "active-preempt/src/json_log.h": "fe9df9cdbc35418c62ae37e0d896f8eea3e40d9669e37be7154c31939649874d",
+    "active-preempt/src/mode_plan.h": "b50c001fef113cc7760487ece104b1ab8a13c26737ca3a5f43c608ac94560831",
+    "active-preempt/src/object_registry.cpp": "f205d6e76d83005df3fdb3372da30f269bcbf73713c5fa6eb0cc42f59b8c2201",
+    "active-preempt/src/object_registry.h": "d285492d3e00cc38e17928470275b9bec80e4dc6a97c0fd8015746c4bd09b5b4",
+    "active-preempt/src/options.h": "daac8d53c3a7c8d0d4421e7a3fa8b4a964beba7cd9f33c1a6c6a48568176cac8",
+    "active-preempt/src/phase2_contract_test.cpp": "07b64fd5e1f43ded794666e7498a82e6e2038c8b297ee3298f610f8756439bc2",
+    "active-preempt/src/phase3_profile_test.cpp": "2d28a7b25608486718dcac66940b620de78b483bd57bd491b3f0cccb30d11cce",
+    "active-preempt/src/preflight.cu": "23eafd300bfca449f636d61a5df3aa71e443dbdf687b53cb55781344f8d0e546",
+    "active-preempt/src/protocol.h": "e7d0440d9236b8622c768f5d818993031af3f5a38451c1f00fb018c66caf3347",
+    "active-preempt/src/recovery.h": "b5c3577a1c93fd8b79616fbff630cfe0c40267ae741445e5e107555af5030822",
+    "active-preempt/src/rm_contract_test.cpp": "cf6d6f2b595231ccaee07e06fb665c816786f21336072e9e4bc728eb72c96b27",
+    "active-preempt/src/rm_control.cpp": "7c56b2ba2687daede2fd842b96bc5f097b51b5b51518fb9622477b86379e7303",
+    "active-preempt/src/rm_control.h": "73326cc84ec61e33ba5d66d46fc3ecb91b3f62240e1c0218b000f8a509fc0a43",
+    "active-preempt/src/rm_observation.cpp": "8f8dfe8380818776d3640d9dfc27f68be0cf1301bd05117b036695305c34312d",
+    "active-preempt/src/rm_observation.h": "37ed8d68daa8129adc6b0f6ac7301f2e7d7049a2b2ee27bf8ecd4233d72bdd9e",
+    "active-preempt/src/trial_record.h": "d505c2c2fb64dbd1b59ae396ea6e7fe8341a2497c015dc65198c8423f3d69452",
+    "active-preempt/src/worker_common.cuh": "f84abd567126e4ef7865351b752fb0c6f2d730694e71d640d84e5f633c1940e1",
+    "active-preempt/CMakeLists.txt": "cdbbc8c1148642eeeac16ca4b7de060a0be9e4e54528f7d9898cc5145906991e"
+  },
+  "binary_sha256": {
+    "int_worker": "e7d549e2b8df71a2ca530ff552647f50e644c6fff6a369723ea8c45638278a95",
+    "librm_control.so": "c470042a0d53832bed5978cee92438513bb855c2c5c9bb37dd991b13eb68f5ac"
+  },
+  "build_profile": "595.58.03",
+  "nvidia_source_commit": "db0c4e65c8e34c678d745ddb1317f53f90d1072b",
+  "benchmark_trials": 0,
+  "active_experiment_authorized": false,
+  "pid": 2248248,
+  "timed_out": false,
+  "returncode": 0,
+  "stdout": "",
+  "stderr": ""
+}

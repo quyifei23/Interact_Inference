@@ -1,0 +1,38 @@
+Consolidate compiler generated dependencies of target preflight_cuda
+Consolidate compiler generated dependencies of target rm_control
+[  8%] Built target preflight_cuda
+[ 13%] Building CXX object CMakeFiles/rm_control.dir/src/rm_control.cpp.o
+[ 17%] Building CXX object CMakeFiles/rm_control.dir/src/control_events.cpp.o
+[ 21%] Building CXX object CMakeFiles/rm_control.dir/src/object_registry.cpp.o
+[ 26%] Building CXX object CMakeFiles/rm_control.dir/src/driver_profile.cpp.o
+[ 30%] Building CXX object CMakeFiles/rm_control.dir/src/rm_observation.cpp.o
+[ 34%] Building CXX object CMakeFiles/rm_control.dir/src/group_query_internal.cpp.o
+[ 39%] Linking CXX shared library librm_control.so
+[ 39%] Built target rm_control
+Consolidate compiler generated dependencies of target event_dump
+Consolidate compiler generated dependencies of target phase2_contract_test
+Consolidate compiler generated dependencies of target int_worker
+Consolidate compiler generated dependencies of target bg_worker
+[ 43%] Building CXX object CMakeFiles/event_dump.dir/src/event_dump.cpp.o
+[ 47%] Building CXX object CMakeFiles/phase2_contract_test.dir/src/phase2_contract_test.cpp.o
+[ 56%] Building CUDA object CMakeFiles/bg_worker.dir/src/bg_worker.cu.o
+[ 56%] Building CUDA object CMakeFiles/int_worker.dir/src/int_worker.cu.o
+[ 60%] Linking CXX executable event_dump
+[ 60%] Built target event_dump
+Consolidate compiler generated dependencies of target rm_contract_test
+[ 65%] Building CXX object CMakeFiles/rm_contract_test.dir/src/rm_contract_test.cpp.o
+[ 69%] Linking CXX executable rm_contract_test
+[ 69%] Built target rm_contract_test
+Consolidate compiler generated dependencies of target phase3_profile_test
+[ 73%] Building CXX object CMakeFiles/phase3_profile_test.dir/src/phase3_profile_test.cpp.o
+[ 78%] Linking CXX executable phase2_contract_test
+[ 78%] Built target phase2_contract_test
+[ 82%] Linking CXX executable phase3_profile_test
+[ 86%] Building CXX object CMakeFiles/group_binding_test.dir/src/group_binding_test.cpp.o
+[ 86%] Built target phase3_profile_test
+[ 91%] Linking CXX executable group_binding_test
+[ 91%] Built target group_binding_test
+[ 95%] Linking CUDA executable bg_worker
+[ 95%] Built target bg_worker
+[100%] Linking CUDA executable int_worker
+[100%] Built target int_worker

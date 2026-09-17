@@ -1,0 +1,16 @@
+{
+  "argv": [
+    "cmake",
+    "-S",
+    "active-preempt",
+    "-B",
+    "active-preempt/build",
+    "-DAP_RM_PROFILE=550.120",
+    "-DNVIDIA_SOURCE=/home/quyifei/multimodal/workspace/Interception/open-gpu-kernel-modules",
+    "-DCMAKE_BUILD_TYPE=RelWithDebInfo",
+    "-DCMAKE_CUDA_ARCHITECTURES=80"
+  ],
+  "utc": "2026-09-17T06:37:32.860914+00:00",
+  "returncode": 0,
+  "log": "configure550.log"
+}

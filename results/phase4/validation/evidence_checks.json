@@ -1,0 +1,13 @@
+{
+  "probe_sources_match_current": true,
+  "probe_binaries_match_current": true,
+  "all_json_and_jsonl_parse": true,
+  "benchmark_raw_csv_count": 0,
+  "both_profiles_ctest_passed": true,
+  "documentation_local_links_exist": true,
+  "diff_check": {
+    "returncode": 0,
+    "stdout": "",
+    "stderr": ""
+  }
+}

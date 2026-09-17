@@ -72,6 +72,67 @@ void snapshot(ap::TrialRecord& r,const ap::Shared& s,const Observer* observer){
     if(ap::acquire(&s.interactive.done))r.done_gpu=s.interactive.done_gpu_ns;
     if(r.bg_present){if(ap::acquire(&s.bg.started))r.bg_main_gpu=s.bg.start_gpu_ns;if(ap::acquire(&s.bg.done))r.bg_done_gpu=s.bg.done_gpu_ns;r.overflow=s.bg.overflow;}
 }
+int probe_group_info(const ap::Options& o){
+    std::unique_ptr<ap::Telemetry> telemetry;
+    std::unique_ptr<ap::GpuWorker> gpu;
+    std::string stage="profile";
+    auto persist=[&](const std::string& prefix){ap::save_control_journal();ap::save_rm_observation(o.run_dir,prefix);};
+    try{
+        ap::configure_rm(ap::RmStage::GroupInfo); // never Active; no authorization argument
+        ap::open_control_journal(o.run_dir,"probe");
+        stage="device_access";
+        int fd=open("/dev/nvidiactl",O_RDWR|O_CLOEXEC);
+        if(fd<0)throw std::runtime_error("DEVICE_ACCESS_BLOCKED: /dev/nvidiactl errno="+std::to_string(errno));
+        close(fd); // access check only, never the control FD
+        stage="cuda_scope";
+        std::ofstream cuda_calls(o.run_dir+"/probe_cuda_calls.log");
+        auto call=[&](CUresult rc,const char* name){cuda_calls<<name<<" code="<<int(rc)<<std::endl;ap::cu_check(rc,name);};
+        call(cuInit(0),"cuInit");int count=0;call(cuDeviceGetCount(&count),"cuDeviceGetCount");
+        cuda_calls<<"visible_device_count="<<count<<std::endl;
+        if(count!=1)throw std::runtime_error("OBJECT_BINDING_UNAVAILABLE: group probe requires one visible CUDA device");
+        CUdevice device;CUuuid uuid{};call(cuDeviceGet(&device,0),"cuDeviceGet(0)");call(cuDeviceGetUuid(&uuid,device),"cuDeviceGetUuid");
+        cudaUUID_t runtime_uuid{};static_assert(sizeof(uuid)==sizeof(runtime_uuid));std::memcpy(&runtime_uuid,&uuid,sizeof(uuid));
+        ap::note_group_cuda_scope(ap::uuid_string(runtime_uuid),count);
+        stage="cuda_workload";
+        telemetry=std::make_unique<ap::Telemetry>();gpu=std::make_unique<ap::GpuWorker>(*telemetry,300,1,0,false,256,false,true);
+        gpu->cleanup_log=o.run_dir+"/probe_cuda_cleanup.log";
+        gpu->launch();if(!gpu->correct())throw std::runtime_error("CORRECTNESS_FAILURE: finite current-context workload differs from warmup reference");
+        if(ap::uuid_string(gpu->prop.uuid)!=ap::uuid_string(runtime_uuid))throw std::runtime_error("OBJECT_BINDING_UNAVAILABLE: CUDA UUID changed");
+        ap::note_cuda_ready(gpu->prop.major,gpu->prop.minor);
+        cuda_calls<<"fixed_iterations=256 blocks=1 threads=256 reference_match=true\n";cuda_calls.close();
+        std::ofstream cuda_identity(o.run_dir+"/cuda_identity.txt");ap::write_identity(cuda_identity,*gpu);cuda_identity.close();
+        stage="group_binding";persist("before_binding_");
+        const auto identity=ap::inspect_owned_tsg(); // no GET_INFO in discovery
+        std::ofstream candidate(o.run_dir+"/group_identity.json");candidate<<identity.json()<<'\n';candidate.close();
+        if(!candidate)throw std::runtime_error("Cannot persist group identity before GET_INFO");
+        persist("before_get_info_");
+        stage="group_get_info";
+        const auto result=ap::get_group_info(identity); // the only project control in this probe
+        ap::save_control_journal();
+        const auto& r=result.control;
+        std::ofstream query(o.run_dir+"/get_info.json");
+        query<<std::boolalpha<<"{\"command\":\"NVA06C_CTRL_CMD_GET_INFO\",\"target_scope\":\"group\",\"hClient\":"<<identity.binding().client
+             <<",\"hObject\":"<<identity.binding().group.token.handle<<",\"attempted\":"<<r.attempted<<",\"operation_seq\":"<<r.operation_seq
+             <<",\"syscall_return\":"<<(r.attempted?std::to_string(r.syscall_result):"null")<<",\"errno\":"<<(r.attempted?std::to_string(r.syscall_errno):"null")
+             <<",\"NV_STATUS_raw\":"<<r.rm_status<<",\"NV_STATUS_valid\":"<<(r.attempted&&r.syscall_result==0&&r.rm_status!=0xffffffff)
+             <<",\"call_begin_ns\":"<<(r.begin_ns?std::to_string(r.begin_ns):"null")<<",\"call_end_ns\":"<<(r.end_ns?std::to_string(r.end_ns):"null")
+             <<",\"get_info_verified\":"<<r.ok()<<",\"result\":"<<ap::json_string(r.describe())
+             <<",\"hardware_tsg_id\":"<<(result.hardware_tsg_id?std::to_string(*result.hardware_tsg_id):"null")<<"}\n";
+        query.close();if(!query)throw std::runtime_error("Cannot persist GET_INFO output; retain control journal");
+        if(!r.ok())throw std::runtime_error("GET_INFO: "+r.describe());
+        persist("before_cleanup_");stage="cuda_cleanup";
+        bool cleanup=gpu->shutdown();gpu.reset();persist("");
+        if(!cleanup)throw std::runtime_error("CUDA_CLEANUP_FAILURE");
+        std::ofstream(o.run_dir+"/probe_status.txt")<<"GROUP_GET_INFO_VERIFIED; channel selection unverified; active controls=0; cleanup passed\n";
+        return 0;
+    }catch(const std::exception& e){
+        ap::record_rm_stop_reason(stage+": "+e.what());
+        persist("failure_"); // preserve object graph/journal BEFORE cleanup
+        std::ofstream(o.run_dir+"/probe_status.txt")<<stage<<": "<<e.what()<<'\n';
+        if(gpu){bool cleanup=gpu->shutdown();gpu.reset();std::ofstream(o.run_dir+"/failure_cleanup.txt")<<"cleanup_ok="<<cleanup<<'\n';}
+        persist("");std::cerr<<stage<<": "<<e.what()<<'\n';return 77;
+    }
+}
 int probe_rm(const ap::Options& o){
     std::unique_ptr<ap::Telemetry> telemetry;
     std::unique_ptr<ap::GpuWorker> gpu;
@@ -136,9 +197,10 @@ int main(int argc,char** argv){
         }
         if(run_dir.empty())throw std::invalid_argument("--run-dir required for RM probes and experiments");
         std::filesystem::create_directories(run_dir);
-        for(auto name:{"raw.csv","probe_status.txt","int_control_events.bin","int_identity.txt","failure.txt"})
+        for(auto name:{"raw.csv","probe_status.txt","int_control_events.bin","probe_control_events.bin","group_identity.json","int_identity.txt","failure.txt"})
             if(std::filesystem::exists(run_dir+"/"+name))throw std::runtime_error("Evidence already exists; use a new run directory");
         evidence_writable=true;
+        if(o.probe==ap::Probe::GroupInfo)return probe_group_info(o);
         if(o.probe!=ap::Probe::None)return probe_rm(o);
         ap::configure_rm(plan.identity?ap::RmStage::Active:ap::RmStage::Disabled,o.test_host);
         // Before any fork: verify CUDA availability in a separate probe process

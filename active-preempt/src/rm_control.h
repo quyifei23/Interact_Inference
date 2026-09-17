@@ -2,6 +2,7 @@
 #include <cstdint>
 #include <string>
 #include <vector>
+#include <optional>
 #include "object_registry.h"
 #include "driver_profile.h"
 
@@ -20,7 +21,7 @@ struct ControlResult {
     uint32_t rm_status = 0xffffffff;
     uint64_t begin_ns = 0, end_ns = 0;
     uint64_t operation_seq = 0;
-    enum class Rejection:uint32_t {None,Device,Abi,Binding,Incomplete,PendingAsync,LogFull,Stage,Authorization,Readonly,GpuScope} rejection=Rejection::None;
+    enum class Rejection:uint32_t {None,Device,Abi,Binding,Incomplete,PendingAsync,LogFull,Stage,Authorization,Readonly,GpuScope,AlreadyQueried} rejection=Rejection::None;
     bool ok() const { return attempted && syscall_result == 0 && rm_status == 0; }
     std::string describe() const;
     const char* category() const;
@@ -32,6 +33,27 @@ struct Identity {
     std::vector<uint32_t> channels;
     Binding binding;
 };
+struct GroupInfoResult {
+    ControlResult control;
+    std::optional<uint32_t> hardware_tsg_id; // status-valid, including ID 0
+};
+class GroupIdentity {
+public:
+    const GroupBinding& binding()const{return binding_;}
+    std::string json()const;
+private:
+    GroupBinding binding_;
+    int allocating_fd_=-1;
+    std::string gpu_uuid_,visible_devices_;
+    explicit GroupIdentity(GroupBinding b,int fd,std::string uuid,std::string visible)
+        :binding_(std::move(b)),allocating_fd_(fd),gpu_uuid_(std::move(uuid)),visible_devices_(std::move(visible)){}
+    friend GroupIdentity inspect_owned_tsg();
+    friend GroupInfoResult get_group_info(const GroupIdentity&);
+};
+// Observation only, followed by a separate one-shot, group-only GET_INFO.
+// No conversion to Identity, no selected compute_channel and no arbitrary cmd.
+GroupIdentity inspect_owned_tsg();
+GroupInfoResult get_group_info(const GroupIdentity& identity);
 
 // Discovery accepts only allocations observed in this process. No externally
 // supplied hClient/hObject, QUERY_GROUP, global enumeration, or privilege bypass.

@@ -1,0 +1,6 @@
+cuInit code=0
+cuDeviceGetCount code=0
+visible_device_count=1
+cuDeviceGet(0) code=0
+cuDeviceGetUuid code=0
+fixed_iterations=256 blocks=1 threads=256 reference_match=true

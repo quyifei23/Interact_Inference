@@ -1,0 +1,16 @@
+{
+  "argv": [
+    "cmake",
+    "-S",
+    "active-preempt",
+    "-B",
+    "active-preempt/build-595",
+    "-DAP_RM_PROFILE=595.58.03",
+    "-DNVIDIA_SOURCE=/tmp/interact-inference-nvidia-595.58.03",
+    "-DCMAKE_BUILD_TYPE=RelWithDebInfo",
+    "-DCMAKE_CUDA_ARCHITECTURES=80"
+  ],
+  "utc": "2026-09-17T06:34:35.607294+00:00",
+  "returncode": 0,
+  "log": "configure595.log"
+}

@@ -1,0 +1,30 @@
+Consolidate compiler generated dependencies of target rm_control
+[  8%] Built target preflight_cuda
+[ 13%] Building CXX object CMakeFiles/rm_control.dir/src/rm_control.cpp.o
+[ 17%] Linking CXX shared library librm_control.so
+[ 39%] Built target rm_control
+Consolidate compiler generated dependencies of target event_dump
+Consolidate compiler generated dependencies of target phase2_contract_test
+Consolidate compiler generated dependencies of target int_worker
+Consolidate compiler generated dependencies of target bg_worker
+[ 43%] Linking CXX executable event_dump
+[ 47%] Building CUDA object CMakeFiles/int_worker.dir/src/int_worker.cu.o
+[ 52%] Building CXX object CMakeFiles/phase2_contract_test.dir/src/phase2_contract_test.cpp.o
+[ 56%] Building CUDA object CMakeFiles/bg_worker.dir/src/bg_worker.cu.o
+[ 60%] Built target event_dump
+Consolidate compiler generated dependencies of target rm_contract_test
+[ 65%] Linking CXX executable rm_contract_test
+[ 69%] Built target rm_contract_test
+Consolidate compiler generated dependencies of target phase3_profile_test
+[ 73%] Linking CXX executable phase3_profile_test
+[ 78%] Built target phase3_profile_test
+Consolidate compiler generated dependencies of target group_binding_test
+[ 82%] Building CXX object CMakeFiles/group_binding_test.dir/src/group_binding_test.cpp.o
+[ 86%] Linking CXX executable phase2_contract_test
+[ 86%] Built target phase2_contract_test
+[ 91%] Linking CXX executable group_binding_test
+[ 91%] Built target group_binding_test
+[ 95%] Linking CUDA executable bg_worker
+[ 95%] Built target bg_worker
+[100%] Linking CUDA executable int_worker
+[100%] Built target int_worker

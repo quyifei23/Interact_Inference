@@ -1,0 +1,10 @@
+{
+  "source": "probe_control_events.bin",
+  "archive": "probe_control_events.bin.gz",
+  "original_bytes": 22548480,
+  "archive_bytes": 22201,
+  "original_sha256": "dda8acd0447ef967cead443d556e823ce7ef631c69b461d465ff4ba27e44504c",
+  "lossless_roundtrip": true,
+  "recovered_json_matches": true,
+  "description": "Actual probe journal, archived after successful cleanup. No events added or filtered."
+}

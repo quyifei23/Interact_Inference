@@ -1,5 +1,6 @@
 #include "control_events.h"
 #include "json_log.h"
+#include <ctrl/ctrla06c.h>
 #include <cstring>
 #include <fstream>
 #include <iomanip>
@@ -22,8 +23,11 @@ void dump(const void* data,size_t length,const std::string& path){
         f<<"{\"schema_version\":2,\"run_id\":"<<json_string(h.run_id)<<",\"owner\":"<<json_string(h.owner)<<",\"pid\":"<<e.pid<<",\"trial_id\":"<<e.trial<<",\"operation_seq\":"<<e.sequence
          <<",\"driver_profile\":"<<json_string(h.profile[0]?h.profile:"550.120")<<",\"source_commit\":"<<json_string(h.source_commit)<<",\"command\":"<<e.command<<",\"params_size\":"<<e.size<<",\"params_hex\":\"";
         for(unsigned j=0;j<e.size&&j<event_param_capacity;++j)f<<std::hex<<std::setw(2)<<std::setfill('0')<<unsigned(e.params[j]);
-        f<<std::dec<<"\",\"target\":{\"hClient\":"<<e.client<<",\"hDevice\":"<<e.device<<",\"hSubdevice\":"<<e.subdevice<<",\"hTSG\":"<<e.group<<",\"hChannel\":"<<e.channel<<",\"hObject\":"<<e.object<<",\"fd\":"<<e.fd<<",\"client_generation\":"<<e.client_generation<<",\"group_generation\":"<<e.group_generation<<",\"target_generation\":"<<e.target_generation<<"}";
-        f<<",\"hardware_tsg_id\":";if(e.tsg_id!=0xffffffff)f<<e.tsg_id;else f<<"null";
+        f<<std::dec<<"\",\"target_scope\":"<<json_string(e.group&&e.object==e.group?"group":"channel_or_subdevice")
+         <<",\"target\":{\"hClient\":"<<e.client<<",\"hDevice\":"<<e.device<<",\"hSubdevice\":"<<e.subdevice<<",\"hTSG\":"<<e.group<<",\"hChannel\":";
+        if(e.channel)f<<e.channel;else f<<"null";
+        f<<",\"hObject\":"<<e.object<<",\"fd\":"<<e.fd<<",\"client_generation\":"<<e.client_generation<<",\"group_generation\":"<<e.group_generation<<",\"target_generation\":"<<e.target_generation<<"}";
+        f<<",\"hardware_tsg_id\":";if(e.tsg_id!=0xffffffff||(e.command==NVA06C_CTRL_CMD_GET_INFO&&!e.channel&&state==2&&e.result.ok()))f<<e.tsg_id;else f<<"null";
         f<<",\"engine_type\":";if(e.engine)f<<e.engine;else f<<"null";
         f<<",\"hardware_channel_id\":null,\"runlist_id\":null,\"operation_state\":"<<json_string(state==1?"IN_FLIGHT":(e.result.attempted?"RETURNED":"REJECTED_BEFORE_IOCTL"))<<",\"call_begin_ns\":";
         if(e.result.begin_ns)f<<e.result.begin_ns;else f<<"null";
@@ -49,7 +53,7 @@ void ControlJournal::open(const std::string& path,const std::string& owner){
     std::strncpy(h->owner,owner.c_str(),sizeof(h->owner)-1);std::strncpy(h->run_id,path.substr(0,path.find_last_of('/')).c_str(),sizeof(h->run_id)-1);
     std::strncpy(h->profile,build_profile().version,sizeof(h->profile)-1);std::strncpy(h->source_commit,build_profile().source_commit,sizeof(h->source_commit)-1);
 }
-ControlEvent* ControlJournal::begin(const Identity* id,uint32_t object,uint32_t cmd,const void* params,uint32_t size,int64_t trial){
+ControlEvent* ControlJournal::begin(const Identity* id,uint32_t object,uint32_t cmd,const void* params,uint32_t size,int64_t trial,const GroupBinding* group){
     if(!data_)return nullptr;
     auto& h=*static_cast<Header*>(data_);uint32_t n=h.count;
     if(n>=event_capacity||size>event_param_capacity){h.overflow=1;return nullptr;}
@@ -59,6 +63,11 @@ ControlEvent* ControlJournal::begin(const Identity* id,uint32_t object,uint32_t 
     if(id){e->client=id->client;e->device=id->device;e->subdevice=id->subdevice;e->group=id->group;e->channel=id->compute_channel;e->fd=id->fd;e->tsg_id=id->tsg_id;e->engine=id->engine;
         e->client_generation=id->binding.client_generation;e->group_generation=id->binding.group.generation;
         for(auto t:{id->binding.device,id->binding.subdevice,id->binding.group,id->binding.compute_channel})if(t.handle==object)e->target_generation=t.generation;}
+    if(group){
+        e->client=group->client;e->device=group->device.token.handle;e->subdevice=group->subdevice.token.handle;e->group=group->group.token.handle;
+        e->fd=group->fd;e->engine=group->group.engine;e->client_generation=group->client_generation;
+        e->group_generation=e->target_generation=group->group.token.generation;
+    }
     e->result.begin_ns=monotonic_ns();__atomic_store_n(&e->state,1,__ATOMIC_RELEASE);__atomic_store_n(&h.count,n+1,__ATOMIC_RELEASE);return e;
 }
 void ControlJournal::complete(ControlEvent* e,const ControlResult& r){if(e){e->result=r;__atomic_store_n(&e->state,2,__ATOMIC_RELEASE);}}

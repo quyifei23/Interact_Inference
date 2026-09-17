@@ -1,0 +1,45 @@
+{
+  "source": "before_cleanup_object_graph.json; observed current-process snapshot only",
+  "node_count": 116,
+  "groups": [
+    {
+      "client": 3252373130,
+      "group": 1543503948,
+      "generation": 76,
+      "engine": 1,
+      "channel_count": 8,
+      "compute_channel_count": 8,
+      "compute_child_count": 8
+    },
+    {
+      "client": 3252373130,
+      "group": 1543503989,
+      "generation": 114,
+      "engine": 11,
+      "channel_count": 4,
+      "compute_channel_count": 0,
+      "compute_child_count": 0
+    },
+    {
+      "client": 3252373130,
+      "group": 1543504003,
+      "generation": 128,
+      "engine": 12,
+      "channel_count": 4,
+      "compute_channel_count": 0,
+      "compute_child_count": 0
+    },
+    {
+      "client": 3252373130,
+      "group": 1543504017,
+      "generation": 142,
+      "engine": 13,
+      "channel_count": 4,
+      "compute_channel_count": 0,
+      "compute_child_count": 0
+    }
+  ],
+  "compute_candidate_count": 1,
+  "bound_member_count": 8,
+  "project_control_records": 1
+}

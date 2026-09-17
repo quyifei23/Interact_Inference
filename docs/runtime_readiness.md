@@ -1,5 +1,7 @@
 # 分阶段运行准备与版本边界
 
+**当前阶段四：** 单 GPU CUDA preflight 成功；595/A100 的独立 group-info probe 已追加一次 GET_INFO，ioctl=0、errno=0、NV_OK，返回 TSG ID=6；清理全部成功。active controls=0、benchmark trials=0。channel 身份仍未验证；不继承主动授权。当前证据见 [phase4_group_binding](phase4_group_binding.md)，以下保留历史时点。
+
 **阶段三更新：** 本次新 preflight 已能访问 8 张 A100，CUDA 最小 workload 成功。独立 experimental 595 adapter 已编译并执行 observe-only，但真实对象图含 8 个 compute channel / 同一 graphics TSG，故未进入 GET_INFO。项目 RM controls=0，benchmark trials=0。阶段三记录及交接命令见 [phase3_bringup](phase3_bringup.md)。下列设备不可访问结果保留为阶段二的历史时点，不代表当前会话。
 
 阶段二基线为 Interact_Inference `9d578f24fdaa102ad94e6db2093ec14386416138`，启动时工作区干净，见 [initial_state.json](../results/phase2/initial_state.json)。本轮开始前的新增 preflight 文件已保留并接入；没有重建研究仓库或修改 upstream 550.120 工作树。

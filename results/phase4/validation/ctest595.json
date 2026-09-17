@@ -1,0 +1,11 @@
+{
+  "argv": [
+    "ctest",
+    "--test-dir",
+    "active-preempt/build-595",
+    "--output-on-failure"
+  ],
+  "utc": "2026-09-17T06:37:59.035011+00:00",
+  "returncode": 0,
+  "log": "ctest595.log"
+}

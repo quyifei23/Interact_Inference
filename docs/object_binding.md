@@ -1,4 +1,33 @@
-# RM 对象绑定与生命周期（阶段二）
+# RM 对象绑定与生命周期
+
+## 阶段四：独立 group binding（当前）
+
+基于研究仓库 `4f4cd179965d08f547d36ddd2d0b68ce3ec7ae71` 的本轮修改。**595.58.03 / A100 的一次 group-target GET_INFO 已接受**：ioctl=0、errno=0、NV_STATUS=0，hardware TSG ID=6。该进程中唯一 compute TSG 有 8 个已识别 compute channel，另有 3 个 copy-only TSG。此为本次快照，不是固定拓扑；没有复用阶段三的身份。完整运行记录见 [phase4_group_binding](phase4_group_binding.md)。
+
+两种类型保持独立：
+
+| 类型 / 路径 | 必要条件 | 本轮用途 |
+|---|---|---|
+| `Binding` / `Identity`，`discover()` | 唯一 compute TSG 且唯一 compute channel | 原严格路径保持不变；多 channel 仍拒绝 |
+| `GroupBinding` / `GroupIdentity`，`discover_group()` / `inspect_owned_tsg()` | 唯一 compute TSG；完整保存全部已捕获、已识别 channel 及其 compute children | 仅 `get_group_info()`，不选择子 channel；不能转换为旧类型 |
+
+`GroupBinding` 保存 PID、registry instance、build profile/source commit、client generation、原 allocating control FD 的 retained dup、device/subdevice/group 的 class/token/generation/parent、各成员及 compute-child 关系。group/channel 的 engine 只保存实际捕获值；未指定的 channel engine 在身份 JSON 中为 null，不复制父 group 的 engine 伪装成观察值。源码定义通过当前 profile SDK 校验，显式非 GR/矛盾 engine 拒绝。
+
+FD 的生存期由 Capture 内的 client 管理：首次观察 client 时从原 allocating `/dev/nvidiactl` FD 做 `F_DUPFD_CLOEXEC`；不另开 FD 借用对象。group snapshot 引用该 retained FD/client generation。client FREE 在同一把锁内使对象失效并关闭 dup；控制前重新检查 registry、FD、PID、profile 和单 GPU scope。`GroupIdentity` 还记录最初观察的 allocating FD 数字作为来源证据，该原始数字本身不是可复用句柄。
+
+`valid_group()` 重新比较当前祖先、成员集合与 revision。成员新增/删除/复用/rebind、compute-child 归属变化、第二个 compute 候选、client/device/subdevice/group 释放或复用、incomplete 都拒绝旧身份。revision 能捕获“新增后又删除”的暂态变化，不仅比较最终集合。无关普通对象、无 compute child 的其他 client、另一个 copy-only group 的成员 FREE 不会污染当前 group。PID/registry instance 防止同值历史 token 或 fork 继承的表重新获得操作资格。
+
+`Capture::mutex` 覆盖已观察 alloc/free/bind 的原 syscall、账本更新，以及本次 GET_INFO 前的完整校验和 syscall。`GroupInfoOnce` 仅构造 `NVA06C_CTRL_CMD_GET_INFO`，成功或失败后都不能在该 probe 中重试。discovery、身份构造不发 control；没有任意 cmd/hObject 的公开调用入口。
+
+单 GPU scope 要求 `CUDA_VISIBLE_DEVICES` 是一个完整 GPU UUID，当前 CUDA 枚举数量为 1，实际 UUID 匹配；短 workload 完成后才允许建立身份。对象选择还需 compute-child ancestry，不能仅按 engine=1、顺序或 GPU 张数选目标。CUDA UUID 是 CUDA 侧 scope 证据；GET_INFO 返回 TSG ID，**不验证 GPU UUID，也不证明已覆盖整个 CUDA context**。
+
+独立状态：`group_binding_observed` 是历史捕获事实，`group_binding_valid` 表示当前快照仍有效，`group_get_info_verified` 是这次查询接受的事实。清理前后应区分，结束 context 后 valid=false。`channel_binding_observed/channel_binding_verified` 是原 `binding_observed/readonly_verified` 的明确别名；group 查询不会设置它们，也不会改变 `active_experiment_authorized/active_result_measured`。
+
+hidden/direct syscall、内部创建/导入对象、未知 class/transport、未覆盖多 context 映射的限制仍在。`incomplete=no` 只表示未检测到缺口。stock RM 对本次对象/FD 的查询接受，不代表 PREEMPT 权限或 channel 选择通过。本轮无 KMD、SecInfo、权限或 driver 修改。
+
+新增 `group_binding_test` 与原 tests 在独立 550/595 构建中各 **7/7** 通过；fixture 使用 synthetic handles，覆盖 1/2/3/8/17 个 channel、copy-only 排除、生命周期/暂态修订、历史进程/registry、ABI/ancestry/FD/阶段拒绝、一次正确目标 GET_INFO、ID 0、错误原值/journal 和无 active/channel 解锁。550 无本轮实机查询，595 仅上述一次。
+
+## 阶段二、三的历史设计记录
 
 阶段三补充：独立 595 adapter 已实际捕获对象，但同一 graphics TSG 下发现 8 个 compute channel，仍按本文件的唯一性条件拒绝绑定；没有 GET_INFO 成功记录。原限制没有放宽，证据和后续 TSG 级绑定提案见 [phase3_bringup](phase3_bringup.md)。以下保留阶段二设计说明。
 

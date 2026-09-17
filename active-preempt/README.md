@@ -1,6 +1,6 @@
-# Active preemption prototype — phase 3 bring-up
+# Active preemption prototype — phase 4 group binding
 
-保留第二阶段的 generation/原 FD、对照模式、Graph markers、schema 2 与恢复日志。**本次 CUDA 最小 workload 已在 A100/595.58.03 成功；595 observe-only 捕获到同一 TSG 下 8 个 compute channel，绑定按约束拒绝。项目 GET/调度 controls=0，benchmark trials=0。** 真实证据与唯一下一步见 [phase3_bringup](../docs/phase3_bringup.md)。
+保留 generation/原 FD、旧严格 channel 身份、对照模式、Graph markers、schema 2 与恢复日志。**本次 A100/595.58.03 的独立 group binding 已接受一次 GET_INFO（ioctl=0 / NV_OK，TSG ID=6）；项目 active controls=0，benchmark trials=0。** 该 group 捕获到 8 个 compute channel，仍未选择具体 launch channel；旧路径继续拒绝。见 [本轮结果](../docs/phase4_group_binding.md) 和 [阶段三历史](../docs/phase3_bringup.md)。
 
 ## 构建与离线检查
 
@@ -15,7 +15,7 @@ ctest --test-dir active-preempt/build --output-on-failure
 
 默认仍依赖同级 NVIDIA submodule 的 550.120 commit `5e52edb2034de7db4d8ae368dbc7c26b416bfa16`、CUDA Toolkit、C++17、CMake 3.22、Linux x86-64。控制 ABI 使用所选 profile 的官方头文件。工作量针对 A100/sm_80；其他 GPU 的 CUDA probe 可独立尝试，主调度 workload 仍限制 A100。
 
-6 个 CTest：原 ABI/errno/空身份、注册表与 mode/恢复/async gate、profile/transport/授权门槛、Python 分析、runner admission/进程树、实际 C++ CSV/journal 与 Python parser 集成。所有 synthetic 数据只在临时目录，测试结果不是 GPU measurements。
+7 个 CTest：原 ABI/errno/空身份、注册表与 mode/恢复/async gate、profile/transport/授权门槛、新 group 生命周期与一次 GET_INFO 的 mock、Python 分析、runner admission/进程树、实际 C++ CSV/journal 与 Python parser 集成。所有 synthetic 数据只在临时目录，测试结果不是 GPU measurements。
 
 595 使用独立构建；`NVIDIA_595_SOURCE` 应指向已检出的、未修改的 **db0c4e65c8e34c678d745ddb1317f53f90d1072b**。不能将 550 submodule 切到该 tag，也不能复用同一个 build 混入不同头文件：
 
@@ -28,6 +28,8 @@ ctest --test-dir active-preempt/build-595 --output-on-failure
 ```
 
 实验 adapter 将 `static_abi_reviewed / observation_enabled / binding_observed / readonly_verified / active_experiment_authorized / active_result_measured` 分开记录。build profile 在编译时固定；运行阶段在第一次 CUDA 调用前显式选择。未知版本不解码 payload，FINN/未知布局阻止绑定。静态通过不授权 active；首次 active 不要求已有 active 成功结果，但仍要求本次有效对象、GET_INFO、workload GPU 范围与操作者确认。
+
+新增 group 证据使用 `group_binding_observed / group_binding_valid / group_get_info_verified`。旧 `binding_observed/readonly_verified` 只代表严格 channel 路径，并以 `channel_binding_observed/channel_binding_verified` 明确输出。group 查询不会解锁旧路径；现有 benchmark runner 仍要求其严格 channel identity，不能直接用本轮结果启动 B/C。
 
 ## 分阶段探测
 
@@ -57,7 +59,24 @@ LD_PRELOAD="$PWD/active-preempt/build-595/librm_control.so" \
   active-preempt/build-595/int_worker --probe-rm-readonly --run-dir results/readonly-new
 ```
 
-**当前真实 observe 因多 compute channel 拒绝；本轮没有运行上述 readonly 命令或下述 benchmark 矩阵。** 不删除唯一性检查，不擅自选择一个 channel，不填写 `--test-host-confirmed`；下一步先审阅 [TSG/channel 绑定范围方案](../docs/phase3_bringup.md)。
+上述 observe/identity/readonly 都保留单 compute-channel 约束，当前真实拓扑会拒绝。本轮只使用下面的独立 group probe，未运行上述 readonly 或下述 benchmark 矩阵。
+
+### 仅查询 group（多 channel 可用）
+
+先在已有普通 CUDA workload 使用权限的环境中核对 GPU UUID / 当前 driver；为匹配的 550 或 595 build 选择新的输出目录。595 示例：
+
+```bash
+nvidia-smi --query-gpu=uuid,name,driver_version --format=csv,noheader
+# TARGET_GPU_UUID 设置为本次核对的一个完整 GPU-... UUID，不能用旧文件中的 RM handles
+CUDA_VISIBLE_DEVICES="$TARGET_GPU_UUID" \
+LD_PRELOAD="$PWD/active-preempt/build-595/librm_control.so" \
+  active-preempt/build-595/int_worker --probe-rm-group-info \
+  --run-dir results/group-info-new
+```
+
+该入口先确认枚举数量=1 / UUID 匹配，完成固定 256 iterations 的有限预热/核验，再捕获新进程的唯一 compute TSG、完整成员和原 FD。只追加一次 `NVA06C_CTRL_CMD_GET_INFO`；不附带其他 getter、调度配置或 benchmark，不要求/不接受 `--test-host-confirmed`。失败保存证据后退出，不换目标、不重试。observe-only 仍追加 0 条项目 control。
+
+输出 `group_identity.json`、`get_info.json`、完整 `*_object_graph.json/capture.txt`、profile 状态、原始 observed ioctl 元数据、独立 control journal 和 CUDA cleanup。应用自己的 controls、项目 readonly、项目 active 三类独立计数。检查 `before_cleanup_profile_state.json` 的当前有效性；context 正常结束后最终 `group_binding_valid=false` 是预期结果，旧 token 不能再操作。TSG ID=0 也可为有效输出，以成功 status 和 optional 输出标记判断。
 
 [对象绑定](../docs/object_binding.md) 解释原 FD、generation、父子关系、唯一候选、捕获不完整与 hidden ioctl 的限制。普通 CUDA `none/int-only` 不要求捕获成功；主动模式必须验证本进程对象，同 GPU UUID、不同 process/context 与 hardware TSG ID。CUPTI channel ID 从未当作 RM handle。
 
