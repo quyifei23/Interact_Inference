@@ -1,0 +1,744 @@
+diff --git a/active-preempt/CMakeLists.txt b/active-preempt/CMakeLists.txt
+index d2b6014..cd92761 100644
+--- a/active-preempt/CMakeLists.txt
++++ b/active-preempt/CMakeLists.txt
+@@ -59,3 +59,5 @@ find_package(Python3 COMPONENTS Interpreter REQUIRED)
+ add_test(NAME analysis_contract_test COMMAND "${Python3_EXECUTABLE}" "${CMAKE_CURRENT_SOURCE_DIR}/scripts/test_analysis.py")
+ add_test(NAME runner_contract_test COMMAND "${Python3_EXECUTABLE}" "${CMAKE_CURRENT_SOURCE_DIR}/scripts/test_runner.py")
+ add_test(NAME schema_integration_test COMMAND "${Python3_EXECUTABLE}" "${CMAKE_CURRENT_SOURCE_DIR}/scripts/test_schema_integration.py" "$<TARGET_FILE:phase2_contract_test>")
++
++add_test(NAME paired_contract_test COMMAND "${Python3_EXECUTABLE}" "${CMAKE_CURRENT_SOURCE_DIR}/scripts/test_pairs.py")
+diff --git a/active-preempt/scripts/run_matrix.py b/active-preempt/scripts/run_matrix.py
+index 1c33137..ddefe1e 100644
+--- a/active-preempt/scripts/run_matrix.py
++++ b/active-preempt/scripts/run_matrix.py
+@@ -13,7 +13,7 @@ import sys
+ import time
+ from summarize import read_rows,summarize,ACCEPTED
+ 
+-BASELINES={'int-only','none'}
++BASELINES={'int-only','none','group-bound-none'}
+ MODES=BASELINES|{'timeslice','preempt-wait','group-preempt-wait','preempt-async','realtime-only','realtime-restart','disable','disable-split'}
+ EXTENDED={'preempt-async','disable','disable-split'}
+ 
+@@ -76,8 +76,8 @@ def run_process_group(cmd,env,log,timeout,grace=8):
+                     termination=[],recovery='not_started')
+     actions=[];timed_out=False
+     try:code=process.wait(timeout=timeout)
+-    except subprocess.TimeoutExpired:
+-        timed_out=True;code=124;actions.append('SIGTERM_PROCESS_GROUP_FOR_OWNER_CLEANUP')
++    except (subprocess.TimeoutExpired,KeyboardInterrupt,InterruptedError) as e:
++        timed_out=isinstance(e,subprocess.TimeoutExpired);code=124 if timed_out else 130;actions.append('SIGTERM_PROCESS_GROUP_FOR_OWNER_CLEANUP')
+         try:os.killpg(process.pid,signal.SIGTERM)
+         except ProcessLookupError:pass
+         try:process.wait(timeout=grace)
+@@ -132,6 +132,8 @@ def validate_admission(args):
+     if not set(args.modes)<=MODES:raise ValueError('unknown mode')
+     if not 1<=args.trials<=100000:raise ValueError('trials must be 1..100000')
+     if set(args.modes)-BASELINES and not args.test_host_confirmed:raise ValueError('Active modes require --test-host-confirmed; no privilege changes are performed')
++    if 'group-bound-none' in args.modes and (args.trials!=1 or args.graph or args.diagnostic_progress or args.test_host_confirmed or not args.bg_iterations or not args.int_iterations):
++        raise ValueError('group-bound-none requires one plain fixed-work trial without active authorization')
+     if 'group-preempt-wait' in args.modes:
+         if args.modes!=['group-preempt-wait'] or args.trials!=1 or args.graph or args.diagnostic_progress or args.force or args.bypass or args.allow_extended:
+             raise ValueError('Group PREEMPT is one plain synchronous smoke only; no other modes/options')
+@@ -159,6 +161,7 @@ def main():
+     p.add_argument('--bg-iterations',type=int,default=0);p.add_argument('--int-iterations',type=int,default=0)
+     p.add_argument('--force',type=int,choices=[0,1],default=0);p.add_argument('--bypass',type=int,choices=[0,1],default=0)
+     p.add_argument('--timeslice-us',type=int,default=1)
++    p.add_argument('--trigger-delay-us',type=int,choices=range(1000,5001),metavar='1000..5000')
+     for flag in ('graph','diagnostic-progress','test-host-confirmed','allow-extended','graph-evidence-reviewed'):p.add_argument('--'+flag,action='store_true')
+     p.add_argument('--smoke-evidence',type=Path);p.add_argument('--primitive-evidence',type=Path)
+     p.add_argument('--paired-none',type=Path,help='For one group-preempt-wait smoke: completed none directory; freeze its iterations and compare scope/build')
+@@ -215,6 +218,7 @@ def main():
+         name=f'{mode}-f{a.force}-b{a.bypass}';out=a.output/name
+         cmd=[str(a.build/'int_worker'),'--run-dir',str(out),'--mode',mode,'--trials',str(a.trials),'--cta-waves',str(a.cta_waves),
+              '--heartbeat-ns',str(a.heartbeat_ns),'--timeslice-us',str(a.timeslice_us),'--force',str(a.force),'--bypass',str(a.bypass)]
++        if a.trigger_delay_us:cmd+=['--trigger-delay-us',str(a.trigger_delay_us)]
+         for flag in ('graph','diagnostic_progress','test_host_confirmed','allow_extended','graph_evidence_reviewed'):
+             if getattr(a,flag):cmd.append('--'+flag.replace('_','-'))
+         for key,value in [('bg-iterations',bg_iterations),('int-iterations',int_iterations)]:
+diff --git a/active-preempt/scripts/summarize.py b/active-preempt/scripts/summarize.py
+index c579d49..1013de4 100644
+--- a/active-preempt/scripts/summarize.py
++++ b/active-preempt/scripts/summarize.py
+@@ -64,6 +64,7 @@ def read_rows(path):
+     if len(set(fields))!=len(fields) or not required<=set(fields):raise ValueError('Missing/duplicate schema 2 columns; refuse ambiguous field semantics')
+     if any(None in r or any(v is None for v in r.values()) for r in rows):raise ValueError('Malformed CSV field count')
+     if {r.get('schema_version') for r in rows}!={SCHEMA_VERSION}:raise ValueError('Schema 2 required; legacy schema 1 has main-entry semantics and must not be mixed')
++    if 'measurement_contract' in fields and len({r['measurement_contract'] for r in rows})!=1:raise ValueError('Mixed measurement contracts; do not combine old and new preparation semantics')
+     if len({r['run_kind'] for r in rows})!=1:raise ValueError('Diagnostic and performance samples must not be mixed')
+     return rows
+ 
+@@ -103,10 +104,16 @@ def summarize(directory,calibration_margin_ns=None):
+     metrics=[('Interaction → graph entry observed, all application-valid',valid,'T_int_graph_entry_observed','T_cpu_trigger'),
+              ('Interaction → graph entry, correct application rows',correct,'T_int_graph_entry_observed','T_cpu_trigger'),
+              ('Interaction → graph entry, timing-eligible subset',subset,'T_int_graph_entry_observed','T_cpu_trigger'),
++             ('Interaction → graph done observed, all application-valid',valid,'T_int_graph_done_observed','T_cpu_trigger'),
+              ('Interaction → main entry observed',valid,'T_int_main_entry_observed','T_cpu_trigger'),
+              ('Host submission',valid,'T_int_submit_end','T_int_submit_begin'),
+              ('IPC request → owner receipt',rows,'T_ipc_received','T_ipc_send'),
+              ('IPC round trip (includes owner control when present)',rows,'T_ipc_ack','T_ipc_send'),
++             ('Owner receipt → preparation begin',rows,'T_owner_prepare_begin','T_owner_received'),
++             ('Common owner preparation',rows,'T_owner_prepare_end','T_owner_prepare_begin'),
++             ('Preparation end → RM call begin',rows,'T_rm_call_begin','T_owner_prepare_end'),
++             ('Preparation end → action end (no-op or active)',rows,'T_owner_action_end','T_owner_prepare_end'),
++             ('Action end → IPC acknowledgment',rows,'T_ipc_ack','T_owner_action_end'),
+              ('RM syscall wall time (including failures)',rows,'T_rm_call_end','T_rm_call_begin'),
+              ('GPU graph marker interval',valid,'T_int_graph_done_gpu_ns','T_int_graph_entry_gpu_ns')]
+     for title,source,end,begin in metrics:
+@@ -119,7 +126,7 @@ def summarize(directory,calibration_margin_ns=None):
+     lines+=['','Exact BG preempt completion, context-save duration, and BG resume latency: **unmeasured**.',
+             '', 'Graph entry is K0 block0/thread0; main entry is the main arithmetic node. Neither is an exact first-warp timestamp. Lifetime overlap and an after-RM ordering hypothesis do not establish causation. Target residency stays unknown without another backend.',
+             '', 'Ordering model: '+('none; observations at/after RM are ambiguous' if model is None else f'explicit affine-offset assumption with {calibration_margin_ns} ns margin; not a guaranteed bound'),
+-            '', 'Paired comparisons: group-preempt-wait / preempt-wait vs none; realtime-restart vs realtime-only. Compare identical fixed work/configurations and separate diagnostic runs. One pair cannot establish a causal or stable latency benefit.']
++            '', 'Paired comparisons: group-preempt-wait vs group-bound-none (matched preparation); historical preempt-wait vs none; realtime-restart vs realtime-only. Compare identical fixed work/configurations and separate diagnostic runs. One pair cannot establish a causal or stable latency benefit.']
+     for path in sorted(directory.glob('*_calibration_*.csv')):
+         with path.open() as f: samples=list(csv.DictReader(f))
+         rtt=[(int(s['cpu_observed_ns'])-int(s['cpu_send_ns']))/1000 for s in samples]
+diff --git a/active-preempt/src/bg_worker.cu b/active-preempt/src/bg_worker.cu
+index 9015320..1931524 100644
+--- a/active-preempt/src/bg_worker.cu
++++ b/active-preempt/src/bg_worker.cu
+@@ -17,7 +17,7 @@ int main(int argc,char** argv){
+     };
+     try{
+         auto o=ap::parse(argc,argv);run_dir=o.run_dir;auto plan=ap::mode_plan(o.mode);
+-        ap::configure_rm(plan.group_identity?ap::RmStage::GroupActive:(plan.identity?ap::RmStage::Active:ap::RmStage::Disabled),o.test_host,ap::GroupOwner::Background);
++        ap::configure_rm((plan.group_identity?(plan.operation==ap::Trigger::GroupPrepareNoop?ap::RmStage::GroupNoop:ap::RmStage::GroupActive):(plan.identity?ap::RmStage::Active:ap::RmStage::Disabled)),o.test_host,ap::GroupOwner::Background);
+         std::signal(SIGTERM,ap::on_stop);std::signal(SIGINT,ap::on_stop);
+         if(o.shared_path.empty())throw std::runtime_error("bg_worker needs controller shared mapping");
+         mapping=std::make_unique<ap::Mapping>(o.shared_path.c_str());auto& s=*mapping->shared;
+@@ -45,6 +45,8 @@ int main(int argc,char** argv){
+         if(rm){s.host.bg_identity_valid=1;s.host.bg_tsg=rm->identity().tsg_id;s.host.bg_client=rm->identity().client;s.host.bg_group=rm->identity().group;s.host.bg_engine=rm->identity().engine;}
+         if(group){const auto& b=group->identity.binding();s.host.bg_group_identity_valid=1;s.host.bg_tsg=*group->info.hardware_tsg_id;
+             s.host.bg_client=b.client;s.host.bg_group=b.group.token.handle;s.host.bg_engine=b.group.engine;}
++        if(sched_getaffinity(0,sizeof(s.host.bg_cpu_affinity),&s.host.bg_cpu_affinity)!=0)throw std::runtime_error("Cannot record BG CPU affinity");
++        s.host.bg_registers=gpu->attributes.numRegs;s.host.bg_static_shared=gpu->attributes.sharedSizeBytes;s.host.bg_active_blocks_per_sm=gpu->active_blocks_per_sm;
+         s.host.bg_iterations=gpu->iterations;s.host.bg_solo_us=gpu->solo_us;s.host.bg_uninstrumented_us=gpu->uninstrumented_us;
+         std::strncpy(s.host.bg_uuid,ap::uuid_string(gpu->prop.uuid).c_str(),sizeof(s.host.bg_uuid)-1);identity.flush();ap::save_control_journal();
+         ap::release(&s.host.ready,1);uint32_t seen=0;bool running=true;
+@@ -52,7 +54,7 @@ int main(int argc,char** argv){
+             uint64_t deadline=ap::monotonic_ns()+60ull*1000000000;
+             while(ap::acquire(&s.host.command_seq)==seen){ap::check_stop();if(ap::monotonic_ns()>deadline)throw std::runtime_error("Controller disappeared");ap::relax();}
+             s.host.command_received_ns=ap::monotonic_ns();uint32_t seq=ap::acquire(&s.host.command_seq);
+-            s.host.result={};s.host.preliminary_result={};s.host.bg_done_at_owner_check=2;ap::record_trial(s.host.trial_id);
++            s.host.result={};s.host.preliminary_result={};s.host.owner_timing={};s.host.bg_done_at_owner_check=2;ap::record_trial(s.host.trial_id);
+             auto need_rm=[&](){if(!rm)throw std::runtime_error("OBJECT_BINDING_UNAVAILABLE: command needs RM identity");};
+             switch(s.host.command){
+             case ap::Command::None:s.host.bg_done_at_owner_check=ap::acquire(&s.bg.done);break;
+@@ -67,12 +69,14 @@ int main(int argc,char** argv){
+                 s.host.bg_correct=gpu->correct();s.host.bg_progress_correct=gpu->progress_correct;work_in_flight=false;
+                 if(group_request_attempted)ap::note_active_result_measured();
+                 if(rm)rm->mark_work_drained();ap::save_control_journal();break;
++            case ap::Command::GroupPrepareNoop:
+             case ap::Command::GroupPreemptWait:
+                 if(!plan.group_identity||!group)throw std::runtime_error("OBJECT_BINDING_UNAVAILABLE: group command requires BG group identity");
+                 if(!work_in_flight||!ap::acquire(&s.bg.started))throw std::runtime_error("INVALID_OBJECT_OR_STATE: BG main work not launched/observed");
+                 s.host.bg_done_at_owner_check=ap::acquire(&s.bg.done);
+-                if(s.host.bg_done_at_owner_check){s.host.result.rejection=ap::ControlResult::Rejection::TargetCompleted;break;}
+-                s.host.result=ap::preempt_group_wait(group->identity,ap::group_preempt_timeout_limit_us());
++                if(s.host.command==ap::Command::GroupPrepareNoop)
++                    s.host.result=ap::prepare_group_noop(group->identity,&s.host.owner_timing);
++                else s.host.result=ap::preempt_group_wait(group->identity,ap::group_preempt_timeout_limit_us(),&s.host.owner_timing,s.host.bg_done_at_owner_check!=0);
+                 group_request_attempted=s.host.result.attempted;break; // mmap journal already published
+             case ap::Command::CheckReuse:{
+                 if(work_in_flight)throw std::runtime_error("BG reuse check requires completed drain");
+diff --git a/active-preempt/src/control_events.cpp b/active-preempt/src/control_events.cpp
+index deeec24..0b04a24 100644
+--- a/active-preempt/src/control_events.cpp
++++ b/active-preempt/src/control_events.cpp
+@@ -20,8 +20,12 @@ void dump(const void* data,size_t length,const std::string& path){
+     const auto* events=reinterpret_cast<const ControlEvent*>(static_cast<const char*>(data)+event_offset);
+     for(size_t i=0;i<std::min<size_t>(__atomic_load_n(&h.count,__ATOMIC_ACQUIRE),event_capacity);++i){
+         const auto& e=events[i];uint32_t state=__atomic_load_n(&e.state,__ATOMIC_ACQUIRE);if(!state)continue;
++        PreparationEvent prep{};
++        const bool local=e.command==0&&e.size==sizeof(prep);
++        if(local)std::memcpy(&prep,e.params,sizeof(prep));
++        const bool preparation=local&&prep.magic==PreparationEvent{}.magic&&prep.revision==1;
+         f<<"{\"schema_version\":2,\"run_id\":"<<json_string(h.run_id)<<",\"owner\":"<<json_string(h.owner)<<",\"pid\":"<<e.pid<<",\"trial_id\":"<<e.trial<<",\"operation_seq\":"<<e.sequence
+-         <<",\"driver_profile\":"<<json_string(h.profile[0]?h.profile:"550.120")<<",\"source_commit\":"<<json_string(h.source_commit)<<",\"command\":"<<e.command<<",\"params_size\":"<<e.size<<",\"params_hex\":\"";
++         <<",\"driver_profile\":"<<json_string(h.profile[0]?h.profile:"550.120")<<",\"source_commit\":"<<json_string(h.source_commit)<<",\"command\":"<<(preparation?"null":std::to_string(e.command))<<",\"params_size\":"<<e.size<<",\"params_hex\":\"";
+         for(unsigned j=0;j<e.size&&j<event_param_capacity;++j)f<<std::hex<<std::setw(2)<<std::setfill('0')<<unsigned(e.params[j]);
+         f<<std::dec<<"\",\"target_scope\":"<<json_string(e.group&&e.object==e.group?"group":"channel_or_subdevice")
+          <<",\"target\":{\"hClient\":"<<e.client<<",\"hDevice\":"<<e.device<<",\"hSubdevice\":"<<e.subdevice<<",\"hTSG\":"<<e.group<<",\"hChannel\":";
+@@ -29,8 +33,16 @@ void dump(const void* data,size_t length,const std::string& path){
+         f<<",\"hObject\":"<<e.object<<",\"fd\":"<<e.fd<<",\"client_generation\":"<<e.client_generation<<",\"group_generation\":"<<e.group_generation<<",\"target_generation\":"<<e.target_generation<<"}";
+         f<<",\"hardware_tsg_id\":";if(e.tsg_id!=0xffffffff||(e.command==NVA06C_CTRL_CMD_GET_INFO&&!e.channel&&state==2&&e.result.ok()))f<<e.tsg_id;else f<<"null";
+         f<<",\"engine_type\":";if(e.engine)f<<e.engine;else f<<"null";
+-        f<<",\"hardware_channel_id\":null,\"runlist_id\":null,\"operation_state\":"<<json_string(state==1?"IN_FLIGHT":(e.result.attempted?"RETURNED":"REJECTED_BEFORE_IOCTL"))<<",\"call_begin_ns\":";
+-        if(e.result.begin_ns)f<<e.result.begin_ns;else f<<"null";
++        f<<",\"event_kind\":"<<json_string(preparation?(prep.noop?"CONTROL_PREPARATION_NOOP":"CONTROL_PREPARATION"):"RM_CONTROL")
++         <<",\"attempted\":"<<(state==2?(e.result.attempted?"true":"false"):"null")
++         <<",\"outcome\":"<<json_string(state==2?e.result.category():"unknown");
++        if(preparation){
++            f<<",\"T_owner_prepare_begin\":"<<prep.timing.prepare_begin_ns<<",\"T_owner_prepare_end\":";
++            if(state==2)f<<prep.timing.prepare_end_ns;else f<<"null";
++            f<<",\"T_owner_action_end\":";if(state==2)f<<prep.timing.action_end_ns;else f<<"null";
++        }
++        f<<",\"hardware_channel_id\":null,\"runlist_id\":null,\"operation_state\":"<<json_string(state==1?"IN_FLIGHT":(preparation?"LOCAL_PREPARATION_COMPLETED":(e.result.attempted?"RETURNED":"REJECTED_BEFORE_IOCTL")))<<",\"call_begin_ns\":";
++        if(!preparation&&e.result.begin_ns)f<<e.result.begin_ns;else f<<"null";
+         if(state==2){f<<",\"call_end_ns\":";if(e.result.end_ns)f<<e.result.end_ns;else f<<"null";
+             f<<",\"syscall_return\":";if(e.result.attempted)f<<e.result.syscall_result;else f<<"null";
+             f<<",\"errno\":";if(e.result.attempted)f<<e.result.syscall_errno;else f<<"null";
+diff --git a/active-preempt/src/control_events.h b/active-preempt/src/control_events.h
+index 0c7dabd..f9c1f5e 100644
+--- a/active-preempt/src/control_events.h
++++ b/active-preempt/src/control_events.h
+@@ -12,6 +12,13 @@ struct ControlEvent {
+     unsigned char params[event_param_capacity]{};
+     ControlResult result{};
+ };
++// Local-only tagged payload, never an RM command. Keeps the schema-2 binary
++// event layout unchanged, so previous journals remain recoverable.
++struct PreparationEvent {
++    uint32_t magic=0x50524550,revision=1,noop=0,reserved=0;
++    OwnerActionTiming timing{};
++};
++static_assert(sizeof(PreparationEvent)<=event_param_capacity);
+ // mmap file survives controller/worker crashes. Recording uses fixed slots and
+ // no allocation or filesystem syscalls on the per-control path.
+ class ControlJournal {
+diff --git a/active-preempt/src/driver_profile.cpp b/active-preempt/src/driver_profile.cpp
+index 347f787..075d5f5 100644
+--- a/active-preempt/src/driver_profile.cpp
++++ b/active-preempt/src/driver_profile.cpp
+@@ -33,7 +33,7 @@ void ProfileState::configure(const DriverProfile& p,const std::string& runtime,R
+ bool ProfileState::may_readonly()const{return observation_enabled&&cuda_minimal_workload_passed&&binding_observed&&(stage==RmStage::Readonly||stage==RmStage::Active);}
+ bool ProfileState::may_active()const{return may_readonly()&&readonly_verified&&workload_gpu_reviewed&&active_experiment_authorized&&stage==RmStage::Active;}
+ bool ProfileState::may_group_info()const{
+-    return (stage==RmStage::GroupInfo||stage==RmStage::GroupActive)&&observation_enabled&&cuda_minimal_workload_passed&&single_gpu_scope_verified&&group_binding_observed;
++    return (stage==RmStage::GroupInfo||stage==RmStage::GroupActive||stage==RmStage::GroupNoop)&&observation_enabled&&cuda_minimal_workload_passed&&single_gpu_scope_verified&&group_binding_observed;
+ }
+ bool ProfileState::may_group_preempt()const{
+     return may_group_info()&&stage==RmStage::GroupActive&&active_experiment_authorized&&workload_gpu_reviewed&&
+diff --git a/active-preempt/src/driver_profile.h b/active-preempt/src/driver_profile.h
+index 9659eb3..5e07ccf 100644
+--- a/active-preempt/src/driver_profile.h
++++ b/active-preempt/src/driver_profile.h
+@@ -2,7 +2,7 @@
+ #include <string>
+ #include <cstdint>
+ namespace ap {
+-enum class RmStage {Disabled,Observe,Readonly,Active,GroupInfo,GroupActive};
++enum class RmStage {Disabled,Observe,Readonly,Active,GroupInfo,GroupActive,GroupNoop};
+ enum class GroupOwner {Unspecified,Background,Interactive};
+ struct DriverProfile {const char* version;const char* source_commit;const char* source_path;bool experimental;};
+ const DriverProfile& build_profile();
+diff --git a/active-preempt/src/group_preempt_test.cpp b/active-preempt/src/group_preempt_test.cpp
+index 4da14e9..732d81d 100644
+--- a/active-preempt/src/group_preempt_test.cpp
++++ b/active-preempt/src/group_preempt_test.cpp
+@@ -157,6 +157,45 @@ void routing(){
+     need(ap::distinct_group_scope(10,20,"uuid","uuid",1,1,0,7),"zero TSG ID not accepted for pair");
+     need(!ap::distinct_group_scope(10,20,"uuid","uuid",1,1,7,7)&&!ap::distinct_group_scope(10,20,"uuid","other",1,1,0,7)&&!ap::distinct_group_scope(10,20,"uuid","uuid",0,0,0,7),"unresolved pair scope accepted");
+ }
++void matched_preparation(){
++    using R=ap::ControlResult::Rejection;
++    for(bool noop:{true,false}){
++        Fixture f(8,noop?ap::RmStage::GroupNoop:ap::RmStage::GroupActive,!noop);f.verify();
++        ap::OwnerActionTiming t;ap::ControlResult r=noop
++            ?f.preempt.prepare_noop(f.registry,f.state,f.binding,f.query,true,f.journal,0,true,&t)
++            :f.preempt.preempt(f.registry,f.state,f.binding,f.query,true,f.journal,0,1000000,Mock::invoke,&f.mock,true,&t);
++        need(t.prepare_begin_ns&&t.prepare_end_ns>=t.prepare_begin_ns&&t.action_end_ns>=t.prepare_end_ns&&t.preparation_seq,"missing preparation timing");
++        need(f.mock.gets==1&&f.mock.preempts==unsigned(!noop),"no-op issued getter/control or treatment skipped syscall");
++        if(noop){
++            need(r.rejection==R::SkippedByDesign&&!r.attempted&&!r.ok()&&!r.begin_ns&&!r.end_ns&&r.rm_status==0xffffffff,"no-op became RM NV_OK");
++            need(!f.state.active_experiment_authorized&&!f.state.may_group_preempt()&&!f.state.may_active(),"no-op unlocked active or channel state");
++            need(f.issue().rejection==R::Stage&&!f.mock.preempts,"no-op owner issued PREEMPT");
++        }else need(r.ok()&&r.begin_ns>=t.prepare_end_ns&&r.end_ns<=t.action_end_ns,"RM timing conflated with preparation");
++        ap::ControlJournal::recover(f.dir+"/events.bin",f.dir+"/events.jsonl");
++        std::ifstream in(f.dir+"/events.jsonl");std::string text((std::istreambuf_iterator<char>(in)),{});
++        need(text.find(noop?"CONTROL_PREPARATION_NOOP":"CONTROL_PREPARATION")!=std::string::npos,"local event missing");
++        need(text.find("\"attempted\":false")!=std::string::npos,"local event counted as syscall");
++        if(noop)need(text.find("\"outcome\":\"SKIPPED_BY_DESIGN\"")!=std::string::npos,"no-op outcome missing");
++    }
++    for(bool noop:{true,false})for(unsigned gate=0;gate<6;++gate){
++        Fixture f(8,noop?ap::RmStage::GroupNoop:ap::RmStage::GroupActive,!noop);f.verify();
++        if(gate==0)f.registry.free(1,3000);
++        if(gate==1)f.registry.incomplete("synthetic capture loss");
++        if(gate==2)populate(f.registry,1,40);
++        if(gate==3)f.state.scope_gpu_uuid="changed";
++        auto r=noop?f.preempt.prepare_noop(f.registry,f.state,f.binding,f.query,gate!=4,f.journal,0,gate!=5)
++            :f.issue(1000000,gate!=4,0,gate!=5);
++        need(!r.attempted&&r.rejection!=R::SkippedByDesign&&f.mock.preempts==0,"common preparation guards differ");
++    }
++    {Fixture f;f.verify();ap::OwnerActionTiming t;
++     auto r=f.preempt.preempt(f.registry,f.state,f.binding,f.query,true,f.journal,0,1000000,Mock::invoke,&f.mock,true,&t,true);
++     need(r.rejection==R::TargetCompleted&&!r.attempted&&t.prepare_end_ns&&!f.mock.preempts,"late BG skips common preparation or sends PREEMPT");}
++    auto plan=ap::mode_plan("group-bound-none");need(plan.group_identity&&!plan.identity&&plan.trigger(true,false)==ap::Trigger::GroupPrepareNoop,"no-op routed to unbound/channel path");
++    std::vector<std::string> argv={"test","--mode","group-bound-none","--bg-iterations","1630976","--int-iterations","5888","--trigger-delay-us","3000","--pair-id","9","--condition","control"};
++    auto parse=[&](){std::vector<char*> args;for(auto& a:argv)args.push_back(a.data());return ap::parse(args.size(),args.data());};
++    need(parse().trials==1&&parse().pair_id=="9"&&parse().trigger_delay_us==3000,"outer pair ID changed local trial");
++    argv.push_back("--test-host-confirmed");rejects(parse);
++}
+ void owner_process(){
+     int commands[2],results[2];need(pipe(commands)==0&&pipe(results)==0,"pipe");
+     pid_t child=fork();need(child>=0,"fork");
+@@ -177,6 +216,6 @@ void owner_process(){
+     need(response[0]==uint32_t(child)&&response[1]==uint32_t(child)&&response[1]!=uint32_t(getpid())&&response[2]==1&&response[3]==1,"controller borrowed BG binding or multiple controls issued");
+ }
+ }
+-int main(){try{successful_path();gates();failures_and_timeout_journal();routing();owner_process();
++int main(){try{successful_path();gates();failures_and_timeout_journal();routing();matched_preparation();owner_process();
+     std::cout<<"Synthetic group PREEMPT: exact GET_INFO binding, multichannel, ownership/stage/auth/scope/generation gates, bounded wait, one-shot, raw failures, timeout journal and owner-process routing passed. GPU controls/trials=0.\n";return 0;
+ }catch(const std::exception& e){std::cerr<<e.what()<<'\n';return 1;}}
+diff --git a/active-preempt/src/group_query_internal.cpp b/active-preempt/src/group_query_internal.cpp
+index 6c7524d..0320bf7 100644
+--- a/active-preempt/src/group_query_internal.cpp
++++ b/active-preempt/src/group_query_internal.cpp
+@@ -56,36 +56,74 @@ bool GroupInfoOnce::verified_for(const GroupBinding& b,const ProfileState& s)con
+         verified_uuid_==s.scope_gpu_uuid&&verified_visible_==s.scope_visible_devices;
+ }
+ ControlResult GroupPreemptOnce::preempt(const ObjectRegistry& registry,ProfileState& state,const GroupBinding& b,const GroupInfoOnce& info,
+-                                      bool fd_valid,ControlJournal& journal,int64_t trial,uint32_t timeout_us,GroupIoctl transport,void* context,bool environment_current){
++                                      bool fd_valid,ControlJournal& journal,int64_t trial,uint32_t timeout_us,GroupIoctl transport,void* context,
++                                      bool environment_current,OwnerActionTiming* timing,bool target_completed){
++    return action(registry,state,b,info,fd_valid,journal,trial,timeout_us,transport,context,environment_current,timing,target_completed,false);
++}
++ControlResult GroupPreemptOnce::prepare_noop(const ObjectRegistry& registry,ProfileState& state,const GroupBinding& b,const GroupInfoOnce& info,
++                                           bool fd_valid,ControlJournal& journal,int64_t trial,bool environment_current,OwnerActionTiming* timing){
++    return action(registry,state,b,info,fd_valid,journal,trial,0,nullptr,nullptr,environment_current,timing,false,true);
++}
++ControlResult GroupPreemptOnce::action(const ObjectRegistry& registry,ProfileState& state,const GroupBinding& b,const GroupInfoOnce& info,
++                                     bool fd_valid,ControlJournal& journal,int64_t trial,uint32_t timeout_us,GroupIoctl transport,void* context,
++                                     bool environment_current,OwnerActionTiming* output,bool target_completed,bool noop){
+     static_assert(sizeof(NVA06C_CTRL_PREEMPT_PARAMS)==8&&alignof(NVA06C_CTRL_PREEMPT_PARAMS)==4);
+     static_assert(offsetof(NVA06C_CTRL_PREEMPT_PARAMS,bWait)==0&&offsetof(NVA06C_CTRL_PREEMPT_PARAMS,bManualTimeout)==1&&offsetof(NVA06C_CTRL_PREEMPT_PARAMS,timeoutUs)==4);
+-    NVA06C_CTRL_PREEMPT_PARAMS params;std::memset(&params,0,sizeof(params));
+-    params.bWait=NV_TRUE;params.bManualTimeout=NV_TRUE;params.timeoutUs=timeout_us;
++    OwnerActionTiming timing=output?*output:OwnerActionTiming{};
++    if(!timing.prepare_begin_ns)timing.prepare_begin_ns=monotonic_ns();
+     ControlResult r;using Rejection=ControlResult::Rejection;
+-    auto* event=journal.begin(nullptr,b.group.token.handle,NVA06C_CTRL_CMD_PREEMPT,&params,sizeof(params),trial,&b);
+-    r.operation_seq=event?event->sequence:0;const auto& profile=build_profile();
+-    if(!event)r.rejection=Rejection::LogFull;
+-    else if(consumed_)r.rejection=Rejection::AlreadyPreempted;
+-    else if(!timeout_us||timeout_us>NVA06C_CTRL_CMD_PREEMPT_MAX_MANUAL_TIMEOUT_US)r.rejection=Rejection::TimeoutRange;
+-    else if(state.stage!=RmStage::GroupActive||trial!=0)r.rejection=Rejection::Stage;
+-    else if(!state.active_experiment_authorized)r.rejection=Rejection::Authorization;
++    PreparationEvent local;local.noop=noop;local.timing=timing;
++    auto* preparation=journal.begin(nullptr,b.group.token.handle,0,&local,sizeof(local),trial,&b);
++    timing.preparation_seq=preparation?preparation->sequence:0;r.operation_seq=timing.preparation_seq;
++    const auto& profile=build_profile();
++    // Common preparation: same checks, same order, exactly once per condition.
++    const bool query_matches=info.verified_for(b,state);
++    if(!preparation)r.rejection=Rejection::LogFull;
+     else if(!state.observation_enabled||b.profile_version!=profile.version||b.source_commit!=profile.source_commit||!version_matches(state.runtime_version,profile.version))r.rejection=Rejection::Abi;
+     else if(!environment_current||b.owner_pid!=uint32_t(getpid())||!registry.valid_group(b)||!group_engine_reviewed(b))r.rejection=Rejection::Binding;
+     else if(!fd_valid)r.rejection=Rejection::Device;
+-    else if(!info.verified_for(b,state))r.rejection=Rejection::Readonly;
++    else if(!query_matches)r.rejection=Rejection::Readonly;
+     else if(state.group_owner!=GroupOwner::Background)r.rejection=Rejection::Owner;
+-    else if(!state.workload_gpu_reviewed||state.authorized_visible_devices.empty()||state.authorized_visible_devices!=state.scope_visible_devices)r.rejection=Rejection::GpuScope;
+-    else if(!state.may_group_preempt())r.rejection=Rejection::Stage;
+-    if(event&&info.verified_for(b,state))event->tsg_id=*info.hardware_tsg_id();
+-    if(r.rejection!=Rejection::None){journal.complete(event,r);return r;}
+-    consumed_=true;
+-    NVOS54_PARAMETERS args{};args.hClient=b.client;args.hObject=b.group.token.handle; // never hardware TSG ID
+-    args.cmd=NVA06C_CTRL_CMD_PREEMPT;args.params=&params;args.paramsSize=sizeof(params);args.status=0xffffffff;
+-    r.begin_ns=monotonic_ns();r.attempted=true;event->result.begin_ns=r.begin_ns;
+-    ++state.project_controls_attempted;++state.project_active_controls_attempted;++state.project_group_preempt_attempted;
+-    errno=0;r.syscall_result=transport(b.fd,_IOWR('F',NV_ESC_RM_CONTROL,NVOS54_PARAMETERS),&args,context);
+-    r.syscall_errno=r.syscall_result<0?errno:0;r.end_ns=monotonic_ns();r.rm_status=args.status;
+-    journal.complete(event,r); // published before any CUDA drain/wait or cleanup
++    else if(!state.workload_gpu_reviewed||!state.single_gpu_scope_verified)r.rejection=Rejection::GpuScope;
++    else if(!state.may_group_info()||(state.stage!=RmStage::GroupActive&&state.stage!=RmStage::GroupNoop)||trial!=0)r.rejection=Rejection::Stage;
++    if(preparation&&query_matches)preparation->tsg_id=*info.hardware_tsg_id();
++    timing.prepare_end_ns=monotonic_ns();
++    const bool prepared=r.rejection==Rejection::None;
++    // Divergence starts here; observation/read-only evidence never grants active
++    // authorization. The no-op never constructs or issues an RM request.
++    if(prepared&&noop){
++        r.rejection=state.stage==RmStage::GroupNoop?Rejection::SkippedByDesign:Rejection::Stage;
++        r.operation_seq=timing.preparation_seq;
++    }else if(prepared){
++        NVA06C_CTRL_PREEMPT_PARAMS params;std::memset(&params,0,sizeof(params));
++        params.bWait=NV_TRUE;params.bManualTimeout=NV_TRUE;params.timeoutUs=timeout_us;
++        auto* event=journal.begin(nullptr,b.group.token.handle,NVA06C_CTRL_CMD_PREEMPT,&params,sizeof(params),trial,&b);
++        r.operation_seq=event?event->sequence:0;if(event&&query_matches)event->tsg_id=*info.hardware_tsg_id();
++        if(!event)r.rejection=Rejection::LogFull;
++        else if(consumed_)r.rejection=Rejection::AlreadyPreempted;
++        else if(!timeout_us||timeout_us>NVA06C_CTRL_CMD_PREEMPT_MAX_MANUAL_TIMEOUT_US)r.rejection=Rejection::TimeoutRange;
++        else if(state.stage!=RmStage::GroupActive)r.rejection=Rejection::Stage;
++        else if(!state.active_experiment_authorized)r.rejection=Rejection::Authorization;
++        else if(state.authorized_visible_devices.empty()||state.authorized_visible_devices!=state.scope_visible_devices)r.rejection=Rejection::GpuScope;
++        else if(!state.may_group_preempt())r.rejection=Rejection::Stage;
++        else if(target_completed)r.rejection=Rejection::TargetCompleted;
++        if(r.rejection==Rejection::None){
++            consumed_=true; // failed/timeout attempts consume the same owner gate
++            NVOS54_PARAMETERS args{};args.hClient=b.client;args.hObject=b.group.token.handle;
++            args.cmd=NVA06C_CTRL_CMD_PREEMPT;args.params=&params;args.paramsSize=sizeof(params);args.status=0xffffffff;
++            r.begin_ns=monotonic_ns();r.attempted=true;event->result.begin_ns=r.begin_ns;
++            ++state.project_controls_attempted;++state.project_active_controls_attempted;++state.project_group_preempt_attempted;
++            errno=0;r.syscall_result=transport(b.fd,_IOWR('F',NV_ESC_RM_CONTROL,NVOS54_PARAMETERS),&args,context);
++            r.syscall_errno=r.syscall_result<0?errno:0;r.end_ns=monotonic_ns();r.rm_status=args.status;
++        }
++        journal.complete(event,r); // before any CUDA drain, even if later timeout
++    }
++    timing.action_end_ns=monotonic_ns();local.timing=timing;
++    if(preparation)std::memcpy(preparation->params,&local,sizeof(local));
++    ControlResult prep_result;prep_result.operation_seq=timing.preparation_seq;
++    prep_result.rejection=prepared?(noop?r.rejection:Rejection::PreparedNoSyscall):r.rejection;
++    journal.complete(preparation,prep_result);
++    if(output)*output=timing;
+     return r;
+ }
+ }
+diff --git a/active-preempt/src/group_query_internal.h b/active-preempt/src/group_query_internal.h
+index 46011a8..c3cf4a9 100644
+--- a/active-preempt/src/group_query_internal.h
++++ b/active-preempt/src/group_query_internal.h
+@@ -25,9 +25,13 @@ class GroupPreemptOnce {
+ public:
+     ControlResult preempt(const ObjectRegistry&,ProfileState&,const GroupBinding&,const GroupInfoOnce&,
+                           bool retained_fd_valid,ControlJournal&,int64_t trial,uint32_t timeout_us,
+-                          GroupIoctl,void* context=nullptr,bool environment_current=true);
++                          GroupIoctl,void* context=nullptr,bool environment_current=true,OwnerActionTiming* timing=nullptr,bool target_completed=false);
++    ControlResult prepare_noop(const ObjectRegistry&,ProfileState&,const GroupBinding&,const GroupInfoOnce&,
++                          bool retained_fd_valid,ControlJournal&,int64_t trial,bool environment_current=true,OwnerActionTiming* timing=nullptr);
+ private:
+     bool consumed_=false;
++    ControlResult action(const ObjectRegistry&,ProfileState&,const GroupBinding&,const GroupInfoOnce&,
++                         bool,ControlJournal&,int64_t,uint32_t,GroupIoctl,void*,bool,OwnerActionTiming*,bool,bool);
+ };
+ // Caller holds Capture::mutex over validation, syscall and journaling. This
+ // covers observed alloc/free/bind, not hidden/direct driver syscalls.
+diff --git a/active-preempt/src/int_worker.cu b/active-preempt/src/int_worker.cu
+index f36e2a9..580b09b 100644
+--- a/active-preempt/src/int_worker.cu
++++ b/active-preempt/src/int_worker.cu
+@@ -8,6 +8,7 @@
+ #include <random>
+ #include <signal.h>
+ #include <sys/wait.h>
++#include <sched.h>
+ 
+ namespace {
+ struct Child {
+@@ -206,7 +207,7 @@ int main(int argc,char** argv){
+         evidence_writable=true;
+         if(o.probe==ap::Probe::GroupInfo)return probe_group_info(o);
+         if(o.probe!=ap::Probe::None)return probe_rm(o);
+-        ap::configure_rm(plan.group_identity?ap::RmStage::GroupActive:(plan.identity?ap::RmStage::Active:ap::RmStage::Disabled),o.test_host,ap::GroupOwner::Interactive);
++        ap::configure_rm((plan.group_identity?(plan.operation==ap::Trigger::GroupPrepareNoop?ap::RmStage::GroupNoop:ap::RmStage::GroupActive):(plan.identity?ap::RmStage::Active:ap::RmStage::Disabled)),o.test_host,ap::GroupOwner::Interactive);
+         // Before any fork: verify CUDA availability in a separate probe process
+         // through the runner. Workers still check cuInit directly below.
+         std::signal(SIGTERM,ap::on_stop);std::signal(SIGINT,ap::on_stop);
+@@ -264,7 +265,22 @@ int main(int argc,char** argv){
+             <<",\"bg_target_us\":"<<o.bg_us<<",\"int_target_us\":"<<o.int_us
+             <<",\"bg_iterations\":"<<(child?std::to_string(s.host.bg_iterations):"null")
+             <<",\"int_iterations\":"<<gpu->iterations<<",\"bg_blocks\":"<<(child?std::to_string(s.host.bg_blocks):"null")
+-            <<",\"int_blocks\":"<<gpu->blocks<<",\"threads_per_block\":256,\"dynamic_shared_bytes\":65536,\"runlist_policy\":\"unknown\"}\n";
++            <<",\"int_blocks\":"<<gpu->blocks<<",\"threads_per_block\":256,\"dynamic_shared_bytes\":65536,\"runlist_policy\":\"unknown\""
++            <<",\"measurement_contract\":\"group-preparation-v1\",\"initialization_policy\":\"fixed-reference-then-1000-ping-bg-short-reference-before-bind-v1\""
++            <<",\"trigger_delay_us\":"<<o.trigger_delay_us<<",\"sm_count\":"<<gpu->prop.multiProcessorCount
++            <<",\"compute_major\":"<<gpu->prop.major<<",\"compute_minor\":"<<gpu->prop.minor
++            <<",\"bg_registers\":"<<s.host.bg_registers<<",\"int_registers\":"<<gpu->attributes.numRegs
++            <<",\"bg_static_shared_bytes\":"<<s.host.bg_static_shared<<",\"int_static_shared_bytes\":"<<gpu->attributes.sharedSizeBytes
++            <<",\"bg_active_blocks_per_sm_estimate\":"<<s.host.bg_active_blocks_per_sm<<",\"int_active_blocks_per_sm_estimate\":"<<gpu->active_blocks_per_sm
++            <<",\"runtime_driver_text\":"<<ap::json_string(ap::loaded_driver_version())
++            <<",\"batch_id\":"<<ap::json_string(o.batch_id)<<",\"pair_id\":"<<ap::json_string(o.pair_id)
++            <<",\"pair_order\":"<<ap::json_string(o.pair_order)<<",\"condition\":"<<ap::json_string(o.condition)<<",\"run_id\":"<<ap::json_string(o.run_id)
++            <<",\"cpu_affinity\":[";
++        cpu_set_t cpus;CPU_ZERO(&cpus);if(sched_getaffinity(0,sizeof(cpus),&cpus)!=0)throw std::runtime_error("Cannot record CPU affinity");
++        bool first_cpu=true;for(int c=0;c<CPU_SETSIZE;++c)if(CPU_ISSET(c,&cpus)){if(!first_cpu)configuration<<',';configuration<<c;first_cpu=false;}
++        configuration<<"],\"bg_cpu_affinity\":[";first_cpu=true;
++        if(child)for(int c=0;c<CPU_SETSIZE;++c)if(CPU_ISSET(c,&s.host.bg_cpu_affinity)){if(!first_cpu)configuration<<',';configuration<<c;first_cpu=false;}
++        configuration<<"]}\n";
+         configuration.flush();if(!configuration)throw std::runtime_error("Cannot save run configuration");
+         std::ofstream raw(run_dir+"/raw.csv"),heartbeats,ctas;
+         if(child){heartbeats.open(run_dir+"/heartbeats.csv");ctas.open(run_dir+"/bg_ctas.csv");}
+@@ -273,6 +289,7 @@ int main(int argc,char** argv){
+         std::minstd_rand rng(20260917);
+         for(unsigned trial=0;trial<o.trials;++trial){
+             ap::TrialRecord row;row.trial=trial;row.mode=o.mode;row.graph=o.graph;row.force=o.force;row.bypass=o.bypass;row.bg_present=plan.background;row.run_kind=o.diagnostic?"diagnostic":"performance";
++            row.batch_id=o.batch_id;row.pair_id=o.pair_id;row.pair_order=o.pair_order;row.condition=o.condition;row.run_id=o.run_id;
+             std::unique_ptr<Observer> observer;
+             try{
+                 ap::record_trial(trial);gpu->reset();gpu->host->launch_id=trial;
+@@ -280,7 +297,8 @@ int main(int argc,char** argv){
+                 if(child)child->command(ap::Command::Prepare,trial); // reset before observer, never concurrently
+                 observer=std::make_unique<Observer>(s,plan.background);
+                 if(child){child->command(ap::Command::Launch,trial);ap::wait_value(&s.bg.started,1,"BG main_entry");row.bg_main_observed=ap::monotonic_ns();
+-                    uint64_t trigger_at=ap::monotonic_ns()+(1000+rng()%4000)*1000ull;
++                    row.planned_delay_us=o.trigger_delay_us?o.trigger_delay_us:1000+rng()%4000;
++                    uint64_t trigger_at=row.bg_main_observed+row.planned_delay_us*1000ull;
+                     while(ap::monotonic_ns()<trigger_at){ap::check_stop();ap::check_peer(s);ap::relax();}
+                 }
+                 if(child)row.bg_done_before=ap::acquire(&s.bg.done)!=0;
+@@ -289,23 +307,24 @@ int main(int argc,char** argv){
+                 if(child){
+                     ap::Command cmd=ap::Command::None;
+                     if(trigger==ap::Trigger::PreemptWait)cmd=ap::Command::PreemptWait;
+-                    else if(trigger==ap::Trigger::GroupPreemptWait&&!row.bg_done_before)cmd=ap::Command::GroupPreemptWait;
++                    else if(trigger==ap::Trigger::GroupPreemptWait)cmd=ap::Command::GroupPreemptWait;
++                    else if(trigger==ap::Trigger::GroupPrepareNoop)cmd=ap::Command::GroupPrepareNoop;
+                     else if(trigger==ap::Trigger::PreemptAsync)cmd=ap::Command::PreemptAsync;
+                     else if(trigger==ap::Trigger::Disable){possibly_disabled=true;cmd=ap::Command::Disable;}
+                     else if(trigger==ap::Trigger::DisableSplit){possibly_disabled=true;cmd=ap::Command::DisableScheduling;}
+                     row.bg_done_before_control=ap::acquire(&s.bg.done)!=0;
+-                    if(plan.group_identity&&row.bg_done_before_control)cmd=ap::Command::None;
+                     row.control_pending=cmd!=ap::Command::None;
+                     ap::ControlResult r;
+                     try{r=child->command(cmd,trial);}catch(...){row.ipc_send=child->send_ns;throw;}
+-                    row.ipc_send=child->send_ns;row.ipc_received=s.host.command_received_ns;row.ipc_ack=child->ack_ns;
++                    row.ipc_send=child->send_ns;row.ipc_received=s.host.command_received_ns;row.ipc_ack=child->ack_ns;row.owner_timing=s.host.owner_timing;
+                     row.bg_done_at_owner_check=s.host.bg_done_at_owner_check<2?int(s.host.bg_done_at_owner_check):-1;
+                     if(cmd!=ap::Command::None)row.control=r;
+                     else if(plan.group_identity)row.control.rejection=ap::ControlResult::Rejection::TargetCompleted;
+                     row.control_pending=false;
+                 }
+                 if(trigger==ap::Trigger::Restart){row.control_pending=true;row.control=rm->restart(o.force,o.bypass);row.control_pending=false;}
+-                if(trigger!=ap::Trigger::None&&!row.control.ok()){
++                if(trigger!=ap::Trigger::None&&!row.control.ok()&&
++                   row.control.rejection!=ap::ControlResult::Rejection::SkippedByDesign&&row.control.rejection!=ap::ControlResult::Rejection::TargetCompleted){
+                     if(!plan.group_identity)throw std::runtime_error(std::string("Trigger rejected: ")+row.control.describe());
+                     row.failure="GROUP_TRIGGER_FAILED_OR_SKIPPED: "+row.control.describe(); // still collect finite-work completion if possible
+                 }
+diff --git a/active-preempt/src/mode_plan.h b/active-preempt/src/mode_plan.h
+index 16968ec..93b2b27 100644
+--- a/active-preempt/src/mode_plan.h
++++ b/active-preempt/src/mode_plan.h
+@@ -2,7 +2,7 @@
+ #include <stdexcept>
+ #include <string>
+ namespace ap {
+-enum class Trigger { None, PreemptWait, PreemptAsync, Restart, Disable, DisableSplit, GroupPreemptWait };
++enum class Trigger { None, PreemptWait, PreemptAsync, Restart, Disable, DisableSplit, GroupPreemptWait, GroupPrepareNoop };
+ struct ModePlan {
+     std::string name;
+     bool background=true,identity=false,timeslice=false,realtime=false,extended=false;
+@@ -23,6 +23,7 @@ inline ModePlan mode_plan(std::string name){
+     else if(name=="realtime-only"||name=="realtime-restart"){
+         p.identity=p.realtime=true;if(name=="realtime-restart")p.operation=Trigger::Restart;
+     }else if(name=="preempt-wait"){p.identity=true;p.operation=Trigger::PreemptWait;}
++    else if(name=="group-bound-none"){p.group_identity=true;p.operation=Trigger::GroupPrepareNoop;}
+     else if(name=="group-preempt-wait"){p.group_identity=true;p.operation=Trigger::GroupPreemptWait;}
+     else if(name=="preempt-async"){p.identity=p.extended=true;p.operation=Trigger::PreemptAsync;}
+     else if(name=="disable"||name=="disable-split"){
+diff --git a/active-preempt/src/options.h b/active-preempt/src/options.h
+index 9498628..b51a5e3 100644
+--- a/active-preempt/src/options.h
++++ b/active-preempt/src/options.h
+@@ -8,8 +8,8 @@
+ namespace ap {
+ enum class Probe {None,Cuda,Observe,Identity,Readonly,GroupInfo};
+ struct Options {
+-    std::string mode="none",run_dir,shared_path;
+-    unsigned trials=1,waves=1;
++    std::string mode="none",run_dir,shared_path,batch_id,pair_id,pair_order,condition,run_id;
++    unsigned trials=1,waves=1,trigger_delay_us=0;
+     uint64_t bg_us=80000,int_us=300,heartbeat_ns=2000,timeslice_us=1,bg_iterations=0,int_iterations=0;
+     bool force=false,bypass=false,graph=false,diagnostic=false,test_host=false,extended=false,graph_reviewed=false;
+     Probe probe=Probe::None;
+@@ -32,9 +32,9 @@ inline Options parse(int argc,char** argv){
+         else if(key=="--help"){
+             std::cout<<"int_worker --probe-cuda | --probe-rm-observe | --probe-rm-identity | --probe-rm-readonly | --probe-rm-group-info [--run-dir DIR]\n"
+                      <<"Group-info requires CUDA_VISIBLE_DEVICES=<one full GPU UUID>; adds GET_INFO once, no other controls.\n"
+-                     <<"int_worker --run-dir DIR --mode int-only|none|timeslice|preempt-wait|group-preempt-wait|preempt-async|realtime-only|realtime-restart|realtime|disable|disable-split\n"
++                     <<"int_worker --run-dir DIR --mode int-only|none|timeslice|preempt-wait|group-bound-none|group-preempt-wait|preempt-async|realtime-only|realtime-restart|realtime|disable|disable-split\n"
+                      <<"[--trials 1] [--cta-waves 1..16] [--bg-iterations N] [--int-iterations N] [--bg-us 80000] [--int-us 300]\n"
+-                     <<"[--heartbeat-ns 2000] [--timeslice-us 1] [--force 0|1] [--bypass 0|1] [--diagnostic-progress]\n"
++                     <<"[--trigger-delay-us 1000..5000] [--heartbeat-ns 2000] [--timeslice-us 1] [--force 0|1] [--bypass 0|1] [--diagnostic-progress]\n"
+                      <<"Active modes require --test-host-confirmed. Async/force/bypass/D also require --allow-extended.\n"
+                      <<"group-preempt-wait: one plain trial, fixed BG/INT iterations, one explicit GPU UUID; BG owner only.\n"
+                      <<"Graph requires --graph --graph-evidence-reviewed after independent plain-kernel evidence review. --probe aliases --probe-cuda.\n";
+@@ -42,9 +42,12 @@ inline Options parse(int argc,char** argv){
+         }else{
+             if(++i>=argc)throw std::invalid_argument("Missing value for "+key);std::string value=argv[i];
+             if(key=="--run-dir")o.run_dir=value;else if(key=="--shared")o.shared_path=value;else if(key=="--mode")o.mode=value;
++            else if(key=="--batch-id")o.batch_id=value;else if(key=="--pair-id")o.pair_id=value;
++            else if(key=="--pair-order")o.pair_order=value;else if(key=="--condition")o.condition=value;else if(key=="--run-id")o.run_id=value;
+             else{size_t used=0;uint64_t v=std::stoull(value,&used);if(used!=value.size()||value.empty()||value[0]=='-')throw std::invalid_argument("Invalid numeric option");
+                 if(key=="--trials"){if(v>100000)throw std::invalid_argument("trials > 100000");o.trials=v;}
+                 else if(key=="--cta-waves"){if(v>16)throw std::invalid_argument("waves > 16");o.waves=v;}
++                else if(key=="--trigger-delay-us"){if(v<1000||v>5000)throw std::invalid_argument("trigger delay must be 1000..5000 us");o.trigger_delay_us=v;}
+                 else if(key=="--bg-us")o.bg_us=v;else if(key=="--int-us")o.int_us=v;
+                 else if(key=="--bg-iterations")o.bg_iterations=v;else if(key=="--int-iterations")o.int_iterations=v;
+                 else if(key=="--heartbeat-ns")o.heartbeat_ns=v;else if(key=="--timeslice-us")o.timeslice_us=v;
+@@ -57,8 +60,15 @@ inline Options parse(int argc,char** argv){
+     if(!o.trials||!o.waves||o.bg_us<50000||o.bg_us>100000||o.int_us<100||o.int_us>500||o.heartbeat_ns>1000000||!o.timeslice_us||o.timeslice_us>1000000)
+         throw std::invalid_argument("Invalid workload/trial bounds");
+     for(auto n:{o.bg_iterations,o.int_iterations})if(n&&(n%256||n>1000000000))throw std::invalid_argument("iterations must be multiples of 256 <= 1e9");
++    for(const auto& value:{o.batch_id,o.pair_id,o.pair_order,o.condition,o.run_id})
++        if(value.find_first_not_of("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789-_.")!=std::string::npos)
++            throw std::invalid_argument("Invalid experiment metadata: use letters/digits/-_.");
++    if(!o.condition.empty()&&o.condition!=(p.name=="group-bound-none"?"control":p.name=="group-preempt-wait"?"treatment":""))
++        throw std::invalid_argument("Condition does not match mode");
++    if(!o.pair_order.empty()&&o.pair_order!="CT"&&o.pair_order!="TC")throw std::invalid_argument("pair-order must be CT or TC");
++    if(p.name=="group-bound-none"&&o.test_host)throw std::invalid_argument("group-bound-none is non-active; do not pass active authorization");
+     if(o.probe==Probe::None){
+-        if((p.identity||p.group_identity)&&!o.test_host)throw std::invalid_argument("Active mode requires --test-host-confirmed (isolated authorized GPU host)");
++        if((p.identity||p.operation==Trigger::GroupPreemptWait)&&!o.test_host)throw std::invalid_argument("Active mode requires --test-host-confirmed (isolated authorized GPU host)");
+         if(p.group_identity&&(o.trials!=1||o.graph||o.force||o.bypass||o.extended||o.diagnostic||!o.bg_iterations||!o.int_iterations))
+             throw std::invalid_argument("group-preempt-wait requires one plain trial and frozen BG/INT iterations; no extended/diagnostic options");
+         if((p.extended||o.force||o.bypass)&&!o.extended)throw std::invalid_argument("Extended modes require --allow-extended after recovery/wait-path validation");
+diff --git a/active-preempt/src/protocol.h b/active-preempt/src/protocol.h
+index 767c53d..65282cc 100644
+--- a/active-preempt/src/protocol.h
++++ b/active-preempt/src/protocol.h
+@@ -10,6 +10,7 @@
+ #include <sys/stat.h>
+ #include <unistd.h>
+ #include <csignal>
++#include <sched.h>
+ #include <type_traits>
+ 
+ namespace ap {
+@@ -39,7 +40,7 @@ struct alignas(4096) Telemetry {
+     uint64_t heartbeat_gpu_ns[max_samples]{};
+     uint64_t cta_start_gpu_ns[max_blocks]{}, cta_end_gpu_ns[max_blocks]{};
+ };
+-enum class Command:uint32_t { None, Launch, Drain, PreemptWait, PreemptAsync, Disable, DisableScheduling, Enable, ReadMode, Exit, Prepare, GroupPreemptWait, CheckReuse };
++enum class Command:uint32_t { None, Launch, Drain, PreemptWait, PreemptAsync, Disable, DisableScheduling, Enable, ReadMode, Exit, Prepare, GroupPreemptWait, CheckReuse, GroupPrepareNoop };
+ struct alignas(4096) HostState {
+     uint32_t ready=0,error=0,command_seq=0,ack_seq=0,controller_pid=0;
+     Command command=Command::None;
+@@ -53,6 +54,9 @@ struct alignas(4096) HostState {
+     uint64_t command_received_ns=0;
+     double bg_solo_us=0,bg_uninstrumented_us=0;
+     ControlResult result{},preliminary_result{};
++    OwnerActionTiming owner_timing{};
++    int bg_registers=0,bg_active_blocks_per_sm=0;uint64_t bg_static_shared=0;
++    cpu_set_t bg_cpu_affinity{};
+     char error_message[512]{},bg_uuid[64]{};
+ };
+ // TSG IDs are compared only for the same selected GPU and explicit matching
+diff --git a/active-preempt/src/rm_control.cpp b/active-preempt/src/rm_control.cpp
+index 2d2ea85..5e23556 100644
+--- a/active-preempt/src/rm_control.cpp
++++ b/active-preempt/src/rm_control.cpp
+@@ -132,6 +132,8 @@ const char* ControlResult::category()const{
+     case Rejection::TimeoutRange:return "INVALID_PREEMPT_TIMEOUT";
+     case Rejection::Owner:return "OWNER_ROLE_REJECTED";
+     case Rejection::TargetCompleted:return "BG_ALREADY_COMPLETED_NO_PREEMPT";
++    case Rejection::SkippedByDesign:return "SKIPPED_BY_DESIGN";
++    case Rejection::PreparedNoSyscall:return "CONTROL_PREPARED";
+     default:break;
+     }
+     if(ok())return "CONTROL_ACCEPTED_EFFECT_UNVERIFIED";
+@@ -173,7 +175,7 @@ void note_cuda_ready(int major,int minor){
+ void note_group_cuda_scope(const std::string& uuid,int count){
+     auto& c=capture();std::lock_guard<std::recursive_mutex> lock(c.mutex);
+     const char* env=std::getenv("CUDA_VISIBLE_DEVICES");std::string visible=env?env:"";
+-    if((c.state.stage!=RmStage::GroupInfo&&c.state.stage!=RmStage::GroupActive)||!group_probe_visibility_matches(visible,uuid,count))
++    if((c.state.stage!=RmStage::GroupInfo&&c.state.stage!=RmStage::GroupActive&&c.state.stage!=RmStage::GroupNoop)||!group_probe_visibility_matches(visible,uuid,count))
+         throw std::runtime_error("OBJECT_BINDING_UNAVAILABLE: group probe requires exactly one explicit full GPU UUID matching CUDA enumeration");
+     c.state.scope_gpu_uuid=uuid;c.state.scope_visible_devices=visible;c.state.single_gpu_scope_verified=true;
+ }
+@@ -246,7 +248,7 @@ bool retained_control_fd_valid(int fd){
+ }
+ GroupIdentity inspect_owned_tsg(){
+     auto& c=capture();std::lock_guard<std::recursive_mutex> lock(c.mutex);
+-    if(!group_environment_current(c)||!c.state.cuda_minimal_workload_passed||(c.state.stage!=RmStage::GroupInfo&&c.state.stage!=RmStage::GroupActive))
++    if(!group_environment_current(c)||!c.state.cuda_minimal_workload_passed||(c.state.stage!=RmStage::GroupInfo&&c.state.stage!=RmStage::GroupActive&&c.state.stage!=RmStage::GroupNoop))
+         throw std::runtime_error("OBJECT_BINDING_UNAVAILABLE: current process/profile/CUDA scope not ready for group discovery");
+     auto b=c.objects.discover_group();
+     if(!detail::group_engine_reviewed(b)||!retained_control_fd_valid(b.fd)||!c.allocating_fds.count(b.client))
+@@ -270,13 +272,28 @@ bool verified_group_current(const GroupIdentity& id){
+         retained_control_fd_valid(id.binding_.fd)&&c.objects.valid_group(id.binding_)&&c.group_query.verified_for(id.binding_,c.state);
+ }
+ uint32_t group_preempt_timeout_limit_us(){return NVA06C_CTRL_CMD_PREEMPT_MAX_MANUAL_TIMEOUT_US;}
+-ControlResult preempt_group_wait(const GroupIdentity& id,uint32_t timeout_us){
++namespace {
++ControlResult group_owner_action(const GroupBinding& binding,const std::string& uuid,const std::string& visible,
++                                bool preempt,uint32_t timeout_us,OwnerActionTiming* output,bool target_completed){
++    OwnerActionTiming timing;timing.prepare_begin_ns=monotonic_ns();
+     auto& c=capture();std::lock_guard<std::recursive_mutex> lock(c.mutex);
+-    // Full registry validation and the single ioctl remain in this critical
+-    // section, serialized with observed alloc/free/bind. No GET_INFO here.
+-    bool current=group_environment_current(c)&&id.gpu_uuid_==c.state.scope_gpu_uuid&&id.visible_devices_==c.state.scope_visible_devices;
+-    return c.group_preempt.preempt(c.objects,c.state,id.binding_,c.group_query,retained_control_fd_valid(id.binding_.fd),c.journal,c.trial,timeout_us,
+-        [](int fd,unsigned long request,void* args,void*){return static_cast<int>(syscall(SYS_ioctl,fd,request,args));},nullptr,current);
++    // Both conditions execute this exact critical section once. Its timing
++    // includes lock acquisition, environment/FD checks and backend preparation.
++    const bool current=group_environment_current(c)&&uuid==c.state.scope_gpu_uuid&&visible==c.state.scope_visible_devices;
++    const bool fd_valid=retained_control_fd_valid(binding.fd);
++    auto transport=[](int fd,unsigned long request,void* args,void*){return static_cast<int>(syscall(SYS_ioctl,fd,request,args));};
++    ControlResult result=preempt
++        ?c.group_preempt.preempt(c.objects,c.state,binding,c.group_query,fd_valid,c.journal,c.trial,timeout_us,transport,nullptr,current,&timing,target_completed)
++        :c.group_preempt.prepare_noop(c.objects,c.state,binding,c.group_query,fd_valid,c.journal,c.trial,current,&timing);
++    if(output)*output=timing;
++    return result;
++}
++}
++ControlResult preempt_group_wait(const GroupIdentity& id,uint32_t timeout_us,OwnerActionTiming* timing,bool target_completed){
++    return group_owner_action(id.binding_,id.gpu_uuid_,id.visible_devices_,true,timeout_us,timing,target_completed);
++}
++ControlResult prepare_group_noop(const GroupIdentity& id,OwnerActionTiming* timing){
++    return group_owner_action(id.binding_,id.gpu_uuid_,id.visible_devices_,false,0,timing,false);
+ }
+ std::string GroupIdentity::json()const{
+     const auto& b=binding_;std::ostringstream s;
+diff --git a/active-preempt/src/rm_control.h b/active-preempt/src/rm_control.h
+index a3cc368..9713f1e 100644
+--- a/active-preempt/src/rm_control.h
++++ b/active-preempt/src/rm_control.h
+@@ -21,11 +21,13 @@ struct ControlResult {
+     uint32_t rm_status = 0xffffffff;
+     uint64_t begin_ns = 0, end_ns = 0;
+     uint64_t operation_seq = 0;
+-    enum class Rejection:uint32_t {None,Device,Abi,Binding,Incomplete,PendingAsync,LogFull,Stage,Authorization,Readonly,GpuScope,AlreadyQueried,AlreadyPreempted,TimeoutRange,Owner,TargetCompleted} rejection=Rejection::None;
++    enum class Rejection:uint32_t {None,Device,Abi,Binding,Incomplete,PendingAsync,LogFull,Stage,Authorization,Readonly,GpuScope,AlreadyQueried,AlreadyPreempted,TimeoutRange,Owner,TargetCompleted,SkippedByDesign,PreparedNoSyscall} rejection=Rejection::None;
+     bool ok() const { return attempted && syscall_result == 0 && rm_status == 0; }
+     std::string describe() const;
+     const char* category() const;
+ };
++// Host control preparation is distinct from the actual RM syscall interval.
++struct OwnerActionTiming {uint64_t prepare_begin_ns=0,prepare_end_ns=0,action_end_ns=0,preparation_seq=0;};
+ struct Identity {
+     int fd = -1; // duplicate of the allocating CUDA control FD, never a fresh open
+     uint32_t client = 0, device = 0, group = 0, subdevice = 0, compute_channel = 0;
+@@ -49,7 +51,8 @@ private:
+         :binding_(std::move(b)),allocating_fd_(fd),gpu_uuid_(std::move(uuid)),visible_devices_(std::move(visible)){}
+     friend GroupIdentity inspect_owned_tsg();
+     friend GroupInfoResult get_group_info(const GroupIdentity&);
+-    friend ControlResult preempt_group_wait(const GroupIdentity&,uint32_t);
++    friend ControlResult preempt_group_wait(const GroupIdentity&,uint32_t,OwnerActionTiming*,bool);
++    friend ControlResult prepare_group_noop(const GroupIdentity&,OwnerActionTiming*);
+     friend bool verified_group_current(const GroupIdentity&);
+ };
+ // Observation only, followed by a separate one-shot, group-only GET_INFO.
+@@ -58,7 +61,9 @@ GroupIdentity inspect_owned_tsg();
+ GroupInfoResult get_group_info(const GroupIdentity& identity);
+ bool verified_group_current(const GroupIdentity& identity); // no project RM control
+ uint32_t group_preempt_timeout_limit_us();
+-ControlResult preempt_group_wait(const GroupIdentity& identity,uint32_t timeout_us);
++ControlResult preempt_group_wait(const GroupIdentity& identity,uint32_t timeout_us,OwnerActionTiming* timing=nullptr,bool target_completed=false);
++// GroupNoop stage only: identical preparation, no RM syscall or active permission.
++ControlResult prepare_group_noop(const GroupIdentity& identity,OwnerActionTiming* timing=nullptr);
+ 
+ // Discovery accepts only allocations observed in this process. No externally
+ // supplied hClient/hObject, QUERY_GROUP, global enumeration, or privilege bypass.
+diff --git a/active-preempt/src/trial_record.h b/active-preempt/src/trial_record.h
+index 56cce50..449f747 100644
+--- a/active-preempt/src/trial_record.h
++++ b/active-preempt/src/trial_record.h
+@@ -15,9 +15,12 @@ struct TrialRecord {
+     int int_correct=-1,bg_correct=-1,progress_correct=-1;
+     std::string failure,control_target_running="unknown";
+     ControlResult control{};
++    OwnerActionTiming owner_timing{};
++    std::string batch_id,pair_id,pair_order,condition,run_id;
++    uint64_t planned_delay_us=0;
+     bool control_pending=false;
+     static void header(std::ostream& f){
+-        f<<"schema_version,trial,mode,run_kind,force,bypass,graph,bg_present,trial_state,T_cpu_trigger,T_int_submit_begin,T_int_submit_end,T_ipc_send,T_ipc_received,T_ipc_ack,T_rm_call_begin,T_rm_call_end,rm_syscall_result,rm_errno,rm_status,operation_seq,T_int_graph_entry_observed,T_int_main_entry_observed,T_int_graph_done_observed,T_bg_main_observed,T_int_graph_entry_gpu_ns,T_int_main_entry_gpu_ns,T_int_graph_done_gpu_ns,T_bg_main_gpu_ns,T_bg_done_gpu_ns,int_entry_node,int_main_node,launch_id,bg_done_before_interaction,bg_done_before_control_observed,control_target_running,application_valid,control_status,gpu_overlap,ordering_relative_to_rm,correctness_status,bg_correct,int_correct,diagnostic_progress_correct,observer_max_poll_gap_ns,heartbeat_overflow,T_bg_preempted_observed,T_bg_resumed_observed,failure,T_bg_done_observed,bg_done_at_owner_check,setup_status\n";
++        f<<"schema_version,trial,mode,run_kind,force,bypass,graph,bg_present,trial_state,T_cpu_trigger,T_int_submit_begin,T_int_submit_end,T_ipc_send,T_ipc_received,T_ipc_ack,T_rm_call_begin,T_rm_call_end,rm_syscall_result,rm_errno,rm_status,operation_seq,T_int_graph_entry_observed,T_int_main_entry_observed,T_int_graph_done_observed,T_bg_main_observed,T_int_graph_entry_gpu_ns,T_int_main_entry_gpu_ns,T_int_graph_done_gpu_ns,T_bg_main_gpu_ns,T_bg_done_gpu_ns,int_entry_node,int_main_node,launch_id,bg_done_before_interaction,bg_done_before_control_observed,control_target_running,application_valid,control_status,gpu_overlap,ordering_relative_to_rm,correctness_status,bg_correct,int_correct,diagnostic_progress_correct,observer_max_poll_gap_ns,heartbeat_overflow,T_bg_preempted_observed,T_bg_resumed_observed,failure,T_bg_done_observed,bg_done_at_owner_check,setup_status,measurement_contract,batch_id,pair_id,pair_order,condition,run_id,local_trial_id,planned_delay_us,actual_delay_ns,trigger_lateness_ns,T_owner_received,T_owner_prepare_begin,T_owner_prepare_end,T_owner_action_end,preparation_seq\n";
+     }
+     void write(std::ostream& f)const{
+         // An incomplete BG/recovery path must not discard an already measured
+@@ -39,7 +42,12 @@ struct TrialRecord {
+         f<<','<<poll_gap<<',';if(bg_present)f<<overflow;f<<",,,\"";
+         for(char c:failure){if(c=='"')f<<'"';f<<(c=='\n'?' ':c);}f<<"\","<<optional_ns(bg_done_observed)<<',';
+         if(bg_present&&bg_done_at_owner_check>=0)f<<bg_done_at_owner_check;f<<',';
+-        f<<(!bg_present?"not_applicable":(bg_done_before||bg_done_before_control||bg_done_at_owner_check==1?"BG_COMPLETED_BEFORE_CONTROL_CHECK":"BG_MAIN_OBSERVED_RESIDENCY_UNKNOWN"))<<'\n';f.flush();
++        f<<(!bg_present?"not_applicable":(bg_done_before||bg_done_before_control||bg_done_at_owner_check==1?"BG_COMPLETED_BEFORE_CONTROL_CHECK":"BG_MAIN_OBSERVED_RESIDENCY_UNKNOWN"))<<",group-preparation-v1,"<<batch_id<<','<<pair_id<<','<<pair_order<<','<<condition<<','<<run_id<<','<<trial<<',';
++        if(planned_delay_us)f<<planned_delay_us;f<<',';
++        if(bg_main_observed&&trigger>=bg_main_observed)f<<trigger-bg_main_observed;f<<',';
++        if(planned_delay_us&&bg_main_observed&&trigger>=bg_main_observed)f<<int64_t(trigger-bg_main_observed)-int64_t(planned_delay_us*1000);f<<',';
++        for(auto n:{ipc_received,owner_timing.prepare_begin_ns,owner_timing.prepare_end_ns,owner_timing.action_end_ns})f<<optional_ns(n)<<',';
++        if(owner_timing.preparation_seq)f<<owner_timing.preparation_seq;f<<'\n';f.flush();
+         if(!f)throw std::runtime_error("Cannot persist trial evidence");
+     }
+ };

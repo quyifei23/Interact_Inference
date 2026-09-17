@@ -1,0 +1,27 @@
+{
+  "addition": "explicit started/missing/error/subset counts; no changed latency/filter definition",
+  "all_previously_reported_latency_metrics_unchanged": true,
+  "no_new_GPU_runs": true,
+  "counts": {
+    "planned_pairs": 10,
+    "planned_runs": 20,
+    "started_runs": 20,
+    "started_pairs": 10,
+    "missing_entry_started_runs": 0,
+    "missing_done_started_runs": 0,
+    "incomplete_trial_started_runs": 0,
+    "failed_or_unconfirmed_runs": 0,
+    "control_error_rows": 0,
+    "timeout_runs": 0,
+    "mechanism_timing_eligible_samples": 0,
+    "complete_runs": 20,
+    "complete_pairs": 10,
+    "active_slots_reserved": 10,
+    "known_preempt_attempts": 10,
+    "unknown_preempt_slots": 0,
+    "stopped_reason": null,
+    "exact_hardware_preempt_completion": "unmeasured",
+    "exact_context_save_duration": "unmeasured",
+    "exact_BG_resume_latency": "unmeasured"
+  }
+}

@@ -15,9 +15,12 @@ struct TrialRecord {
     int int_correct=-1,bg_correct=-1,progress_correct=-1;
     std::string failure,control_target_running="unknown";
     ControlResult control{};
+    OwnerActionTiming owner_timing{};
+    std::string batch_id,pair_id,pair_order,condition,run_id;
+    uint64_t planned_delay_us=0;
     bool control_pending=false;
     static void header(std::ostream& f){
-        f<<"schema_version,trial,mode,run_kind,force,bypass,graph,bg_present,trial_state,T_cpu_trigger,T_int_submit_begin,T_int_submit_end,T_ipc_send,T_ipc_received,T_ipc_ack,T_rm_call_begin,T_rm_call_end,rm_syscall_result,rm_errno,rm_status,operation_seq,T_int_graph_entry_observed,T_int_main_entry_observed,T_int_graph_done_observed,T_bg_main_observed,T_int_graph_entry_gpu_ns,T_int_main_entry_gpu_ns,T_int_graph_done_gpu_ns,T_bg_main_gpu_ns,T_bg_done_gpu_ns,int_entry_node,int_main_node,launch_id,bg_done_before_interaction,bg_done_before_control_observed,control_target_running,application_valid,control_status,gpu_overlap,ordering_relative_to_rm,correctness_status,bg_correct,int_correct,diagnostic_progress_correct,observer_max_poll_gap_ns,heartbeat_overflow,T_bg_preempted_observed,T_bg_resumed_observed,failure,T_bg_done_observed,bg_done_at_owner_check,setup_status\n";
+        f<<"schema_version,trial,mode,run_kind,force,bypass,graph,bg_present,trial_state,T_cpu_trigger,T_int_submit_begin,T_int_submit_end,T_ipc_send,T_ipc_received,T_ipc_ack,T_rm_call_begin,T_rm_call_end,rm_syscall_result,rm_errno,rm_status,operation_seq,T_int_graph_entry_observed,T_int_main_entry_observed,T_int_graph_done_observed,T_bg_main_observed,T_int_graph_entry_gpu_ns,T_int_main_entry_gpu_ns,T_int_graph_done_gpu_ns,T_bg_main_gpu_ns,T_bg_done_gpu_ns,int_entry_node,int_main_node,launch_id,bg_done_before_interaction,bg_done_before_control_observed,control_target_running,application_valid,control_status,gpu_overlap,ordering_relative_to_rm,correctness_status,bg_correct,int_correct,diagnostic_progress_correct,observer_max_poll_gap_ns,heartbeat_overflow,T_bg_preempted_observed,T_bg_resumed_observed,failure,T_bg_done_observed,bg_done_at_owner_check,setup_status,measurement_contract,batch_id,pair_id,pair_order,condition,run_id,local_trial_id,planned_delay_us,actual_delay_ns,trigger_lateness_ns,T_owner_received,T_owner_prepare_begin,T_owner_prepare_end,T_owner_action_end,preparation_seq\n";
     }
     void write(std::ostream& f)const{
         // An incomplete BG/recovery path must not discard an already measured
@@ -39,7 +42,12 @@ struct TrialRecord {
         f<<','<<poll_gap<<',';if(bg_present)f<<overflow;f<<",,,\"";
         for(char c:failure){if(c=='"')f<<'"';f<<(c=='\n'?' ':c);}f<<"\","<<optional_ns(bg_done_observed)<<',';
         if(bg_present&&bg_done_at_owner_check>=0)f<<bg_done_at_owner_check;f<<',';
-        f<<(!bg_present?"not_applicable":(bg_done_before||bg_done_before_control||bg_done_at_owner_check==1?"BG_COMPLETED_BEFORE_CONTROL_CHECK":"BG_MAIN_OBSERVED_RESIDENCY_UNKNOWN"))<<'\n';f.flush();
+        f<<(!bg_present?"not_applicable":(bg_done_before||bg_done_before_control||bg_done_at_owner_check==1?"BG_COMPLETED_BEFORE_CONTROL_CHECK":"BG_MAIN_OBSERVED_RESIDENCY_UNKNOWN"))<<",group-preparation-v1,"<<batch_id<<','<<pair_id<<','<<pair_order<<','<<condition<<','<<run_id<<','<<trial<<',';
+        if(planned_delay_us)f<<planned_delay_us;f<<',';
+        if(bg_main_observed&&trigger>=bg_main_observed)f<<trigger-bg_main_observed;f<<',';
+        if(planned_delay_us&&bg_main_observed&&trigger>=bg_main_observed)f<<int64_t(trigger-bg_main_observed)-int64_t(planned_delay_us*1000);f<<',';
+        for(auto n:{ipc_received,owner_timing.prepare_begin_ns,owner_timing.prepare_end_ns,owner_timing.action_end_ns})f<<optional_ns(n)<<',';
+        if(owner_timing.preparation_seq)f<<owner_timing.preparation_seq;f<<'\n';f.flush();
         if(!f)throw std::runtime_error("Cannot persist trial evidence");
     }
 };

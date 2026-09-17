@@ -59,3 +59,5 @@ find_package(Python3 COMPONENTS Interpreter REQUIRED)
 add_test(NAME analysis_contract_test COMMAND "${Python3_EXECUTABLE}" "${CMAKE_CURRENT_SOURCE_DIR}/scripts/test_analysis.py")
 add_test(NAME runner_contract_test COMMAND "${Python3_EXECUTABLE}" "${CMAKE_CURRENT_SOURCE_DIR}/scripts/test_runner.py")
 add_test(NAME schema_integration_test COMMAND "${Python3_EXECUTABLE}" "${CMAKE_CURRENT_SOURCE_DIR}/scripts/test_schema_integration.py" "$<TARGET_FILE:phase2_contract_test>")
+
+add_test(NAME paired_contract_test COMMAND "${Python3_EXECUTABLE}" "${CMAKE_CURRENT_SOURCE_DIR}/scripts/test_pairs.py")

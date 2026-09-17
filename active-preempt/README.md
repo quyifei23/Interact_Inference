@@ -1,6 +1,8 @@
-# Active preemption prototype — phase 5 group PREEMPT
+# Active preemption prototype — phase 6 paired group PREEMPT
 
-**阶段五已完成一次获授权的同步 group PREEMPT smoke。** A100/595.58.03：BG/INT 各自重新绑定并 GET_INFO 成功（当前 ID 6/10），BG owner 唯一一次 PREEMPT 返回 ioctl=0、errno=0、NV_OK；两者输出、BG 同一 context/stream 后续计算及 cleanup 通过。M0/M1/M3 各 1 trial；M3 ordering 仍为 ambiguous，不能据此宣称因果抢占或性能 winner。完整原始证据与限制见 [phase5_group_preempt](../docs/phase5_group_preempt.md)。[阶段四 GET_INFO 记录](../docs/phase4_group_binding.md) 保持为历史证据。
+**阶段六已完成获授权的 10 对匹配实验。** 新 `group-bound-none` 与 B 共用 group 绑定、GET_INFO 和锁内控制准备；20 个 run 全部完成，10 次 PREEMPT 均被接受。entry 9/10 对较短（1 对慢 0.448 μs），done 10/10 对较短；所有 treatment 的顺序仍为 ambiguous。完整逐对值、计数、限制见 [phase6_paired_preempt](../docs/phase6_paired_preempt.md)，不能据此宣称 p99、instruction-level preemption 或硬件完成时刻。
+
+**历史阶段五已完成一次获授权的同步 group PREEMPT smoke。** A100/595.58.03：BG/INT 各自重新绑定并 GET_INFO 成功（当前 ID 6/10），BG owner 唯一一次 PREEMPT 返回 ioctl=0、errno=0、NV_OK；两者输出、BG 同一 context/stream 后续计算及 cleanup 通过。M0/M1/M3 各 1 trial；M3 ordering 仍为 ambiguous，不能据此宣称因果抢占或性能 winner。完整原始证据与限制见 [phase5_group_preempt](../docs/phase5_group_preempt.md)。[阶段四 GET_INFO 记录](../docs/phase4_group_binding.md) 保持为历史证据。
 
 ## 构建与离线检查
 
@@ -15,7 +17,7 @@ ctest --test-dir active-preempt/build --output-on-failure
 
 默认仍依赖同级 NVIDIA submodule 的 550.120 commit `5e52edb2034de7db4d8ae368dbc7c26b416bfa16`、CUDA Toolkit、C++17、CMake 3.22、Linux x86-64。控制 ABI 使用所选 profile 的官方头文件。工作量针对 A100/sm_80；其他 GPU 的 CUDA probe 可独立尝试，主调度 workload 仍限制 A100。
 
-8 个 CTest：保留原 ABI/errno、注册表/mode/恢复、profile/transport、group 生命周期/GET_INFO、Python 分析/runner/schema；新增 group PREEMPT 的精确绑定凭据、阶段/授权/owner/FD/scope/失效拒绝、一次同步请求、错误/超时 journal 和双进程命令测试。550/595 独立构建均通过。所有 synthetic 数据只在临时目录，不是 GPU measurements。
+9 个 CTest：保留原 ABI/errno、注册表/mode/恢复、profile/transport、group 生命周期/GET_INFO、Python 分析/runner/schema；包括 group PREEMPT 的精确绑定凭据、阶段/授权/owner/FD/scope/失效拒绝、一次同步请求、错误/超时 journal 和双进程命令测试。阶段六另增加共用 preparation/no-op 权限及配对计划/预算/整数统计测试（16 项 Python unittest）。550/595 独立构建各 9/9 通过。所有 synthetic 数据只在临时目录，不是 GPU measurements。
 
 595 使用独立构建；`NVIDIA_595_SOURCE` 应指向已检出的、未修改的 **db0c4e65c8e34c678d745ddb1317f53f90d1072b**。不能将 550 submodule 切到该 tag，也不能复用同一个 build 混入不同头文件：
 
@@ -81,6 +83,37 @@ LD_PRELOAD="$PWD/active-preempt/build-595/librm_control.so" \
 [对象绑定](../docs/object_binding.md) 解释原 FD、generation、父子关系、唯一候选、捕获不完整与 hidden ioctl 的限制。普通 CUDA `none/int-only` 不要求捕获成功；主动模式必须验证本进程对象，同 GPU UUID、不同 process/context 与 hardware TSG ID。CUPTI channel ID 从未当作 RM handle。
 
 ## 最小对照矩阵
+
+### 阶段六：固定的 10 对匹配实验
+
+`group-bound-none` 使用独立的 `GroupNoop` 阶段；两 owner 初始化各 GET_INFO 一次，interaction 时 BG 走与 B 相同的 `group_owner_action → GroupPreemptOnce::action` 准备路径，随后记录 `SKIPPED_BY_DESIGN`，不发项目 RM syscall、不接受 `--test-host-confirmed`。`group-preempt-wait` 仍须新的明确授权，只由 BG owner 发一次同步请求，进程内只允许 trial0。旧 `none/int-only` 继续可用。
+
+已有正式批次已结束，10 次额度已使用，**不要重跑该批次或沿用它的授权**。以下是将来新批次的准备/计划命令；先核实当前 GPU/版本及普通 CUDA 使用许可，再使用新的输出目录。若 build 改变，要在冻结计划前做一次非主动准备：
+
+```bash
+CUDA_VISIBLE_DEVICES="$TARGET_GPU_UUID" \
+python3 active-preempt/scripts/run_matrix.py --build active-preempt/build-595 \
+  --output results/phase6-prepare-new --modes group-bound-none --trials 1 \
+  --bg-iterations 1630976 --int-iterations 5888 --trigger-delay-us 3000
+
+python3 active-preempt/scripts/run_paired.py plan --build active-preempt/build-595 \
+  --preparation results/phase6-prepare-new/group-bound-none-f0-b0 \
+  --gpu "$TARGET_GPU_UUID" --batch-id phase6-new --output results/phase6-paired-new
+
+# 仅在操作者新确认同卡隔离/任务保护条件，并授权该计划最多 10 次尝试之后：
+CUDA_VISIBLE_DEVICES="$TARGET_GPU_UUID" \
+python3 active-preempt/scripts/run_paired.py execute \
+  --plan results/phase6-paired-new/plan.json --test-host-confirmed
+
+# 只读已有结果的离线分析，不产生 CUDA/RM 请求：
+python3 active-preempt/scripts/analyze_pairs.py results/phase6/paired595
+```
+
+plan 固定 seed20260917、5 CT/5 TC、每对同一 1000–5000 μs delay；冻结资源、iterations、instrumentation、初始化、profile/source 和二进制指纹。每次新建两进程，新查询当前身份，不导入旧 handle。两 owner 的实际 CPU affinity 都记录，不设置亲和性/特权调度。
+
+runner 在 spawn 前写入预算 reservation；超时/未知状态保守占用槽位并停止，不 resume/retry/补样。前一进程树退出、输出/同 context 短计算/cleanup 核实后才开下一组。结果不利、before-RM、ambiguous 或 BG 已完成不成为重试理由。计划/CLI 标志不构成用户授权本身，也不建设新的权限服务。
+
+每 run 沿用 schema 2 CSV/journal，追加 `group-preparation-v1` 标识和 owner prepare/action 时段；本地 no-op event 不伪造 NV_OK，真实 RM 时间保持空值。批次 `pairs.csv`、`paired_analysis.json`、`paired_summary.md` 保留全部计划行、原始 entry/done/delta 与独立状态维度，只报告小样本描述，不报尾延迟 SLA。完整 contract 见 [measurement](docs/measurement.md)。
 
 ### 阶段五：一次 group B，独立于旧 channel 模式
 

@@ -21,11 +21,13 @@ struct ControlResult {
     uint32_t rm_status = 0xffffffff;
     uint64_t begin_ns = 0, end_ns = 0;
     uint64_t operation_seq = 0;
-    enum class Rejection:uint32_t {None,Device,Abi,Binding,Incomplete,PendingAsync,LogFull,Stage,Authorization,Readonly,GpuScope,AlreadyQueried,AlreadyPreempted,TimeoutRange,Owner,TargetCompleted} rejection=Rejection::None;
+    enum class Rejection:uint32_t {None,Device,Abi,Binding,Incomplete,PendingAsync,LogFull,Stage,Authorization,Readonly,GpuScope,AlreadyQueried,AlreadyPreempted,TimeoutRange,Owner,TargetCompleted,SkippedByDesign,PreparedNoSyscall} rejection=Rejection::None;
     bool ok() const { return attempted && syscall_result == 0 && rm_status == 0; }
     std::string describe() const;
     const char* category() const;
 };
+// Host control preparation is distinct from the actual RM syscall interval.
+struct OwnerActionTiming {uint64_t prepare_begin_ns=0,prepare_end_ns=0,action_end_ns=0,preparation_seq=0;};
 struct Identity {
     int fd = -1; // duplicate of the allocating CUDA control FD, never a fresh open
     uint32_t client = 0, device = 0, group = 0, subdevice = 0, compute_channel = 0;
@@ -49,7 +51,8 @@ private:
         :binding_(std::move(b)),allocating_fd_(fd),gpu_uuid_(std::move(uuid)),visible_devices_(std::move(visible)){}
     friend GroupIdentity inspect_owned_tsg();
     friend GroupInfoResult get_group_info(const GroupIdentity&);
-    friend ControlResult preempt_group_wait(const GroupIdentity&,uint32_t);
+    friend ControlResult preempt_group_wait(const GroupIdentity&,uint32_t,OwnerActionTiming*,bool);
+    friend ControlResult prepare_group_noop(const GroupIdentity&,OwnerActionTiming*);
     friend bool verified_group_current(const GroupIdentity&);
 };
 // Observation only, followed by a separate one-shot, group-only GET_INFO.
@@ -58,7 +61,9 @@ GroupIdentity inspect_owned_tsg();
 GroupInfoResult get_group_info(const GroupIdentity& identity);
 bool verified_group_current(const GroupIdentity& identity); // no project RM control
 uint32_t group_preempt_timeout_limit_us();
-ControlResult preempt_group_wait(const GroupIdentity& identity,uint32_t timeout_us);
+ControlResult preempt_group_wait(const GroupIdentity& identity,uint32_t timeout_us,OwnerActionTiming* timing=nullptr,bool target_completed=false);
+// GroupNoop stage only: identical preparation, no RM syscall or active permission.
+ControlResult prepare_group_noop(const GroupIdentity& identity,OwnerActionTiming* timing=nullptr);
 
 // Discovery accepts only allocations observed in this process. No externally
 // supplied hClient/hObject, QUERY_GROUP, global enumeration, or privilege bypass.

@@ -64,6 +64,7 @@ def read_rows(path):
     if len(set(fields))!=len(fields) or not required<=set(fields):raise ValueError('Missing/duplicate schema 2 columns; refuse ambiguous field semantics')
     if any(None in r or any(v is None for v in r.values()) for r in rows):raise ValueError('Malformed CSV field count')
     if {r.get('schema_version') for r in rows}!={SCHEMA_VERSION}:raise ValueError('Schema 2 required; legacy schema 1 has main-entry semantics and must not be mixed')
+    if 'measurement_contract' in fields and len({r['measurement_contract'] for r in rows})!=1:raise ValueError('Mixed measurement contracts; do not combine old and new preparation semantics')
     if len({r['run_kind'] for r in rows})!=1:raise ValueError('Diagnostic and performance samples must not be mixed')
     return rows
 
@@ -103,10 +104,16 @@ def summarize(directory,calibration_margin_ns=None):
     metrics=[('Interaction → graph entry observed, all application-valid',valid,'T_int_graph_entry_observed','T_cpu_trigger'),
              ('Interaction → graph entry, correct application rows',correct,'T_int_graph_entry_observed','T_cpu_trigger'),
              ('Interaction → graph entry, timing-eligible subset',subset,'T_int_graph_entry_observed','T_cpu_trigger'),
+             ('Interaction → graph done observed, all application-valid',valid,'T_int_graph_done_observed','T_cpu_trigger'),
              ('Interaction → main entry observed',valid,'T_int_main_entry_observed','T_cpu_trigger'),
              ('Host submission',valid,'T_int_submit_end','T_int_submit_begin'),
              ('IPC request → owner receipt',rows,'T_ipc_received','T_ipc_send'),
              ('IPC round trip (includes owner control when present)',rows,'T_ipc_ack','T_ipc_send'),
+             ('Owner receipt → preparation begin',rows,'T_owner_prepare_begin','T_owner_received'),
+             ('Common owner preparation',rows,'T_owner_prepare_end','T_owner_prepare_begin'),
+             ('Preparation end → RM call begin',rows,'T_rm_call_begin','T_owner_prepare_end'),
+             ('Preparation end → action end (no-op or active)',rows,'T_owner_action_end','T_owner_prepare_end'),
+             ('Action end → IPC acknowledgment',rows,'T_ipc_ack','T_owner_action_end'),
              ('RM syscall wall time (including failures)',rows,'T_rm_call_end','T_rm_call_begin'),
              ('GPU graph marker interval',valid,'T_int_graph_done_gpu_ns','T_int_graph_entry_gpu_ns')]
     for title,source,end,begin in metrics:
@@ -119,7 +126,7 @@ def summarize(directory,calibration_margin_ns=None):
     lines+=['','Exact BG preempt completion, context-save duration, and BG resume latency: **unmeasured**.',
             '', 'Graph entry is K0 block0/thread0; main entry is the main arithmetic node. Neither is an exact first-warp timestamp. Lifetime overlap and an after-RM ordering hypothesis do not establish causation. Target residency stays unknown without another backend.',
             '', 'Ordering model: '+('none; observations at/after RM are ambiguous' if model is None else f'explicit affine-offset assumption with {calibration_margin_ns} ns margin; not a guaranteed bound'),
-            '', 'Paired comparisons: group-preempt-wait / preempt-wait vs none; realtime-restart vs realtime-only. Compare identical fixed work/configurations and separate diagnostic runs. One pair cannot establish a causal or stable latency benefit.']
+            '', 'Paired comparisons: group-preempt-wait vs group-bound-none (matched preparation); historical preempt-wait vs none; realtime-restart vs realtime-only. Compare identical fixed work/configurations and separate diagnostic runs. One pair cannot establish a causal or stable latency benefit.']
     for path in sorted(directory.glob('*_calibration_*.csv')):
         with path.open() as f: samples=list(csv.DictReader(f))
         rtt=[(int(s['cpu_observed_ns'])-int(s['cpu_send_ns']))/1000 for s in samples]

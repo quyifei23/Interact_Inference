@@ -17,7 +17,7 @@ int main(int argc,char** argv){
     };
     try{
         auto o=ap::parse(argc,argv);run_dir=o.run_dir;auto plan=ap::mode_plan(o.mode);
-        ap::configure_rm(plan.group_identity?ap::RmStage::GroupActive:(plan.identity?ap::RmStage::Active:ap::RmStage::Disabled),o.test_host,ap::GroupOwner::Background);
+        ap::configure_rm((plan.group_identity?(plan.operation==ap::Trigger::GroupPrepareNoop?ap::RmStage::GroupNoop:ap::RmStage::GroupActive):(plan.identity?ap::RmStage::Active:ap::RmStage::Disabled)),o.test_host,ap::GroupOwner::Background);
         std::signal(SIGTERM,ap::on_stop);std::signal(SIGINT,ap::on_stop);
         if(o.shared_path.empty())throw std::runtime_error("bg_worker needs controller shared mapping");
         mapping=std::make_unique<ap::Mapping>(o.shared_path.c_str());auto& s=*mapping->shared;
@@ -45,6 +45,8 @@ int main(int argc,char** argv){
         if(rm){s.host.bg_identity_valid=1;s.host.bg_tsg=rm->identity().tsg_id;s.host.bg_client=rm->identity().client;s.host.bg_group=rm->identity().group;s.host.bg_engine=rm->identity().engine;}
         if(group){const auto& b=group->identity.binding();s.host.bg_group_identity_valid=1;s.host.bg_tsg=*group->info.hardware_tsg_id;
             s.host.bg_client=b.client;s.host.bg_group=b.group.token.handle;s.host.bg_engine=b.group.engine;}
+        if(sched_getaffinity(0,sizeof(s.host.bg_cpu_affinity),&s.host.bg_cpu_affinity)!=0)throw std::runtime_error("Cannot record BG CPU affinity");
+        s.host.bg_registers=gpu->attributes.numRegs;s.host.bg_static_shared=gpu->attributes.sharedSizeBytes;s.host.bg_active_blocks_per_sm=gpu->active_blocks_per_sm;
         s.host.bg_iterations=gpu->iterations;s.host.bg_solo_us=gpu->solo_us;s.host.bg_uninstrumented_us=gpu->uninstrumented_us;
         std::strncpy(s.host.bg_uuid,ap::uuid_string(gpu->prop.uuid).c_str(),sizeof(s.host.bg_uuid)-1);identity.flush();ap::save_control_journal();
         ap::release(&s.host.ready,1);uint32_t seen=0;bool running=true;
@@ -52,7 +54,7 @@ int main(int argc,char** argv){
             uint64_t deadline=ap::monotonic_ns()+60ull*1000000000;
             while(ap::acquire(&s.host.command_seq)==seen){ap::check_stop();if(ap::monotonic_ns()>deadline)throw std::runtime_error("Controller disappeared");ap::relax();}
             s.host.command_received_ns=ap::monotonic_ns();uint32_t seq=ap::acquire(&s.host.command_seq);
-            s.host.result={};s.host.preliminary_result={};s.host.bg_done_at_owner_check=2;ap::record_trial(s.host.trial_id);
+            s.host.result={};s.host.preliminary_result={};s.host.owner_timing={};s.host.bg_done_at_owner_check=2;ap::record_trial(s.host.trial_id);
             auto need_rm=[&](){if(!rm)throw std::runtime_error("OBJECT_BINDING_UNAVAILABLE: command needs RM identity");};
             switch(s.host.command){
             case ap::Command::None:s.host.bg_done_at_owner_check=ap::acquire(&s.bg.done);break;
@@ -67,12 +69,14 @@ int main(int argc,char** argv){
                 s.host.bg_correct=gpu->correct();s.host.bg_progress_correct=gpu->progress_correct;work_in_flight=false;
                 if(group_request_attempted)ap::note_active_result_measured();
                 if(rm)rm->mark_work_drained();ap::save_control_journal();break;
+            case ap::Command::GroupPrepareNoop:
             case ap::Command::GroupPreemptWait:
                 if(!plan.group_identity||!group)throw std::runtime_error("OBJECT_BINDING_UNAVAILABLE: group command requires BG group identity");
                 if(!work_in_flight||!ap::acquire(&s.bg.started))throw std::runtime_error("INVALID_OBJECT_OR_STATE: BG main work not launched/observed");
                 s.host.bg_done_at_owner_check=ap::acquire(&s.bg.done);
-                if(s.host.bg_done_at_owner_check){s.host.result.rejection=ap::ControlResult::Rejection::TargetCompleted;break;}
-                s.host.result=ap::preempt_group_wait(group->identity,ap::group_preempt_timeout_limit_us());
+                if(s.host.command==ap::Command::GroupPrepareNoop)
+                    s.host.result=ap::prepare_group_noop(group->identity,&s.host.owner_timing);
+                else s.host.result=ap::preempt_group_wait(group->identity,ap::group_preempt_timeout_limit_us(),&s.host.owner_timing,s.host.bg_done_at_owner_check!=0);
                 group_request_attempted=s.host.result.attempted;break; // mmap journal already published
             case ap::Command::CheckReuse:{
                 if(work_in_flight)throw std::runtime_error("BG reuse check requires completed drain");

@@ -132,6 +132,8 @@ const char* ControlResult::category()const{
     case Rejection::TimeoutRange:return "INVALID_PREEMPT_TIMEOUT";
     case Rejection::Owner:return "OWNER_ROLE_REJECTED";
     case Rejection::TargetCompleted:return "BG_ALREADY_COMPLETED_NO_PREEMPT";
+    case Rejection::SkippedByDesign:return "SKIPPED_BY_DESIGN";
+    case Rejection::PreparedNoSyscall:return "CONTROL_PREPARED";
     default:break;
     }
     if(ok())return "CONTROL_ACCEPTED_EFFECT_UNVERIFIED";
@@ -173,7 +175,7 @@ void note_cuda_ready(int major,int minor){
 void note_group_cuda_scope(const std::string& uuid,int count){
     auto& c=capture();std::lock_guard<std::recursive_mutex> lock(c.mutex);
     const char* env=std::getenv("CUDA_VISIBLE_DEVICES");std::string visible=env?env:"";
-    if((c.state.stage!=RmStage::GroupInfo&&c.state.stage!=RmStage::GroupActive)||!group_probe_visibility_matches(visible,uuid,count))
+    if((c.state.stage!=RmStage::GroupInfo&&c.state.stage!=RmStage::GroupActive&&c.state.stage!=RmStage::GroupNoop)||!group_probe_visibility_matches(visible,uuid,count))
         throw std::runtime_error("OBJECT_BINDING_UNAVAILABLE: group probe requires exactly one explicit full GPU UUID matching CUDA enumeration");
     c.state.scope_gpu_uuid=uuid;c.state.scope_visible_devices=visible;c.state.single_gpu_scope_verified=true;
 }
@@ -246,7 +248,7 @@ bool retained_control_fd_valid(int fd){
 }
 GroupIdentity inspect_owned_tsg(){
     auto& c=capture();std::lock_guard<std::recursive_mutex> lock(c.mutex);
-    if(!group_environment_current(c)||!c.state.cuda_minimal_workload_passed||(c.state.stage!=RmStage::GroupInfo&&c.state.stage!=RmStage::GroupActive))
+    if(!group_environment_current(c)||!c.state.cuda_minimal_workload_passed||(c.state.stage!=RmStage::GroupInfo&&c.state.stage!=RmStage::GroupActive&&c.state.stage!=RmStage::GroupNoop))
         throw std::runtime_error("OBJECT_BINDING_UNAVAILABLE: current process/profile/CUDA scope not ready for group discovery");
     auto b=c.objects.discover_group();
     if(!detail::group_engine_reviewed(b)||!retained_control_fd_valid(b.fd)||!c.allocating_fds.count(b.client))
@@ -270,13 +272,28 @@ bool verified_group_current(const GroupIdentity& id){
         retained_control_fd_valid(id.binding_.fd)&&c.objects.valid_group(id.binding_)&&c.group_query.verified_for(id.binding_,c.state);
 }
 uint32_t group_preempt_timeout_limit_us(){return NVA06C_CTRL_CMD_PREEMPT_MAX_MANUAL_TIMEOUT_US;}
-ControlResult preempt_group_wait(const GroupIdentity& id,uint32_t timeout_us){
+namespace {
+ControlResult group_owner_action(const GroupBinding& binding,const std::string& uuid,const std::string& visible,
+                                bool preempt,uint32_t timeout_us,OwnerActionTiming* output,bool target_completed){
+    OwnerActionTiming timing;timing.prepare_begin_ns=monotonic_ns();
     auto& c=capture();std::lock_guard<std::recursive_mutex> lock(c.mutex);
-    // Full registry validation and the single ioctl remain in this critical
-    // section, serialized with observed alloc/free/bind. No GET_INFO here.
-    bool current=group_environment_current(c)&&id.gpu_uuid_==c.state.scope_gpu_uuid&&id.visible_devices_==c.state.scope_visible_devices;
-    return c.group_preempt.preempt(c.objects,c.state,id.binding_,c.group_query,retained_control_fd_valid(id.binding_.fd),c.journal,c.trial,timeout_us,
-        [](int fd,unsigned long request,void* args,void*){return static_cast<int>(syscall(SYS_ioctl,fd,request,args));},nullptr,current);
+    // Both conditions execute this exact critical section once. Its timing
+    // includes lock acquisition, environment/FD checks and backend preparation.
+    const bool current=group_environment_current(c)&&uuid==c.state.scope_gpu_uuid&&visible==c.state.scope_visible_devices;
+    const bool fd_valid=retained_control_fd_valid(binding.fd);
+    auto transport=[](int fd,unsigned long request,void* args,void*){return static_cast<int>(syscall(SYS_ioctl,fd,request,args));};
+    ControlResult result=preempt
+        ?c.group_preempt.preempt(c.objects,c.state,binding,c.group_query,fd_valid,c.journal,c.trial,timeout_us,transport,nullptr,current,&timing,target_completed)
+        :c.group_preempt.prepare_noop(c.objects,c.state,binding,c.group_query,fd_valid,c.journal,c.trial,current,&timing);
+    if(output)*output=timing;
+    return result;
+}
+}
+ControlResult preempt_group_wait(const GroupIdentity& id,uint32_t timeout_us,OwnerActionTiming* timing,bool target_completed){
+    return group_owner_action(id.binding_,id.gpu_uuid_,id.visible_devices_,true,timeout_us,timing,target_completed);
+}
+ControlResult prepare_group_noop(const GroupIdentity& id,OwnerActionTiming* timing){
+    return group_owner_action(id.binding_,id.gpu_uuid_,id.visible_devices_,false,0,timing,false);
 }
 std::string GroupIdentity::json()const{
     const auto& b=binding_;std::ostringstream s;

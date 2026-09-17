@@ -12,6 +12,13 @@ struct ControlEvent {
     unsigned char params[event_param_capacity]{};
     ControlResult result{};
 };
+// Local-only tagged payload, never an RM command. Keeps the schema-2 binary
+// event layout unchanged, so previous journals remain recoverable.
+struct PreparationEvent {
+    uint32_t magic=0x50524550,revision=1,noop=0,reserved=0;
+    OwnerActionTiming timing{};
+};
+static_assert(sizeof(PreparationEvent)<=event_param_capacity);
 // mmap file survives controller/worker crashes. Recording uses fixed slots and
 // no allocation or filesystem syscalls on the per-control path.
 class ControlJournal {

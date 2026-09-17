@@ -1,0 +1,8 @@
+{
+  "utc": "2026-09-17T08:28:56.462217+00:00",
+  "gpu": "GPU-99e4e85f-1945-866c-9e00-130b51df7908",
+  "plan_sha256": "aa499487eaf8f73dbf1a3c0df60c45bd7e4c4380ed4323fb71ed1f518df6f426",
+  "max_preempt_attempts": 10,
+  "operator_confirmation_flag": true,
+  "scope": "this batch only; isolation confirmed by operator"
+}

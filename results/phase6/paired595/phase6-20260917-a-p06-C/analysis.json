@@ -1,0 +1,64 @@
+{
+  "schema_version": 2,
+  "rows": 1,
+  "application_valid": 1,
+  "correct_application_rows": 1,
+  "timing_eligible_subset": 0,
+  "preemption_confirmed": 0,
+  "dimensions": {
+    "trial_state": {
+      "complete": 1
+    },
+    "application_valid": {
+      "1": 1
+    },
+    "control_status": {
+      "SKIPPED_BY_DESIGN": 1
+    },
+    "gpu_overlap": {
+      "lifetime_overlap": 1
+    },
+    "derived_ordering": {
+      "not_applicable": 1
+    },
+    "correctness_status": {
+      "PASS": 1
+    },
+    "control_target_running": {
+      "unknown": 1
+    },
+    "bg_done_before_interaction": {
+      "0": 1
+    },
+    "bg_done_before_control_observed": {
+      "0": 1
+    },
+    "bg_done_at_owner_check": {
+      "0": 1
+    },
+    "setup_status": {
+      "BG_MAIN_OBSERVED_RESIDENCY_UNKNOWN": 1
+    }
+  },
+  "calibration_model": null,
+  "timeout_rows": 0,
+  "missing_entry_or_done_observation": 0,
+  "failure_messages": {},
+  "raw_values_us": {
+    "Interaction \u2192 graph entry observed, all application-valid": 1255.725,
+    "Interaction \u2192 graph entry, correct application rows": 1255.725,
+    "Interaction \u2192 graph entry, timing-eligible subset": null,
+    "Interaction \u2192 graph done observed, all application-valid": 1512.696,
+    "Interaction \u2192 main entry observed": 1260.483,
+    "Host submission": 40.944,
+    "IPC request \u2192 owner receipt": 0.355,
+    "IPC round trip (includes owner control when present)": 36.689,
+    "Owner receipt \u2192 preparation begin": 0.589,
+    "Common owner preparation": 35.145,
+    "Preparation end \u2192 RM call begin": null,
+    "Preparation end \u2192 action end (no-op or active)": 0.037,
+    "Action end \u2192 IPC acknowledgment": 0.563,
+    "RM syscall wall time (including failures)": null,
+    "GPU graph marker interval": 257.024
+  }
+}

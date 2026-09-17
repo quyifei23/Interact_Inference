@@ -33,7 +33,7 @@ void ProfileState::configure(const DriverProfile& p,const std::string& runtime,R
 bool ProfileState::may_readonly()const{return observation_enabled&&cuda_minimal_workload_passed&&binding_observed&&(stage==RmStage::Readonly||stage==RmStage::Active);}
 bool ProfileState::may_active()const{return may_readonly()&&readonly_verified&&workload_gpu_reviewed&&active_experiment_authorized&&stage==RmStage::Active;}
 bool ProfileState::may_group_info()const{
-    return (stage==RmStage::GroupInfo||stage==RmStage::GroupActive)&&observation_enabled&&cuda_minimal_workload_passed&&single_gpu_scope_verified&&group_binding_observed;
+    return (stage==RmStage::GroupInfo||stage==RmStage::GroupActive||stage==RmStage::GroupNoop)&&observation_enabled&&cuda_minimal_workload_passed&&single_gpu_scope_verified&&group_binding_observed;
 }
 bool ProfileState::may_group_preempt()const{
     return may_group_info()&&stage==RmStage::GroupActive&&active_experiment_authorized&&workload_gpu_reviewed&&

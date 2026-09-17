@@ -2,7 +2,7 @@
 #include <stdexcept>
 #include <string>
 namespace ap {
-enum class Trigger { None, PreemptWait, PreemptAsync, Restart, Disable, DisableSplit, GroupPreemptWait };
+enum class Trigger { None, PreemptWait, PreemptAsync, Restart, Disable, DisableSplit, GroupPreemptWait, GroupPrepareNoop };
 struct ModePlan {
     std::string name;
     bool background=true,identity=false,timeslice=false,realtime=false,extended=false;
@@ -23,6 +23,7 @@ inline ModePlan mode_plan(std::string name){
     else if(name=="realtime-only"||name=="realtime-restart"){
         p.identity=p.realtime=true;if(name=="realtime-restart")p.operation=Trigger::Restart;
     }else if(name=="preempt-wait"){p.identity=true;p.operation=Trigger::PreemptWait;}
+    else if(name=="group-bound-none"){p.group_identity=true;p.operation=Trigger::GroupPrepareNoop;}
     else if(name=="group-preempt-wait"){p.group_identity=true;p.operation=Trigger::GroupPreemptWait;}
     else if(name=="preempt-async"){p.identity=p.extended=true;p.operation=Trigger::PreemptAsync;}
     else if(name=="disable"||name=="disable-split"){

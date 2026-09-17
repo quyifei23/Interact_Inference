@@ -1,0 +1,11 @@
+{
+  "recorded_utc": "2026-09-17T08:28:56.401132+00:00",
+  "source": "explicit user reply in this task",
+  "user_reply": "确认条件，授权该批最多 10 次尝试",
+  "gpu_uuid": "GPU-99e4e85f-1945-866c-9e00-130b51df7908",
+  "plan_sha256": "aa499487eaf8f73dbf1a3c0df60c45bd7e4c4380ed4323fb71ed1f518df6f426",
+  "max_new_preempt_attempts": 10,
+  "isolation_confirmed_by_operator": true,
+  "fresh_authorization": true,
+  "failure_policy": "stop on operational error; no retry, replacement, or additional active smoke"
+}

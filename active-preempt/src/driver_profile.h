@@ -2,7 +2,7 @@
 #include <string>
 #include <cstdint>
 namespace ap {
-enum class RmStage {Disabled,Observe,Readonly,Active,GroupInfo,GroupActive};
+enum class RmStage {Disabled,Observe,Readonly,Active,GroupInfo,GroupActive,GroupNoop};
 enum class GroupOwner {Unspecified,Background,Interactive};
 struct DriverProfile {const char* version;const char* source_commit;const char* source_path;bool experimental;};
 const DriverProfile& build_profile();

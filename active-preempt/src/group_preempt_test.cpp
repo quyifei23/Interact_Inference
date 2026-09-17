@@ -157,6 +157,45 @@ void routing(){
     need(ap::distinct_group_scope(10,20,"uuid","uuid",1,1,0,7),"zero TSG ID not accepted for pair");
     need(!ap::distinct_group_scope(10,20,"uuid","uuid",1,1,7,7)&&!ap::distinct_group_scope(10,20,"uuid","other",1,1,0,7)&&!ap::distinct_group_scope(10,20,"uuid","uuid",0,0,0,7),"unresolved pair scope accepted");
 }
+void matched_preparation(){
+    using R=ap::ControlResult::Rejection;
+    for(bool noop:{true,false}){
+        Fixture f(8,noop?ap::RmStage::GroupNoop:ap::RmStage::GroupActive,!noop);f.verify();
+        ap::OwnerActionTiming t;ap::ControlResult r=noop
+            ?f.preempt.prepare_noop(f.registry,f.state,f.binding,f.query,true,f.journal,0,true,&t)
+            :f.preempt.preempt(f.registry,f.state,f.binding,f.query,true,f.journal,0,1000000,Mock::invoke,&f.mock,true,&t);
+        need(t.prepare_begin_ns&&t.prepare_end_ns>=t.prepare_begin_ns&&t.action_end_ns>=t.prepare_end_ns&&t.preparation_seq,"missing preparation timing");
+        need(f.mock.gets==1&&f.mock.preempts==unsigned(!noop),"no-op issued getter/control or treatment skipped syscall");
+        if(noop){
+            need(r.rejection==R::SkippedByDesign&&!r.attempted&&!r.ok()&&!r.begin_ns&&!r.end_ns&&r.rm_status==0xffffffff,"no-op became RM NV_OK");
+            need(!f.state.active_experiment_authorized&&!f.state.may_group_preempt()&&!f.state.may_active(),"no-op unlocked active or channel state");
+            need(f.issue().rejection==R::Stage&&!f.mock.preempts,"no-op owner issued PREEMPT");
+        }else need(r.ok()&&r.begin_ns>=t.prepare_end_ns&&r.end_ns<=t.action_end_ns,"RM timing conflated with preparation");
+        ap::ControlJournal::recover(f.dir+"/events.bin",f.dir+"/events.jsonl");
+        std::ifstream in(f.dir+"/events.jsonl");std::string text((std::istreambuf_iterator<char>(in)),{});
+        need(text.find(noop?"CONTROL_PREPARATION_NOOP":"CONTROL_PREPARATION")!=std::string::npos,"local event missing");
+        need(text.find("\"attempted\":false")!=std::string::npos,"local event counted as syscall");
+        if(noop)need(text.find("\"outcome\":\"SKIPPED_BY_DESIGN\"")!=std::string::npos,"no-op outcome missing");
+    }
+    for(bool noop:{true,false})for(unsigned gate=0;gate<6;++gate){
+        Fixture f(8,noop?ap::RmStage::GroupNoop:ap::RmStage::GroupActive,!noop);f.verify();
+        if(gate==0)f.registry.free(1,3000);
+        if(gate==1)f.registry.incomplete("synthetic capture loss");
+        if(gate==2)populate(f.registry,1,40);
+        if(gate==3)f.state.scope_gpu_uuid="changed";
+        auto r=noop?f.preempt.prepare_noop(f.registry,f.state,f.binding,f.query,gate!=4,f.journal,0,gate!=5)
+            :f.issue(1000000,gate!=4,0,gate!=5);
+        need(!r.attempted&&r.rejection!=R::SkippedByDesign&&f.mock.preempts==0,"common preparation guards differ");
+    }
+    {Fixture f;f.verify();ap::OwnerActionTiming t;
+     auto r=f.preempt.preempt(f.registry,f.state,f.binding,f.query,true,f.journal,0,1000000,Mock::invoke,&f.mock,true,&t,true);
+     need(r.rejection==R::TargetCompleted&&!r.attempted&&t.prepare_end_ns&&!f.mock.preempts,"late BG skips common preparation or sends PREEMPT");}
+    auto plan=ap::mode_plan("group-bound-none");need(plan.group_identity&&!plan.identity&&plan.trigger(true,false)==ap::Trigger::GroupPrepareNoop,"no-op routed to unbound/channel path");
+    std::vector<std::string> argv={"test","--mode","group-bound-none","--bg-iterations","1630976","--int-iterations","5888","--trigger-delay-us","3000","--pair-id","9","--condition","control"};
+    auto parse=[&](){std::vector<char*> args;for(auto& a:argv)args.push_back(a.data());return ap::parse(args.size(),args.data());};
+    need(parse().trials==1&&parse().pair_id=="9"&&parse().trigger_delay_us==3000,"outer pair ID changed local trial");
+    argv.push_back("--test-host-confirmed");rejects(parse);
+}
 void owner_process(){
     int commands[2],results[2];need(pipe(commands)==0&&pipe(results)==0,"pipe");
     pid_t child=fork();need(child>=0,"fork");
@@ -177,6 +216,6 @@ void owner_process(){
     need(response[0]==uint32_t(child)&&response[1]==uint32_t(child)&&response[1]!=uint32_t(getpid())&&response[2]==1&&response[3]==1,"controller borrowed BG binding or multiple controls issued");
 }
 }
-int main(){try{successful_path();gates();failures_and_timeout_journal();routing();owner_process();
+int main(){try{successful_path();gates();failures_and_timeout_journal();routing();matched_preparation();owner_process();
     std::cout<<"Synthetic group PREEMPT: exact GET_INFO binding, multichannel, ownership/stage/auth/scope/generation gates, bounded wait, one-shot, raw failures, timeout journal and owner-process routing passed. GPU controls/trials=0.\n";return 0;
 }catch(const std::exception& e){std::cerr<<e.what()<<'\n';return 1;}}

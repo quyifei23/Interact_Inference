@@ -1,0 +1,6 @@
+cudaFree(output) code=0 cudaSuccess no error
+cudaEventDestroy(end) code=0 cudaSuccess no error
+cudaEventDestroy(begin) code=0 cudaSuccess no error
+cudaStreamDestroy code=0 cudaSuccess no error
+cudaHostUnregister code=0 cudaSuccess no error
+cuCtxDestroy code=0

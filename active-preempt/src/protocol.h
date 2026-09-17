@@ -10,6 +10,7 @@
 #include <sys/stat.h>
 #include <unistd.h>
 #include <csignal>
+#include <sched.h>
 #include <type_traits>
 
 namespace ap {
@@ -39,7 +40,7 @@ struct alignas(4096) Telemetry {
     uint64_t heartbeat_gpu_ns[max_samples]{};
     uint64_t cta_start_gpu_ns[max_blocks]{}, cta_end_gpu_ns[max_blocks]{};
 };
-enum class Command:uint32_t { None, Launch, Drain, PreemptWait, PreemptAsync, Disable, DisableScheduling, Enable, ReadMode, Exit, Prepare, GroupPreemptWait, CheckReuse };
+enum class Command:uint32_t { None, Launch, Drain, PreemptWait, PreemptAsync, Disable, DisableScheduling, Enable, ReadMode, Exit, Prepare, GroupPreemptWait, CheckReuse, GroupPrepareNoop };
 struct alignas(4096) HostState {
     uint32_t ready=0,error=0,command_seq=0,ack_seq=0,controller_pid=0;
     Command command=Command::None;
@@ -53,6 +54,9 @@ struct alignas(4096) HostState {
     uint64_t command_received_ns=0;
     double bg_solo_us=0,bg_uninstrumented_us=0;
     ControlResult result{},preliminary_result{};
+    OwnerActionTiming owner_timing{};
+    int bg_registers=0,bg_active_blocks_per_sm=0;uint64_t bg_static_shared=0;
+    cpu_set_t bg_cpu_affinity{};
     char error_message[512]{},bg_uuid[64]{};
 };
 // TSG IDs are compared only for the same selected GPU and explicit matching

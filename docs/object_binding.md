@@ -91,3 +91,9 @@ hidden/direct syscall、内部创建/导入对象、未知 class/transport、未
 ## 离线验证
 
 `phase2_contract_test` 覆盖唯一成功发现、多 TSG、多 compute channel、无 compute child、递归 FREE、H/C1 → free → H/C2 → unrelated FREE、旧 token 拒绝、重绑/新增 channel、client 隔离及复用、容量/不完整/不支持 ABI 拒绝。`rm_contract_test` 保留官方 ABI、EBADF、未更新 status 不能当成功与空身份拒绝。它们证明账本算法和拒绝逻辑，不证明实际 libcuda 的 interposition 完整性。
+
+## 阶段六增量：无干预的 group 对照
+
+`GroupNoop` / `group-bound-none` 复用现有 `GroupBinding/GroupIdentity` 与当前 GET_INFO，不改变 discover/validate 的唯一性、完整成员、generation 或原 FD 边界。新增 `prepare_group_noop` 与 `preempt_group_wait` 共用 `rm_control.cpp:group_owner_action`、`group_query_internal.cpp:GroupPreemptOnce::action` 的锁内准备；共同检查仅执行一次。随后 no-op 明确跳过 syscall，不能授权 PREEMPT、转换 channel 身份或把 `GroupInfo` 只读 probe 升级为 active。实际授权、once gate、timeout 和真实调度 ioctl 仍在独立分支。
+
+本次匹配批次每条 run 都重新创建两个 owner、重新绑定和 GET_INFO；20 run / 40 次 GET_INFO，所有当前捕获的选定 compute TSG 各有 8 个 compute channel。这是该批次的观测形状，不是固定数量要求。完整结果与 hidden/direct-syscall 可见性限制见 [phase6_paired_preempt](phase6_paired_preempt.md)。

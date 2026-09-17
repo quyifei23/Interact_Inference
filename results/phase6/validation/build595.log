@@ -1,0 +1,16 @@
+[  8%] Built target preflight_cuda
+[ 36%] Built target rm_control
+[ 40%] Building CUDA object CMakeFiles/bg_worker.dir/src/bg_worker.cu.o
+[ 52%] Built target event_dump
+[ 56%] Building CUDA object CMakeFiles/int_worker.dir/src/int_worker.cu.o
+[ 60%] Built target phase3_profile_test
+[ 68%] Built target rm_contract_test
+[ 76%] Built target phase2_contract_test
+[ 80%] Building CXX object CMakeFiles/group_preempt_test.dir/src/group_preempt_test.cpp.o
+[ 88%] Built target group_binding_test
+[ 92%] Linking CXX executable group_preempt_test
+[ 92%] Built target group_preempt_test
+[ 96%] Linking CUDA executable bg_worker
+[ 96%] Built target bg_worker
+[100%] Linking CUDA executable int_worker
+[100%] Built target int_worker

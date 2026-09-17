@@ -83,3 +83,31 @@ W2 用低 waves、较长每 CTA 工作；W1 用更多 waves、较短每 CTA 工�
 本轮仅探测 CUPTI 可用性，未实现强制 trace 后端。将来的 backend 应另存 process/context/kernel/graph-node correlation、timestamp 域、丢事件数，并核查 context-switch START/END 的实际语义；官方类型描述的是 switch operation 起止，不直接定义 BG-out/INT-in 或“所有 execution state 已写回”。[官方 activity 类型](https://docs.nvidia.com/cupti/api/structCUpti__ActivityComputeEngineCtxSwitch.html)
 
 尚未覆盖：prequeue 1/4/16、连续 interaction、旧 INT 的 demote/promote 复用、latest-request-wins、取消/回滚与 buffer 回收。当前只编译了单次 launch 的 Graph preempt/resume 路径，没有实机执行；旧队列不会因 PREEMPT 被删除。旧工作可能访问的内存在排空或可靠回收以前不能复用。
+
+## 阶段六：匹配 group 路径的相邻配对
+
+新主对照为 `group-bound-none` vs `group-preempt-wait`；旧 `none` 只作历史背景。每条样本均新建两进程/context，使用同一构建产物、固定工作量、初始化/reference/ping/GET_INFO/observer/短计算复用与清理顺序。两个 owner 各查询一次自己的当前 group；control 的 interaction 阶段只执行准备，无 RM syscall。
+
+`rm_control.cpp:group_owner_action` 在 capture 锁下共用环境/profile/UUID/原 FD 检查；`GroupPreemptOnce::action` 共用完整 generation/ancestry/成员快照、精确 GET_INFO 凭据和 journal 元数据准备，各条件执行一次。prepare 区间包括取锁、文件/环境读取、注册表检查、凭据比较及元数据，不将整段归因于扫描。准备之后，treatment 另检查 active 授权 scope、BG owner 一次额度和 timeout，并写真实 PREEMPT event；control 在独立 `GroupNoop` 阶段返回 `SKIPPED_BY_DESIGN`。两条路径没有人工补时，也不声称 CPU 指令逐条相同。
+
+schema 2 原字段含义保持，新增 `measurement_contract=group-preparation-v1` 及以下尾部字段。配对分析只接受该 contract 与冻结配置，不能混入历史 schema 2 结果：
+
+| 字段 | 含义 |
+|---|---|
+| batch_id / pair_id / pair_order / condition / run_id | 冻结计划中的批次、外层 pair、CT/TC、control/treatment、唯一运行目录名 |
+| local_trial_id | 每次新进程内始终为 0，与外层 pair_id 独立 |
+| planned_delay_us / actual_delay_ns / trigger_lateness_ns | 预选 BG main host marker 后延迟；实际 trigger−main；实际减计划。相同 host delay 不保证相同硬件 timeslice phase |
+| T_owner_received | `T_ipc_received` 的显式别名，同一次观测 |
+| T_owner_prepare_begin/end | 共用准备区间（begin 在取锁前） |
+| T_owner_action_end | no-op 决定跳过或真实 control 结果已进入 RM journal 后的时刻；随后发布 preparation event、返回并写 owner ack |
+| preparation_seq | 独立准备事件序号；不计入 RM controls |
+
+journal 的 schema-2 binary 布局不变。新的本地事件使用已有参数区的带 magic/version 的 payload，JSON `command=null`，`event_kind=CONTROL_PREPARATION[_NOOP]`、`attempted=false`；no-op `outcome=SKIPPED_BY_DESIGN`，syscall/errno/NV_STATUS/实际 call begin/end 均 null。真实 GET_INFO/PREEMPT 为 `event_kind=RM_CONTROL`，各自计数；libcuda 自身的 controls 另计。preparation 的完成不是 NV_OK，也不授权 channel 或 active 操作。
+
+主指标为整数纳秒先相减的 `L_entry`、`L_done`，再换算 μs。每对 `Δ=control−treatment`，正值表示主动组观测间隔较小。独立列出提交、IPC send→receive、receive→prepare、prepare、prepare end→RM begin、syscall wall time、IPC round trip。无 syscall 的对照不制造 RM duration。默认不启用 GPU→CPU 时钟映射；observer 在 RM 后才看到 marker 继续标 ambiguous。
+
+固定 seed 20260917 生成 5 CT + 5 TC 的打乱顺序，每对一个预选 delay。每 run 的共同配置指纹保留所有配置键，仅排除 mode/condition 和批次标识；完整二进制指纹另核对。记录实际两 owner CPU affinity（不改亲和性/优先级）、GPU clocks/温度/利用率快照（在关键路径外读取、不修改）。
+
+`run_paired.py` 在 spawn **之前**持久化 reservation。最多十个主动槽位；失败、在途未知或 worker 崩溃不退还槽位，不恢复批次、不补样。worker 每进程最多一次且仅 trial0 的门槛不变。RM/CUDA/观测/正确性/清理/配置错误停止后续 run；before-RM、ambiguous、变慢、无 overlap、BG 已完成本身不导致重试或删样。进程树处理复用已有有界清理，并覆盖 runner interrupt。SIGKILL/内核停滞无法承诺恢复，未知状态留在账本并禁止自动续跑。
+
+`analyze_pairs.py` 保留全部计划行和已知应用区间；缺失值为空/unknown，错误与正确性标签单列。配置不匹配的原始值仍展示，但不能形成配对 delta。另列 complete/correct 子集，不能替代主表。报告原始值、中位数、均值/范围、正负/零的对数、CT/TC 分组及各独立维度，不生成小批次 p95/p99/SLA 或按显著性加样。精确硬件 preempt/context-save/resume 均仍 unmeasured。

@@ -13,7 +13,7 @@ import sys
 import time
 from summarize import read_rows,summarize,ACCEPTED
 
-BASELINES={'int-only','none'}
+BASELINES={'int-only','none','group-bound-none'}
 MODES=BASELINES|{'timeslice','preempt-wait','group-preempt-wait','preempt-async','realtime-only','realtime-restart','disable','disable-split'}
 EXTENDED={'preempt-async','disable','disable-split'}
 
@@ -76,8 +76,8 @@ def run_process_group(cmd,env,log,timeout,grace=8):
                     termination=[],recovery='not_started')
     actions=[];timed_out=False
     try:code=process.wait(timeout=timeout)
-    except subprocess.TimeoutExpired:
-        timed_out=True;code=124;actions.append('SIGTERM_PROCESS_GROUP_FOR_OWNER_CLEANUP')
+    except (subprocess.TimeoutExpired,KeyboardInterrupt,InterruptedError) as e:
+        timed_out=isinstance(e,subprocess.TimeoutExpired);code=124 if timed_out else 130;actions.append('SIGTERM_PROCESS_GROUP_FOR_OWNER_CLEANUP')
         try:os.killpg(process.pid,signal.SIGTERM)
         except ProcessLookupError:pass
         try:process.wait(timeout=grace)
@@ -132,6 +132,8 @@ def validate_admission(args):
     if not set(args.modes)<=MODES:raise ValueError('unknown mode')
     if not 1<=args.trials<=100000:raise ValueError('trials must be 1..100000')
     if set(args.modes)-BASELINES and not args.test_host_confirmed:raise ValueError('Active modes require --test-host-confirmed; no privilege changes are performed')
+    if 'group-bound-none' in args.modes and (args.trials!=1 or args.graph or args.diagnostic_progress or args.test_host_confirmed or not args.bg_iterations or not args.int_iterations):
+        raise ValueError('group-bound-none requires one plain fixed-work trial without active authorization')
     if 'group-preempt-wait' in args.modes:
         if args.modes!=['group-preempt-wait'] or args.trials!=1 or args.graph or args.diagnostic_progress or args.force or args.bypass or args.allow_extended:
             raise ValueError('Group PREEMPT is one plain synchronous smoke only; no other modes/options')
@@ -159,6 +161,7 @@ def main():
     p.add_argument('--bg-iterations',type=int,default=0);p.add_argument('--int-iterations',type=int,default=0)
     p.add_argument('--force',type=int,choices=[0,1],default=0);p.add_argument('--bypass',type=int,choices=[0,1],default=0)
     p.add_argument('--timeslice-us',type=int,default=1)
+    p.add_argument('--trigger-delay-us',type=int,choices=range(1000,5001),metavar='1000..5000')
     for flag in ('graph','diagnostic-progress','test-host-confirmed','allow-extended','graph-evidence-reviewed'):p.add_argument('--'+flag,action='store_true')
     p.add_argument('--smoke-evidence',type=Path);p.add_argument('--primitive-evidence',type=Path)
     p.add_argument('--paired-none',type=Path,help='For one group-preempt-wait smoke: completed none directory; freeze its iterations and compare scope/build')
@@ -215,6 +218,7 @@ def main():
         name=f'{mode}-f{a.force}-b{a.bypass}';out=a.output/name
         cmd=[str(a.build/'int_worker'),'--run-dir',str(out),'--mode',mode,'--trials',str(a.trials),'--cta-waves',str(a.cta_waves),
              '--heartbeat-ns',str(a.heartbeat_ns),'--timeslice-us',str(a.timeslice_us),'--force',str(a.force),'--bypass',str(a.bypass)]
+        if a.trigger_delay_us:cmd+=['--trigger-delay-us',str(a.trigger_delay_us)]
         for flag in ('graph','diagnostic_progress','test_host_confirmed','allow_extended','graph_evidence_reviewed'):
             if getattr(a,flag):cmd.append('--'+flag.replace('_','-'))
         for key,value in [('bg-iterations',bg_iterations),('int-iterations',int_iterations)]:

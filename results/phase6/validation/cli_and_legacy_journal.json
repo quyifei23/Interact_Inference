@@ -1,0 +1,153 @@
+{
+  "utc": "2026-09-17T08:32:21.902576+00:00",
+  "checks": [
+    {
+      "argv": [
+        "active-preempt/build/int_worker",
+        "--help"
+      ],
+      "returncode": 0,
+      "stdout": "int_worker --probe-cuda | --probe-rm-observe | --probe-rm-identity | --probe-rm-readonly | --probe-rm-group-info [--run-dir DIR]\nGroup-info requires CUDA_VISIBLE_DEVICES=<one full GPU UUID>; adds GET_INFO once, no other controls.\nint_worker --run-dir DIR --mode int-only|none|timeslice|preempt-wait|group-bound-none|group-preempt-wait|preempt-async|realtime-only|realtime-restart|realtime|disable|disable-split\n[--trials 1] [--cta-waves 1..16] [--bg-iterations N] [--int-iterations N] [--bg-us 80000] [--int-us 300]\n[--trigger-delay-us 1000..5000] [--heartbeat-ns 2000] [--timeslice-us 1] [--force 0|1] [--bypass 0|1] [--diagnostic-progress]\nActive modes require --test-host-confirmed. Async/force/bypass/D also require --allow-extended.\ngroup-preempt-wait: one plain trial, fixed BG/INT iterations, one explicit GPU UUID; BG owner only.\nGraph requires --graph --graph-evidence-reviewed after independent plain-kernel evidence review. --probe aliases --probe-cuda.\n",
+      "stderr": "",
+      "expected_success": true
+    },
+    {
+      "argv": [
+        "active-preempt/build/int_worker",
+        "--mode",
+        "group-preempt-wait",
+        "--bg-iterations",
+        "1630976",
+        "--int-iterations",
+        "5888"
+      ],
+      "returncode": 1,
+      "stdout": "",
+      "stderr": "Error: Active mode requires --test-host-confirmed (isolated authorized GPU host)\n",
+      "expected_success": false
+    },
+    {
+      "argv": [
+        "active-preempt/build/int_worker",
+        "--mode",
+        "group-bound-none",
+        "--trials",
+        "2",
+        "--bg-iterations",
+        "1630976",
+        "--int-iterations",
+        "5888"
+      ],
+      "returncode": 1,
+      "stdout": "",
+      "stderr": "Error: group-preempt-wait requires one plain trial and frozen BG/INT iterations; no extended/diagnostic options\n",
+      "expected_success": false
+    },
+    {
+      "argv": [
+        "active-preempt/build/int_worker",
+        "--mode",
+        "group-bound-none",
+        "--test-host-confirmed",
+        "--bg-iterations",
+        "1630976",
+        "--int-iterations",
+        "5888"
+      ],
+      "returncode": 1,
+      "stdout": "",
+      "stderr": "Error: group-bound-none is non-active; do not pass active authorization\n",
+      "expected_success": false
+    },
+    {
+      "argv": [
+        "active-preempt/build/int_worker",
+        "--mode",
+        "group-bound-none",
+        "--trigger-delay-us",
+        "999"
+      ],
+      "returncode": 1,
+      "stdout": "",
+      "stderr": "Error: trigger delay must be 1000..5000 us\n",
+      "expected_success": false
+    },
+    {
+      "argv": [
+        "active-preempt/build-595/int_worker",
+        "--help"
+      ],
+      "returncode": 0,
+      "stdout": "int_worker --probe-cuda | --probe-rm-observe | --probe-rm-identity | --probe-rm-readonly | --probe-rm-group-info [--run-dir DIR]\nGroup-info requires CUDA_VISIBLE_DEVICES=<one full GPU UUID>; adds GET_INFO once, no other controls.\nint_worker --run-dir DIR --mode int-only|none|timeslice|preempt-wait|group-bound-none|group-preempt-wait|preempt-async|realtime-only|realtime-restart|realtime|disable|disable-split\n[--trials 1] [--cta-waves 1..16] [--bg-iterations N] [--int-iterations N] [--bg-us 80000] [--int-us 300]\n[--trigger-delay-us 1000..5000] [--heartbeat-ns 2000] [--timeslice-us 1] [--force 0|1] [--bypass 0|1] [--diagnostic-progress]\nActive modes require --test-host-confirmed. Async/force/bypass/D also require --allow-extended.\ngroup-preempt-wait: one plain trial, fixed BG/INT iterations, one explicit GPU UUID; BG owner only.\nGraph requires --graph --graph-evidence-reviewed after independent plain-kernel evidence review. --probe aliases --probe-cuda.\n",
+      "stderr": "",
+      "expected_success": true
+    },
+    {
+      "argv": [
+        "active-preempt/build-595/int_worker",
+        "--mode",
+        "group-preempt-wait",
+        "--bg-iterations",
+        "1630976",
+        "--int-iterations",
+        "5888"
+      ],
+      "returncode": 1,
+      "stdout": "",
+      "stderr": "Error: Active mode requires --test-host-confirmed (isolated authorized GPU host)\n",
+      "expected_success": false
+    },
+    {
+      "argv": [
+        "active-preempt/build-595/int_worker",
+        "--mode",
+        "group-bound-none",
+        "--trials",
+        "2",
+        "--bg-iterations",
+        "1630976",
+        "--int-iterations",
+        "5888"
+      ],
+      "returncode": 1,
+      "stdout": "",
+      "stderr": "Error: group-preempt-wait requires one plain trial and frozen BG/INT iterations; no extended/diagnostic options\n",
+      "expected_success": false
+    },
+    {
+      "argv": [
+        "active-preempt/build-595/int_worker",
+        "--mode",
+        "group-bound-none",
+        "--test-host-confirmed",
+        "--bg-iterations",
+        "1630976",
+        "--int-iterations",
+        "5888"
+      ],
+      "returncode": 1,
+      "stdout": "",
+      "stderr": "Error: group-bound-none is non-active; do not pass active authorization\n",
+      "expected_success": false
+    },
+    {
+      "argv": [
+        "active-preempt/build-595/int_worker",
+        "--mode",
+        "group-bound-none",
+        "--trigger-delay-us",
+        "999"
+      ],
+      "returncode": 1,
+      "stdout": "",
+      "stderr": "Error: trigger delay must be 1000..5000 us\n",
+      "expected_success": false
+    },
+    {
+      "call": "recover phase5 journal with phase6 event_dump",
+      "returncode": 0,
+      "retained_all_prior_fields": true,
+      "events": 2
+    }
+  ]
+}

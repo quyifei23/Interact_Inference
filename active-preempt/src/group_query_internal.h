@@ -25,9 +25,13 @@ class GroupPreemptOnce {
 public:
     ControlResult preempt(const ObjectRegistry&,ProfileState&,const GroupBinding&,const GroupInfoOnce&,
                           bool retained_fd_valid,ControlJournal&,int64_t trial,uint32_t timeout_us,
-                          GroupIoctl,void* context=nullptr,bool environment_current=true);
+                          GroupIoctl,void* context=nullptr,bool environment_current=true,OwnerActionTiming* timing=nullptr,bool target_completed=false);
+    ControlResult prepare_noop(const ObjectRegistry&,ProfileState&,const GroupBinding&,const GroupInfoOnce&,
+                          bool retained_fd_valid,ControlJournal&,int64_t trial,bool environment_current=true,OwnerActionTiming* timing=nullptr);
 private:
     bool consumed_=false;
+    ControlResult action(const ObjectRegistry&,ProfileState&,const GroupBinding&,const GroupInfoOnce&,
+                         bool,ControlJournal&,int64_t,uint32_t,GroupIoctl,void*,bool,OwnerActionTiming*,bool,bool);
 };
 // Caller holds Capture::mutex over validation, syscall and journaling. This
 // covers observed alloc/free/bind, not hidden/direct driver syscalls.

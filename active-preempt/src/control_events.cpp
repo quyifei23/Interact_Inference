@@ -20,8 +20,12 @@ void dump(const void* data,size_t length,const std::string& path){
     const auto* events=reinterpret_cast<const ControlEvent*>(static_cast<const char*>(data)+event_offset);
     for(size_t i=0;i<std::min<size_t>(__atomic_load_n(&h.count,__ATOMIC_ACQUIRE),event_capacity);++i){
         const auto& e=events[i];uint32_t state=__atomic_load_n(&e.state,__ATOMIC_ACQUIRE);if(!state)continue;
+        PreparationEvent prep{};
+        const bool local=e.command==0&&e.size==sizeof(prep);
+        if(local)std::memcpy(&prep,e.params,sizeof(prep));
+        const bool preparation=local&&prep.magic==PreparationEvent{}.magic&&prep.revision==1;
         f<<"{\"schema_version\":2,\"run_id\":"<<json_string(h.run_id)<<",\"owner\":"<<json_string(h.owner)<<",\"pid\":"<<e.pid<<",\"trial_id\":"<<e.trial<<",\"operation_seq\":"<<e.sequence
-         <<",\"driver_profile\":"<<json_string(h.profile[0]?h.profile:"550.120")<<",\"source_commit\":"<<json_string(h.source_commit)<<",\"command\":"<<e.command<<",\"params_size\":"<<e.size<<",\"params_hex\":\"";
+         <<",\"driver_profile\":"<<json_string(h.profile[0]?h.profile:"550.120")<<",\"source_commit\":"<<json_string(h.source_commit)<<",\"command\":"<<(preparation?"null":std::to_string(e.command))<<",\"params_size\":"<<e.size<<",\"params_hex\":\"";
         for(unsigned j=0;j<e.size&&j<event_param_capacity;++j)f<<std::hex<<std::setw(2)<<std::setfill('0')<<unsigned(e.params[j]);
         f<<std::dec<<"\",\"target_scope\":"<<json_string(e.group&&e.object==e.group?"group":"channel_or_subdevice")
          <<",\"target\":{\"hClient\":"<<e.client<<",\"hDevice\":"<<e.device<<",\"hSubdevice\":"<<e.subdevice<<",\"hTSG\":"<<e.group<<",\"hChannel\":";
@@ -29,8 +33,16 @@ void dump(const void* data,size_t length,const std::string& path){
         f<<",\"hObject\":"<<e.object<<",\"fd\":"<<e.fd<<",\"client_generation\":"<<e.client_generation<<",\"group_generation\":"<<e.group_generation<<",\"target_generation\":"<<e.target_generation<<"}";
         f<<",\"hardware_tsg_id\":";if(e.tsg_id!=0xffffffff||(e.command==NVA06C_CTRL_CMD_GET_INFO&&!e.channel&&state==2&&e.result.ok()))f<<e.tsg_id;else f<<"null";
         f<<",\"engine_type\":";if(e.engine)f<<e.engine;else f<<"null";
-        f<<",\"hardware_channel_id\":null,\"runlist_id\":null,\"operation_state\":"<<json_string(state==1?"IN_FLIGHT":(e.result.attempted?"RETURNED":"REJECTED_BEFORE_IOCTL"))<<",\"call_begin_ns\":";
-        if(e.result.begin_ns)f<<e.result.begin_ns;else f<<"null";
+        f<<",\"event_kind\":"<<json_string(preparation?(prep.noop?"CONTROL_PREPARATION_NOOP":"CONTROL_PREPARATION"):"RM_CONTROL")
+         <<",\"attempted\":"<<(state==2?(e.result.attempted?"true":"false"):"null")
+         <<",\"outcome\":"<<json_string(state==2?e.result.category():"unknown");
+        if(preparation){
+            f<<",\"T_owner_prepare_begin\":"<<prep.timing.prepare_begin_ns<<",\"T_owner_prepare_end\":";
+            if(state==2)f<<prep.timing.prepare_end_ns;else f<<"null";
+            f<<",\"T_owner_action_end\":";if(state==2)f<<prep.timing.action_end_ns;else f<<"null";
+        }
+        f<<",\"hardware_channel_id\":null,\"runlist_id\":null,\"operation_state\":"<<json_string(state==1?"IN_FLIGHT":(preparation?"LOCAL_PREPARATION_COMPLETED":(e.result.attempted?"RETURNED":"REJECTED_BEFORE_IOCTL")))<<",\"call_begin_ns\":";
+        if(!preparation&&e.result.begin_ns)f<<e.result.begin_ns;else f<<"null";
         if(state==2){f<<",\"call_end_ns\":";if(e.result.end_ns)f<<e.result.end_ns;else f<<"null";
             f<<",\"syscall_return\":";if(e.result.attempted)f<<e.result.syscall_result;else f<<"null";
             f<<",\"errno\":";if(e.result.attempted)f<<e.result.syscall_errno;else f<<"null";

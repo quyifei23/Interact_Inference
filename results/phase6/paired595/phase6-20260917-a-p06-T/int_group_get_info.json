@@ -1,0 +1,1 @@
+{"pid":2342305,"hClient":3252373804,"hObject":1543503948,"attempted":true,"syscall_return":0,"errno":0,"NV_STATUS_raw":0,"operation_seq":1,"verified":true,"call_begin_ns":3812362174314974,"call_end_ns":3812362174367824,"hardware_tsg_id":10,"result":"CONTROL_ACCEPTED_EFFECT_UNVERIFIED attempted=1 ioctl=0 errno=0 rm_status=0x0"}

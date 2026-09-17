@@ -1,0 +1,1264 @@
+{
+  "utc": "2026-09-17T08:31:29.213624+00:00",
+  "status": "all batch raw/configuration/identity/journal/cleanup checks passed",
+  "batch_only": true,
+  "runs": 20,
+  "pairs": 10,
+  "project_get_info": 40,
+  "project_preempt": 10,
+  "project_other_controls": 0,
+  "libcuda_rm_controls_observed_before_cleanup_sum": 28800,
+  "binary_sha256_still_matches_plan": true,
+  "records": [
+    {
+      "run_id": "phase6-20260917-a-p00-T",
+      "owners": {
+        "bg": {
+          "pid": 2341756,
+          "group_handle": 1543503948,
+          "group_generation": 76,
+          "client": 3252373654,
+          "engine": 1,
+          "channels": 8,
+          "compute_children": [
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1
+          ],
+          "hardware_tsg_id": 6,
+          "get_info_attempts": 1,
+          "preempt_attempts": 1,
+          "application_rm_controls_observed": 720
+        },
+        "int": {
+          "pid": 2341755,
+          "group_handle": 1543503948,
+          "group_generation": 76,
+          "client": 3252373658,
+          "engine": 1,
+          "channels": 8,
+          "compute_children": [
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1
+          ],
+          "hardware_tsg_id": 10,
+          "get_info_attempts": 1,
+          "preempt_attempts": 0,
+          "application_rm_controls_observed": 720
+        }
+      },
+      "configuration_sha256": "6e65980373950f2920b5315acdf34957990bf539b9614cd57c5ff32a9942ab30",
+      "query_count": 2,
+      "preempt_count": 1,
+      "other_controls_count": 0,
+      "PREEMPT_raw": [
+        {
+          "syscall_return": 0,
+          "errno": 0,
+          "rm_status": 0,
+          "call_begin_ns": 3812336556256990,
+          "call_end_ns": 3812336556731756,
+          "params_hex": "0101000040420f00"
+        }
+      ],
+      "control_status": "CONTROL_ACCEPTED_EFFECT_UNVERIFIED",
+      "ordering": "ordering_ambiguous",
+      "correctness": "PASS",
+      "cleanup_and_reuse_verified": true
+    },
+    {
+      "run_id": "phase6-20260917-a-p00-C",
+      "owners": {
+        "bg": {
+          "pid": 2341817,
+          "group_handle": 1543503948,
+          "group_generation": 76,
+          "client": 3252373667,
+          "engine": 1,
+          "channels": 8,
+          "compute_children": [
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1
+          ],
+          "hardware_tsg_id": 6,
+          "get_info_attempts": 1,
+          "preempt_attempts": 0,
+          "application_rm_controls_observed": 720
+        },
+        "int": {
+          "pid": 2341816,
+          "group_handle": 1543503948,
+          "group_generation": 76,
+          "client": 3252373671,
+          "engine": 1,
+          "channels": 8,
+          "compute_children": [
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1
+          ],
+          "hardware_tsg_id": 10,
+          "get_info_attempts": 1,
+          "preempt_attempts": 0,
+          "application_rm_controls_observed": 720
+        }
+      },
+      "configuration_sha256": "6e65980373950f2920b5315acdf34957990bf539b9614cd57c5ff32a9942ab30",
+      "query_count": 2,
+      "preempt_count": 0,
+      "other_controls_count": 0,
+      "PREEMPT_raw": [],
+      "control_status": "SKIPPED_BY_DESIGN",
+      "ordering": "not_applicable",
+      "correctness": "PASS",
+      "cleanup_and_reuse_verified": true
+    },
+    {
+      "run_id": "phase6-20260917-a-p01-T",
+      "owners": {
+        "bg": {
+          "pid": 2341850,
+          "group_handle": 1543503948,
+          "group_generation": 76,
+          "client": 3252373679,
+          "engine": 1,
+          "channels": 8,
+          "compute_children": [
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1
+          ],
+          "hardware_tsg_id": 6,
+          "get_info_attempts": 1,
+          "preempt_attempts": 1,
+          "application_rm_controls_observed": 720
+        },
+        "int": {
+          "pid": 2341849,
+          "group_handle": 1543503948,
+          "group_generation": 76,
+          "client": 3252373683,
+          "engine": 1,
+          "channels": 8,
+          "compute_children": [
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1
+          ],
+          "hardware_tsg_id": 10,
+          "get_info_attempts": 1,
+          "preempt_attempts": 0,
+          "application_rm_controls_observed": 720
+        }
+      },
+      "configuration_sha256": "085e08e193f261545690500a823c580d48ba5bc3a0b7f3ce4e63e49df815fc81",
+      "query_count": 2,
+      "preempt_count": 1,
+      "other_controls_count": 0,
+      "PREEMPT_raw": [
+        {
+          "syscall_return": 0,
+          "errno": 0,
+          "rm_status": 0,
+          "call_begin_ns": 3812341052783105,
+          "call_end_ns": 3812341053255141,
+          "params_hex": "0101000040420f00"
+        }
+      ],
+      "control_status": "CONTROL_ACCEPTED_EFFECT_UNVERIFIED",
+      "ordering": "ordering_ambiguous",
+      "correctness": "PASS",
+      "cleanup_and_reuse_verified": true
+    },
+    {
+      "run_id": "phase6-20260917-a-p01-C",
+      "owners": {
+        "bg": {
+          "pid": 2341877,
+          "group_handle": 1543503948,
+          "group_generation": 76,
+          "client": 3252373691,
+          "engine": 1,
+          "channels": 8,
+          "compute_children": [
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1
+          ],
+          "hardware_tsg_id": 6,
+          "get_info_attempts": 1,
+          "preempt_attempts": 0,
+          "application_rm_controls_observed": 720
+        },
+        "int": {
+          "pid": 2341876,
+          "group_handle": 1543503948,
+          "group_generation": 76,
+          "client": 3252373695,
+          "engine": 1,
+          "channels": 8,
+          "compute_children": [
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1
+          ],
+          "hardware_tsg_id": 10,
+          "get_info_attempts": 1,
+          "preempt_attempts": 0,
+          "application_rm_controls_observed": 720
+        }
+      },
+      "configuration_sha256": "085e08e193f261545690500a823c580d48ba5bc3a0b7f3ce4e63e49df815fc81",
+      "query_count": 2,
+      "preempt_count": 0,
+      "other_controls_count": 0,
+      "PREEMPT_raw": [],
+      "control_status": "SKIPPED_BY_DESIGN",
+      "ordering": "not_applicable",
+      "correctness": "PASS",
+      "cleanup_and_reuse_verified": true
+    },
+    {
+      "run_id": "phase6-20260917-a-p02-C",
+      "owners": {
+        "bg": {
+          "pid": 2341938,
+          "group_handle": 1543503948,
+          "group_generation": 76,
+          "client": 3252373703,
+          "engine": 1,
+          "channels": 8,
+          "compute_children": [
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1
+          ],
+          "hardware_tsg_id": 6,
+          "get_info_attempts": 1,
+          "preempt_attempts": 0,
+          "application_rm_controls_observed": 720
+        },
+        "int": {
+          "pid": 2341937,
+          "group_handle": 1543503948,
+          "group_generation": 76,
+          "client": 3252373707,
+          "engine": 1,
+          "channels": 8,
+          "compute_children": [
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1
+          ],
+          "hardware_tsg_id": 10,
+          "get_info_attempts": 1,
+          "preempt_attempts": 0,
+          "application_rm_controls_observed": 720
+        }
+      },
+      "configuration_sha256": "dbe130dd98df24b4d5c982171b38997de01ce36b83ac47dd87c0291559af732c",
+      "query_count": 2,
+      "preempt_count": 0,
+      "other_controls_count": 0,
+      "PREEMPT_raw": [],
+      "control_status": "SKIPPED_BY_DESIGN",
+      "ordering": "not_applicable",
+      "correctness": "PASS",
+      "cleanup_and_reuse_verified": true
+    },
+    {
+      "run_id": "phase6-20260917-a-p02-T",
+      "owners": {
+        "bg": {
+          "pid": 2341967,
+          "group_handle": 1543503948,
+          "group_generation": 76,
+          "client": 3252373715,
+          "engine": 1,
+          "channels": 8,
+          "compute_children": [
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1
+          ],
+          "hardware_tsg_id": 6,
+          "get_info_attempts": 1,
+          "preempt_attempts": 1,
+          "application_rm_controls_observed": 720
+        },
+        "int": {
+          "pid": 2341966,
+          "group_handle": 1543503948,
+          "group_generation": 76,
+          "client": 3252373719,
+          "engine": 1,
+          "channels": 8,
+          "compute_children": [
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1
+          ],
+          "hardware_tsg_id": 10,
+          "get_info_attempts": 1,
+          "preempt_attempts": 0,
+          "application_rm_controls_observed": 720
+        }
+      },
+      "configuration_sha256": "dbe130dd98df24b4d5c982171b38997de01ce36b83ac47dd87c0291559af732c",
+      "query_count": 2,
+      "preempt_count": 1,
+      "other_controls_count": 0,
+      "PREEMPT_raw": [
+        {
+          "syscall_return": 0,
+          "errno": 0,
+          "rm_status": 0,
+          "call_begin_ns": 3812346936341709,
+          "call_end_ns": 3812346936639038,
+          "params_hex": "0101000040420f00"
+        }
+      ],
+      "control_status": "CONTROL_ACCEPTED_EFFECT_UNVERIFIED",
+      "ordering": "ordering_ambiguous",
+      "correctness": "PASS",
+      "cleanup_and_reuse_verified": true
+    },
+    {
+      "run_id": "phase6-20260917-a-p03-C",
+      "owners": {
+        "bg": {
+          "pid": 2342020,
+          "group_handle": 1543503948,
+          "group_generation": 76,
+          "client": 3252373727,
+          "engine": 1,
+          "channels": 8,
+          "compute_children": [
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1
+          ],
+          "hardware_tsg_id": 6,
+          "get_info_attempts": 1,
+          "preempt_attempts": 0,
+          "application_rm_controls_observed": 720
+        },
+        "int": {
+          "pid": 2342019,
+          "group_handle": 1543503948,
+          "group_generation": 76,
+          "client": 3252373731,
+          "engine": 1,
+          "channels": 8,
+          "compute_children": [
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1
+          ],
+          "hardware_tsg_id": 10,
+          "get_info_attempts": 1,
+          "preempt_attempts": 0,
+          "application_rm_controls_observed": 720
+        }
+      },
+      "configuration_sha256": "88b545aad5efd8a60de5616bab895a393898ed184c0c873dc95ca5ae5ba68f43",
+      "query_count": 2,
+      "preempt_count": 0,
+      "other_controls_count": 0,
+      "PREEMPT_raw": [],
+      "control_status": "SKIPPED_BY_DESIGN",
+      "ordering": "not_applicable",
+      "correctness": "PASS",
+      "cleanup_and_reuse_verified": true
+    },
+    {
+      "run_id": "phase6-20260917-a-p03-T",
+      "owners": {
+        "bg": {
+          "pid": 2342090,
+          "group_handle": 1543503948,
+          "group_generation": 76,
+          "client": 3252373739,
+          "engine": 1,
+          "channels": 8,
+          "compute_children": [
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1
+          ],
+          "hardware_tsg_id": 6,
+          "get_info_attempts": 1,
+          "preempt_attempts": 1,
+          "application_rm_controls_observed": 720
+        },
+        "int": {
+          "pid": 2342089,
+          "group_handle": 1543503948,
+          "group_generation": 76,
+          "client": 3252373743,
+          "engine": 1,
+          "channels": 8,
+          "compute_children": [
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1
+          ],
+          "hardware_tsg_id": 10,
+          "get_info_attempts": 1,
+          "preempt_attempts": 0,
+          "application_rm_controls_observed": 720
+        }
+      },
+      "configuration_sha256": "88b545aad5efd8a60de5616bab895a393898ed184c0c873dc95ca5ae5ba68f43",
+      "query_count": 2,
+      "preempt_count": 1,
+      "other_controls_count": 0,
+      "PREEMPT_raw": [
+        {
+          "syscall_return": 0,
+          "errno": 0,
+          "rm_status": 0,
+          "call_begin_ns": 3812351065443007,
+          "call_end_ns": 3812351065913478,
+          "params_hex": "0101000040420f00"
+        }
+      ],
+      "control_status": "CONTROL_ACCEPTED_EFFECT_UNVERIFIED",
+      "ordering": "ordering_ambiguous",
+      "correctness": "PASS",
+      "cleanup_and_reuse_verified": true
+    },
+    {
+      "run_id": "phase6-20260917-a-p04-C",
+      "owners": {
+        "bg": {
+          "pid": 2342147,
+          "group_handle": 1543503948,
+          "group_generation": 76,
+          "client": 3252373752,
+          "engine": 1,
+          "channels": 8,
+          "compute_children": [
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1
+          ],
+          "hardware_tsg_id": 6,
+          "get_info_attempts": 1,
+          "preempt_attempts": 0,
+          "application_rm_controls_observed": 720
+        },
+        "int": {
+          "pid": 2342146,
+          "group_handle": 1543503948,
+          "group_generation": 76,
+          "client": 3252373756,
+          "engine": 1,
+          "channels": 8,
+          "compute_children": [
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1
+          ],
+          "hardware_tsg_id": 10,
+          "get_info_attempts": 1,
+          "preempt_attempts": 0,
+          "application_rm_controls_observed": 720
+        }
+      },
+      "configuration_sha256": "4b322e5672c8e581b797e1a0b0be2f10239f0926b5c044311030fa1047a4dac7",
+      "query_count": 2,
+      "preempt_count": 0,
+      "other_controls_count": 0,
+      "PREEMPT_raw": [],
+      "control_status": "SKIPPED_BY_DESIGN",
+      "ordering": "not_applicable",
+      "correctness": "PASS",
+      "cleanup_and_reuse_verified": true
+    },
+    {
+      "run_id": "phase6-20260917-a-p04-T",
+      "owners": {
+        "bg": {
+          "pid": 2342186,
+          "group_handle": 1543503948,
+          "group_generation": 76,
+          "client": 3252373764,
+          "engine": 1,
+          "channels": 8,
+          "compute_children": [
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1
+          ],
+          "hardware_tsg_id": 6,
+          "get_info_attempts": 1,
+          "preempt_attempts": 1,
+          "application_rm_controls_observed": 720
+        },
+        "int": {
+          "pid": 2342185,
+          "group_handle": 1543503948,
+          "group_generation": 76,
+          "client": 3252373768,
+          "engine": 1,
+          "channels": 8,
+          "compute_children": [
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1
+          ],
+          "hardware_tsg_id": 10,
+          "get_info_attempts": 1,
+          "preempt_attempts": 0,
+          "application_rm_controls_observed": 720
+        }
+      },
+      "configuration_sha256": "4b322e5672c8e581b797e1a0b0be2f10239f0926b5c044311030fa1047a4dac7",
+      "query_count": 2,
+      "preempt_count": 1,
+      "other_controls_count": 0,
+      "PREEMPT_raw": [
+        {
+          "syscall_return": 0,
+          "errno": 0,
+          "rm_status": 0,
+          "call_begin_ns": 3812355683437120,
+          "call_end_ns": 3812355683916667,
+          "params_hex": "0101000040420f00"
+        }
+      ],
+      "control_status": "CONTROL_ACCEPTED_EFFECT_UNVERIFIED",
+      "ordering": "ordering_ambiguous",
+      "correctness": "PASS",
+      "cleanup_and_reuse_verified": true
+    },
+    {
+      "run_id": "phase6-20260917-a-p05-T",
+      "owners": {
+        "bg": {
+          "pid": 2342221,
+          "group_handle": 1543503948,
+          "group_generation": 76,
+          "client": 3252373776,
+          "engine": 1,
+          "channels": 8,
+          "compute_children": [
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1
+          ],
+          "hardware_tsg_id": 6,
+          "get_info_attempts": 1,
+          "preempt_attempts": 1,
+          "application_rm_controls_observed": 720
+        },
+        "int": {
+          "pid": 2342220,
+          "group_handle": 1543503948,
+          "group_generation": 76,
+          "client": 3252373780,
+          "engine": 1,
+          "channels": 8,
+          "compute_children": [
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1
+          ],
+          "hardware_tsg_id": 10,
+          "get_info_attempts": 1,
+          "preempt_attempts": 0,
+          "application_rm_controls_observed": 720
+        }
+      },
+      "configuration_sha256": "02861f479c794f96555b485b8a252e14915892e436bac896d34aa9259b190320",
+      "query_count": 2,
+      "preempt_count": 1,
+      "other_controls_count": 0,
+      "PREEMPT_raw": [
+        {
+          "syscall_return": 0,
+          "errno": 0,
+          "rm_status": 0,
+          "call_begin_ns": 3812358005861532,
+          "call_end_ns": 3812358006341250,
+          "params_hex": "0101000040420f00"
+        }
+      ],
+      "control_status": "CONTROL_ACCEPTED_EFFECT_UNVERIFIED",
+      "ordering": "ordering_ambiguous",
+      "correctness": "PASS",
+      "cleanup_and_reuse_verified": true
+    },
+    {
+      "run_id": "phase6-20260917-a-p05-C",
+      "owners": {
+        "bg": {
+          "pid": 2342279,
+          "group_handle": 1543503948,
+          "group_generation": 76,
+          "client": 3252373788,
+          "engine": 1,
+          "channels": 8,
+          "compute_children": [
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1
+          ],
+          "hardware_tsg_id": 6,
+          "get_info_attempts": 1,
+          "preempt_attempts": 0,
+          "application_rm_controls_observed": 720
+        },
+        "int": {
+          "pid": 2342278,
+          "group_handle": 1543503948,
+          "group_generation": 76,
+          "client": 3252373792,
+          "engine": 1,
+          "channels": 8,
+          "compute_children": [
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1
+          ],
+          "hardware_tsg_id": 10,
+          "get_info_attempts": 1,
+          "preempt_attempts": 0,
+          "application_rm_controls_observed": 720
+        }
+      },
+      "configuration_sha256": "02861f479c794f96555b485b8a252e14915892e436bac896d34aa9259b190320",
+      "query_count": 2,
+      "preempt_count": 0,
+      "other_controls_count": 0,
+      "PREEMPT_raw": [],
+      "control_status": "SKIPPED_BY_DESIGN",
+      "ordering": "not_applicable",
+      "correctness": "PASS",
+      "cleanup_and_reuse_verified": true
+    },
+    {
+      "run_id": "phase6-20260917-a-p06-T",
+      "owners": {
+        "bg": {
+          "pid": 2342306,
+          "group_handle": 1543503948,
+          "group_generation": 76,
+          "client": 3252373800,
+          "engine": 1,
+          "channels": 8,
+          "compute_children": [
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1
+          ],
+          "hardware_tsg_id": 6,
+          "get_info_attempts": 1,
+          "preempt_attempts": 1,
+          "application_rm_controls_observed": 720
+        },
+        "int": {
+          "pid": 2342305,
+          "group_handle": 1543503948,
+          "group_generation": 76,
+          "client": 3252373804,
+          "engine": 1,
+          "channels": 8,
+          "compute_children": [
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1
+          ],
+          "hardware_tsg_id": 10,
+          "get_info_attempts": 1,
+          "preempt_attempts": 0,
+          "application_rm_controls_observed": 720
+        }
+      },
+      "configuration_sha256": "c4babec3a23c94cdab97c7f10427684e9530690ad1386837270ace05e3a64bfc",
+      "query_count": 2,
+      "preempt_count": 1,
+      "other_controls_count": 0,
+      "PREEMPT_raw": [
+        {
+          "syscall_return": 0,
+          "errno": 0,
+          "rm_status": 0,
+          "call_begin_ns": 3812362180699912,
+          "call_end_ns": 3812362181159716,
+          "params_hex": "0101000040420f00"
+        }
+      ],
+      "control_status": "CONTROL_ACCEPTED_EFFECT_UNVERIFIED",
+      "ordering": "ordering_ambiguous",
+      "correctness": "PASS",
+      "cleanup_and_reuse_verified": true
+    },
+    {
+      "run_id": "phase6-20260917-a-p06-C",
+      "owners": {
+        "bg": {
+          "pid": 2342369,
+          "group_handle": 1543503948,
+          "group_generation": 76,
+          "client": 3252373812,
+          "engine": 1,
+          "channels": 8,
+          "compute_children": [
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1
+          ],
+          "hardware_tsg_id": 6,
+          "get_info_attempts": 1,
+          "preempt_attempts": 0,
+          "application_rm_controls_observed": 720
+        },
+        "int": {
+          "pid": 2342368,
+          "group_handle": 1543503948,
+          "group_generation": 76,
+          "client": 3252373816,
+          "engine": 1,
+          "channels": 8,
+          "compute_children": [
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1
+          ],
+          "hardware_tsg_id": 10,
+          "get_info_attempts": 1,
+          "preempt_attempts": 0,
+          "application_rm_controls_observed": 720
+        }
+      },
+      "configuration_sha256": "c4babec3a23c94cdab97c7f10427684e9530690ad1386837270ace05e3a64bfc",
+      "query_count": 2,
+      "preempt_count": 0,
+      "other_controls_count": 0,
+      "PREEMPT_raw": [],
+      "control_status": "SKIPPED_BY_DESIGN",
+      "ordering": "not_applicable",
+      "correctness": "PASS",
+      "cleanup_and_reuse_verified": true
+    },
+    {
+      "run_id": "phase6-20260917-a-p07-C",
+      "owners": {
+        "bg": {
+          "pid": 2342433,
+          "group_handle": 1543503948,
+          "group_generation": 76,
+          "client": 3252373824,
+          "engine": 1,
+          "channels": 8,
+          "compute_children": [
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1
+          ],
+          "hardware_tsg_id": 6,
+          "get_info_attempts": 1,
+          "preempt_attempts": 0,
+          "application_rm_controls_observed": 720
+        },
+        "int": {
+          "pid": 2342432,
+          "group_handle": 1543503948,
+          "group_generation": 76,
+          "client": 3252373828,
+          "engine": 1,
+          "channels": 8,
+          "compute_children": [
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1
+          ],
+          "hardware_tsg_id": 10,
+          "get_info_attempts": 1,
+          "preempt_attempts": 0,
+          "application_rm_controls_observed": 720
+        }
+      },
+      "configuration_sha256": "8b7abcd06299131d5f53b8a7ce177f97f96f5e1c1c853a8524cca562e33d0561",
+      "query_count": 2,
+      "preempt_count": 0,
+      "other_controls_count": 0,
+      "PREEMPT_raw": [],
+      "control_status": "SKIPPED_BY_DESIGN",
+      "ordering": "not_applicable",
+      "correctness": "PASS",
+      "cleanup_and_reuse_verified": true
+    },
+    {
+      "run_id": "phase6-20260917-a-p07-T",
+      "owners": {
+        "bg": {
+          "pid": 2342490,
+          "group_handle": 1543503948,
+          "group_generation": 76,
+          "client": 3252373837,
+          "engine": 1,
+          "channels": 8,
+          "compute_children": [
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1
+          ],
+          "hardware_tsg_id": 6,
+          "get_info_attempts": 1,
+          "preempt_attempts": 1,
+          "application_rm_controls_observed": 720
+        },
+        "int": {
+          "pid": 2342489,
+          "group_handle": 1543503948,
+          "group_generation": 76,
+          "client": 3252373841,
+          "engine": 1,
+          "channels": 8,
+          "compute_children": [
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1
+          ],
+          "hardware_tsg_id": 10,
+          "get_info_attempts": 1,
+          "preempt_attempts": 0,
+          "application_rm_controls_observed": 720
+        }
+      },
+      "configuration_sha256": "8b7abcd06299131d5f53b8a7ce177f97f96f5e1c1c853a8524cca562e33d0561",
+      "query_count": 2,
+      "preempt_count": 1,
+      "other_controls_count": 0,
+      "PREEMPT_raw": [
+        {
+          "syscall_return": 0,
+          "errno": 0,
+          "rm_status": 0,
+          "call_begin_ns": 3812368893399705,
+          "call_end_ns": 3812368893871999,
+          "params_hex": "0101000040420f00"
+        }
+      ],
+      "control_status": "CONTROL_ACCEPTED_EFFECT_UNVERIFIED",
+      "ordering": "ordering_ambiguous",
+      "correctness": "PASS",
+      "cleanup_and_reuse_verified": true
+    },
+    {
+      "run_id": "phase6-20260917-a-p08-C",
+      "owners": {
+        "bg": {
+          "pid": 2342522,
+          "group_handle": 1543503948,
+          "group_generation": 76,
+          "client": 3252373849,
+          "engine": 1,
+          "channels": 8,
+          "compute_children": [
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1
+          ],
+          "hardware_tsg_id": 6,
+          "get_info_attempts": 1,
+          "preempt_attempts": 0,
+          "application_rm_controls_observed": 720
+        },
+        "int": {
+          "pid": 2342521,
+          "group_handle": 1543503948,
+          "group_generation": 76,
+          "client": 3252373853,
+          "engine": 1,
+          "channels": 8,
+          "compute_children": [
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1
+          ],
+          "hardware_tsg_id": 10,
+          "get_info_attempts": 1,
+          "preempt_attempts": 0,
+          "application_rm_controls_observed": 720
+        }
+      },
+      "configuration_sha256": "1657c49f905887bd8cd034bad0ef0997f1824ecb15d12e891093686819fc1b54",
+      "query_count": 2,
+      "preempt_count": 0,
+      "other_controls_count": 0,
+      "PREEMPT_raw": [],
+      "control_status": "SKIPPED_BY_DESIGN",
+      "ordering": "not_applicable",
+      "correctness": "PASS",
+      "cleanup_and_reuse_verified": true
+    },
+    {
+      "run_id": "phase6-20260917-a-p08-T",
+      "owners": {
+        "bg": {
+          "pid": 2342563,
+          "group_handle": 1543503948,
+          "group_generation": 76,
+          "client": 3252373861,
+          "engine": 1,
+          "channels": 8,
+          "compute_children": [
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1
+          ],
+          "hardware_tsg_id": 6,
+          "get_info_attempts": 1,
+          "preempt_attempts": 1,
+          "application_rm_controls_observed": 720
+        },
+        "int": {
+          "pid": 2342562,
+          "group_handle": 1543503948,
+          "group_generation": 76,
+          "client": 3252373865,
+          "engine": 1,
+          "channels": 8,
+          "compute_children": [
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1
+          ],
+          "hardware_tsg_id": 10,
+          "get_info_attempts": 1,
+          "preempt_attempts": 0,
+          "application_rm_controls_observed": 720
+        }
+      },
+      "configuration_sha256": "1657c49f905887bd8cd034bad0ef0997f1824ecb15d12e891093686819fc1b54",
+      "query_count": 2,
+      "preempt_count": 1,
+      "other_controls_count": 0,
+      "PREEMPT_raw": [
+        {
+          "syscall_return": 0,
+          "errno": 0,
+          "rm_status": 0,
+          "call_begin_ns": 3812373131046594,
+          "call_end_ns": 3812373131524820,
+          "params_hex": "0101000040420f00"
+        }
+      ],
+      "control_status": "CONTROL_ACCEPTED_EFFECT_UNVERIFIED",
+      "ordering": "ordering_ambiguous",
+      "correctness": "PASS",
+      "cleanup_and_reuse_verified": true
+    },
+    {
+      "run_id": "phase6-20260917-a-p09-T",
+      "owners": {
+        "bg": {
+          "pid": 2342646,
+          "group_handle": 1543503948,
+          "group_generation": 76,
+          "client": 3252373873,
+          "engine": 1,
+          "channels": 8,
+          "compute_children": [
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1
+          ],
+          "hardware_tsg_id": 6,
+          "get_info_attempts": 1,
+          "preempt_attempts": 1,
+          "application_rm_controls_observed": 720
+        },
+        "int": {
+          "pid": 2342645,
+          "group_handle": 1543503948,
+          "group_generation": 76,
+          "client": 3252373877,
+          "engine": 1,
+          "channels": 8,
+          "compute_children": [
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1
+          ],
+          "hardware_tsg_id": 10,
+          "get_info_attempts": 1,
+          "preempt_attempts": 0,
+          "application_rm_controls_observed": 720
+        }
+      },
+      "configuration_sha256": "9bac87350820250cb9e9e6e2a17429883482bcca15041f95dc78ba26a61397f7",
+      "query_count": 2,
+      "preempt_count": 1,
+      "other_controls_count": 0,
+      "PREEMPT_raw": [
+        {
+          "syscall_return": 0,
+          "errno": 0,
+          "rm_status": 0,
+          "call_begin_ns": 3812375255368200,
+          "call_end_ns": 3812375255834589,
+          "params_hex": "0101000040420f00"
+        }
+      ],
+      "control_status": "CONTROL_ACCEPTED_EFFECT_UNVERIFIED",
+      "ordering": "ordering_ambiguous",
+      "correctness": "PASS",
+      "cleanup_and_reuse_verified": true
+    },
+    {
+      "run_id": "phase6-20260917-a-p09-C",
+      "owners": {
+        "bg": {
+          "pid": 2342673,
+          "group_handle": 1543503948,
+          "group_generation": 76,
+          "client": 3252373885,
+          "engine": 1,
+          "channels": 8,
+          "compute_children": [
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1
+          ],
+          "hardware_tsg_id": 6,
+          "get_info_attempts": 1,
+          "preempt_attempts": 0,
+          "application_rm_controls_observed": 720
+        },
+        "int": {
+          "pid": 2342672,
+          "group_handle": 1543503948,
+          "group_generation": 76,
+          "client": 3252373889,
+          "engine": 1,
+          "channels": 8,
+          "compute_children": [
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1
+          ],
+          "hardware_tsg_id": 10,
+          "get_info_attempts": 1,
+          "preempt_attempts": 0,
+          "application_rm_controls_observed": 720
+        }
+      },
+      "configuration_sha256": "9bac87350820250cb9e9e6e2a17429883482bcca15041f95dc78ba26a61397f7",
+      "query_count": 2,
+      "preempt_count": 0,
+      "other_controls_count": 0,
+      "PREEMPT_raw": [],
+      "control_status": "SKIPPED_BY_DESIGN",
+      "ordering": "not_applicable",
+      "correctness": "PASS",
+      "cleanup_and_reuse_verified": true
+    }
+  ]
+}

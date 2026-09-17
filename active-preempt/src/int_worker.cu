@@ -8,6 +8,7 @@
 #include <random>
 #include <signal.h>
 #include <sys/wait.h>
+#include <sched.h>
 
 namespace {
 struct Child {
@@ -206,7 +207,7 @@ int main(int argc,char** argv){
         evidence_writable=true;
         if(o.probe==ap::Probe::GroupInfo)return probe_group_info(o);
         if(o.probe!=ap::Probe::None)return probe_rm(o);
-        ap::configure_rm(plan.group_identity?ap::RmStage::GroupActive:(plan.identity?ap::RmStage::Active:ap::RmStage::Disabled),o.test_host,ap::GroupOwner::Interactive);
+        ap::configure_rm((plan.group_identity?(plan.operation==ap::Trigger::GroupPrepareNoop?ap::RmStage::GroupNoop:ap::RmStage::GroupActive):(plan.identity?ap::RmStage::Active:ap::RmStage::Disabled)),o.test_host,ap::GroupOwner::Interactive);
         // Before any fork: verify CUDA availability in a separate probe process
         // through the runner. Workers still check cuInit directly below.
         std::signal(SIGTERM,ap::on_stop);std::signal(SIGINT,ap::on_stop);
@@ -264,7 +265,22 @@ int main(int argc,char** argv){
             <<",\"bg_target_us\":"<<o.bg_us<<",\"int_target_us\":"<<o.int_us
             <<",\"bg_iterations\":"<<(child?std::to_string(s.host.bg_iterations):"null")
             <<",\"int_iterations\":"<<gpu->iterations<<",\"bg_blocks\":"<<(child?std::to_string(s.host.bg_blocks):"null")
-            <<",\"int_blocks\":"<<gpu->blocks<<",\"threads_per_block\":256,\"dynamic_shared_bytes\":65536,\"runlist_policy\":\"unknown\"}\n";
+            <<",\"int_blocks\":"<<gpu->blocks<<",\"threads_per_block\":256,\"dynamic_shared_bytes\":65536,\"runlist_policy\":\"unknown\""
+            <<",\"measurement_contract\":\"group-preparation-v1\",\"initialization_policy\":\"fixed-reference-then-1000-ping-bg-short-reference-before-bind-v1\""
+            <<",\"trigger_delay_us\":"<<o.trigger_delay_us<<",\"sm_count\":"<<gpu->prop.multiProcessorCount
+            <<",\"compute_major\":"<<gpu->prop.major<<",\"compute_minor\":"<<gpu->prop.minor
+            <<",\"bg_registers\":"<<s.host.bg_registers<<",\"int_registers\":"<<gpu->attributes.numRegs
+            <<",\"bg_static_shared_bytes\":"<<s.host.bg_static_shared<<",\"int_static_shared_bytes\":"<<gpu->attributes.sharedSizeBytes
+            <<",\"bg_active_blocks_per_sm_estimate\":"<<s.host.bg_active_blocks_per_sm<<",\"int_active_blocks_per_sm_estimate\":"<<gpu->active_blocks_per_sm
+            <<",\"runtime_driver_text\":"<<ap::json_string(ap::loaded_driver_version())
+            <<",\"batch_id\":"<<ap::json_string(o.batch_id)<<",\"pair_id\":"<<ap::json_string(o.pair_id)
+            <<",\"pair_order\":"<<ap::json_string(o.pair_order)<<",\"condition\":"<<ap::json_string(o.condition)<<",\"run_id\":"<<ap::json_string(o.run_id)
+            <<",\"cpu_affinity\":[";
+        cpu_set_t cpus;CPU_ZERO(&cpus);if(sched_getaffinity(0,sizeof(cpus),&cpus)!=0)throw std::runtime_error("Cannot record CPU affinity");
+        bool first_cpu=true;for(int c=0;c<CPU_SETSIZE;++c)if(CPU_ISSET(c,&cpus)){if(!first_cpu)configuration<<',';configuration<<c;first_cpu=false;}
+        configuration<<"],\"bg_cpu_affinity\":[";first_cpu=true;
+        if(child)for(int c=0;c<CPU_SETSIZE;++c)if(CPU_ISSET(c,&s.host.bg_cpu_affinity)){if(!first_cpu)configuration<<',';configuration<<c;first_cpu=false;}
+        configuration<<"]}\n";
         configuration.flush();if(!configuration)throw std::runtime_error("Cannot save run configuration");
         std::ofstream raw(run_dir+"/raw.csv"),heartbeats,ctas;
         if(child){heartbeats.open(run_dir+"/heartbeats.csv");ctas.open(run_dir+"/bg_ctas.csv");}
@@ -273,6 +289,7 @@ int main(int argc,char** argv){
         std::minstd_rand rng(20260917);
         for(unsigned trial=0;trial<o.trials;++trial){
             ap::TrialRecord row;row.trial=trial;row.mode=o.mode;row.graph=o.graph;row.force=o.force;row.bypass=o.bypass;row.bg_present=plan.background;row.run_kind=o.diagnostic?"diagnostic":"performance";
+            row.batch_id=o.batch_id;row.pair_id=o.pair_id;row.pair_order=o.pair_order;row.condition=o.condition;row.run_id=o.run_id;
             std::unique_ptr<Observer> observer;
             try{
                 ap::record_trial(trial);gpu->reset();gpu->host->launch_id=trial;
@@ -280,7 +297,8 @@ int main(int argc,char** argv){
                 if(child)child->command(ap::Command::Prepare,trial); // reset before observer, never concurrently
                 observer=std::make_unique<Observer>(s,plan.background);
                 if(child){child->command(ap::Command::Launch,trial);ap::wait_value(&s.bg.started,1,"BG main_entry");row.bg_main_observed=ap::monotonic_ns();
-                    uint64_t trigger_at=ap::monotonic_ns()+(1000+rng()%4000)*1000ull;
+                    row.planned_delay_us=o.trigger_delay_us?o.trigger_delay_us:1000+rng()%4000;
+                    uint64_t trigger_at=row.bg_main_observed+row.planned_delay_us*1000ull;
                     while(ap::monotonic_ns()<trigger_at){ap::check_stop();ap::check_peer(s);ap::relax();}
                 }
                 if(child)row.bg_done_before=ap::acquire(&s.bg.done)!=0;
@@ -289,23 +307,24 @@ int main(int argc,char** argv){
                 if(child){
                     ap::Command cmd=ap::Command::None;
                     if(trigger==ap::Trigger::PreemptWait)cmd=ap::Command::PreemptWait;
-                    else if(trigger==ap::Trigger::GroupPreemptWait&&!row.bg_done_before)cmd=ap::Command::GroupPreemptWait;
+                    else if(trigger==ap::Trigger::GroupPreemptWait)cmd=ap::Command::GroupPreemptWait;
+                    else if(trigger==ap::Trigger::GroupPrepareNoop)cmd=ap::Command::GroupPrepareNoop;
                     else if(trigger==ap::Trigger::PreemptAsync)cmd=ap::Command::PreemptAsync;
                     else if(trigger==ap::Trigger::Disable){possibly_disabled=true;cmd=ap::Command::Disable;}
                     else if(trigger==ap::Trigger::DisableSplit){possibly_disabled=true;cmd=ap::Command::DisableScheduling;}
                     row.bg_done_before_control=ap::acquire(&s.bg.done)!=0;
-                    if(plan.group_identity&&row.bg_done_before_control)cmd=ap::Command::None;
                     row.control_pending=cmd!=ap::Command::None;
                     ap::ControlResult r;
                     try{r=child->command(cmd,trial);}catch(...){row.ipc_send=child->send_ns;throw;}
-                    row.ipc_send=child->send_ns;row.ipc_received=s.host.command_received_ns;row.ipc_ack=child->ack_ns;
+                    row.ipc_send=child->send_ns;row.ipc_received=s.host.command_received_ns;row.ipc_ack=child->ack_ns;row.owner_timing=s.host.owner_timing;
                     row.bg_done_at_owner_check=s.host.bg_done_at_owner_check<2?int(s.host.bg_done_at_owner_check):-1;
                     if(cmd!=ap::Command::None)row.control=r;
                     else if(plan.group_identity)row.control.rejection=ap::ControlResult::Rejection::TargetCompleted;
                     row.control_pending=false;
                 }
                 if(trigger==ap::Trigger::Restart){row.control_pending=true;row.control=rm->restart(o.force,o.bypass);row.control_pending=false;}
-                if(trigger!=ap::Trigger::None&&!row.control.ok()){
+                if(trigger!=ap::Trigger::None&&!row.control.ok()&&
+                   row.control.rejection!=ap::ControlResult::Rejection::SkippedByDesign&&row.control.rejection!=ap::ControlResult::Rejection::TargetCompleted){
                     if(!plan.group_identity)throw std::runtime_error(std::string("Trigger rejected: ")+row.control.describe());
                     row.failure="GROUP_TRIGGER_FAILED_OR_SKIPPED: "+row.control.describe(); // still collect finite-work completion if possible
                 }
