@@ -1,0 +1,18 @@
+{
+  "artifacts": {
+    "trace.info": {
+      "sha256": "15e16c4b5eac819190b52e599c6bee611f56d437826db38e3a491143d78960af",
+      "bytes": 755388
+    },
+    "trace.sqlite": {
+      "sha256": "847c2332d805cb9d2e3af7631e0419bcc22bcb4e6104cd22fcc7065980bdc57a",
+      "bytes": 31686656
+    },
+    "trace.nsys-rep": {
+      "sha256": "080571253f841a8d1542ef84ce1a47ff74843d99c70869f57eb5c4c4e40c41bb",
+      "bytes": 11848623
+    }
+  },
+  "originals_retained_locally": true,
+  "sharing": "Original Nsight files include inherited environment/system metadata; excluded from git. events.csv contains this experiment only."
+}

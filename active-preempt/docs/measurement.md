@@ -111,3 +111,17 @@ journal 的 schema-2 binary 布局不变。新的本地事件使用已有参数�
 `run_paired.py` 在 spawn **之前**持久化 reservation。最多十个主动槽位；失败、在途未知或 worker 崩溃不退还槽位，不恢复批次、不补样。worker 每进程最多一次且仅 trial0 的门槛不变。RM/CUDA/观测/正确性/清理/配置错误停止后续 run；before-RM、ambiguous、变慢、无 overlap、BG 已完成本身不导致重试或删样。进程树处理复用已有有界清理，并覆盖 runner interrupt。SIGKILL/内核停滞无法承诺恢复，未知状态留在账本并禁止自动续跑。
 
 `analyze_pairs.py` 保留全部计划行和已知应用区间；缺失值为空/unknown，错误与正确性标签单列。配置不匹配的原始值仍展示，但不能形成配对 delta。另列 complete/correct 子集，不能替代主表。报告原始值、中位数、均值/范围、正负/零的对数、CT/TC 分组及各独立维度，不生成小批次 p95/p99/SLA 或按显著性加样。精确硬件 preempt/context-save/resume 均仍 unmeasured。
+
+## Phase 7：独立调度诊断
+
+`--diagnostic-trace` 保持 schema 2 字段原义、fixed arithmetic 和 observer，额外把 `run_kind` 标为 diagnostic。D0/D1 不进入 Phase 6 配对样本/统计。NVTX 的初始化和文件导出在 trial 外；本项目在热路径只填固定 128 槽缓冲及调用 NVTX，不同步写文件。NVTX/工具自身仍有开销，不能视为无扰动。
+
+标记包括 owner_init、trial、BG/INT submit、interaction、owner_prepare_and_action、preempt_ioctl_envelope、trial_done、BG 原工作完成与短计算复用。label 含 run ID、role、PID、operation_seq；真实 PREEMPT 使用同一条 journal 的序号。`preempt_ioctl_envelope` 包括 NVTX 调用边界和少量 bookkeeping，实际 syscall begin/end 仍在 CLOCK_MONOTONIC_RAW journal；它不是硬件 context-save interval。诊断关闭时不初始化 NVTX；开启也不授予权限或改变 once gate。
+
+三个时间域始终分开：RAW CPU、GPU globaltimer、Nsight session-relative ns。`events.csv` 保留原始表/rowid/列或 CSV 行与列；只对本来就在同一 Nsight 时间轴上的事件保留 normalized timestamp，其余留空。UTC session origin、export normalization/shift 和原 trace span 另存，不直接把 UTC 或 RAW 加到 trace 值。所有作差先使用整数；ns 存储单位不保证 1 ns 有效精度。
+
+`marker_links.json` 通过完整 label 连接 NVTX 与 RAW API 调用前后 bracket。没有拟合 RAW/globaltimer→Nsight 时钟，也没有把 bracket 当全时段漂移上界。现有 `ordering_relative_to_rm` 仍为 ambiguous；新证据只陈述同一诊断时间轴中 relative-to-NVTX-envelope 的顺序。精确 preempt completion、context-save duration、BG resume latency 仍 unmeasured。
+
+关联路径为当前 owner PID/GPU → 提交 NVTX 内 CUDA API correlationId → arithmetic activity 的 CUDA context。再结合该 owner 当前唯一 compute-containing GroupIdentity/GET_INFO，建立有限的 process/workload/group 关联。Nsight switch context ID 与 CUDA context ID、TSG ID **不按数值匹配**；metadata 的 hwId=0 原样记录。每个 owner 的 submit→trial-end 窗口只接受唯一 switch context ID；初始化/窗口外记录保留但不扩张关联生命周期。额外 context 或无法唯一关联则关闭 D1 门槛。
+
+实际 SQLite schema 3.16.1 和 Nsight 2024.6.2.225 先检查后解析；enum 从导出读取。`SAVE_END`/`RESTORE_START` 保留原名，不套用 CUPTI compute-engine START/END，也不把它们画成 SM 驻留条。kernel start/end 表示 lifetime；BG lifetime 跨 INT、BG restore 后原工作完成，与继续执行一致，不能排除确定性重放或证明寄存器级保存。未知 schema、缺 BG、缺事件、匿名/多 context、已知 error/loss/truncation 都阻止 D1。工具未提供可确认的 dropped count，结果记录 unknown；序号无可见间隙不等于零丢失。

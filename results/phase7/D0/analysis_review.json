@@ -1,0 +1,6 @@
+{
+  "collection_runs": 1,
+  "reason": "Initial offline association included an INT initialization SAVE_END before INT submission. Association is now restricted to each owner submit-to-trial-end; all earlier switch records retained as unknown/outside scope. No trace was recollected and no expected ID chosen numerically.",
+  "initial": "analysis_initial/assessment.json",
+  "reviewed": "analysis/assessment.json"
+}

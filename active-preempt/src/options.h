@@ -11,7 +11,7 @@ struct Options {
     std::string mode="none",run_dir,shared_path,batch_id,pair_id,pair_order,condition,run_id;
     unsigned trials=1,waves=1,trigger_delay_us=0;
     uint64_t bg_us=80000,int_us=300,heartbeat_ns=2000,timeslice_us=1,bg_iterations=0,int_iterations=0;
-    bool force=false,bypass=false,graph=false,diagnostic=false,test_host=false,extended=false,graph_reviewed=false;
+    bool force=false,bypass=false,graph=false,diagnostic=false,diagnostic_trace=false,test_host=false,extended=false,graph_reviewed=false;
     Probe probe=Probe::None;
 };
 inline Options parse(int argc,char** argv){
@@ -21,6 +21,7 @@ inline Options parse(int argc,char** argv){
             if(++probes_seen>1)throw std::invalid_argument("Select exactly one probe stage");
         if(key=="--graph")o.graph=true;
         else if(key=="--diagnostic-progress")o.diagnostic=true;
+        else if(key=="--diagnostic-trace")o.diagnostic_trace=true;
         else if(key=="--test-host-confirmed")o.test_host=true;
         else if(key=="--allow-extended")o.extended=true;
         else if(key=="--graph-evidence-reviewed")o.graph_reviewed=true;
@@ -37,6 +38,7 @@ inline Options parse(int argc,char** argv){
                      <<"[--trigger-delay-us 1000..5000] [--heartbeat-ns 2000] [--timeslice-us 1] [--force 0|1] [--bypass 0|1] [--diagnostic-progress]\n"
                      <<"Active modes require --test-host-confirmed. Async/force/bypass/D also require --allow-extended.\n"
                      <<"group-preempt-wait: one plain trial, fixed BG/INT iterations, one explicit GPU UUID; BG owner only.\n"
+                     <<"--diagnostic-trace: optional NVTX host markers for one group-bound-none/group-preempt-wait trial; requires --run-id. No progress kernel changes.\n"
                      <<"Graph requires --graph --graph-evidence-reviewed after independent plain-kernel evidence review. --probe aliases --probe-cuda.\n";
             std::exit(0);
         }else{
@@ -67,6 +69,8 @@ inline Options parse(int argc,char** argv){
         throw std::invalid_argument("Condition does not match mode");
     if(!o.pair_order.empty()&&o.pair_order!="CT"&&o.pair_order!="TC")throw std::invalid_argument("pair-order must be CT or TC");
     if(p.name=="group-bound-none"&&o.test_host)throw std::invalid_argument("group-bound-none is non-active; do not pass active authorization");
+    if(o.diagnostic_trace&&(o.probe!=Probe::None||!p.group_identity||o.run_id.empty()||o.run_id.size()>100))
+        throw std::invalid_argument("diagnostic-trace needs a named group-mode trial, never a probe");
     if(o.probe==Probe::None){
         if((p.identity||p.operation==Trigger::GroupPreemptWait)&&!o.test_host)throw std::invalid_argument("Active mode requires --test-host-confirmed (isolated authorized GPU host)");
         if(p.group_identity&&(o.trials!=1||o.graph||o.force||o.bypass||o.extended||o.diagnostic||!o.bg_iterations||!o.int_iterations))

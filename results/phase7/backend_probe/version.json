@@ -1,0 +1,9 @@
+{
+  "call": [
+    "/usr/local/cuda/bin/nsys",
+    "--version"
+  ],
+  "returncode": 0,
+  "stdout": "NVIDIA Nsight Systems version 2024.6.2.225-246235244400v0\n",
+  "stderr": ""
+}

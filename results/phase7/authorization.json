@@ -1,0 +1,9 @@
+{
+  "source": "current conversation",
+  "statements": [
+    "本轮不需要新的手动授权，可以直接执行",
+    "可以不止一次"
+  ],
+  "scope": "Phase7 on GPU-99e4e85f-1945-866c-9e00-130b51df7908; no host configuration changes; D1 still requires a valid D0 backend",
+  "implementation_plan": "Retain minimal D0/D1; no result-seeking retry. User lifted the one-request ceiling, no additional request planned."
+}

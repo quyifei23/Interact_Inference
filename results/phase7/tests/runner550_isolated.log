@@ -1,0 +1,8 @@
+Internal ctest changing into directory: /home/quyifei/multimodal/workspace/Interception/active-preempt/build
+Test project /home/quyifei/multimodal/workspace/Interception/active-preempt/build
+    Start 7: runner_contract_test
+1/1 Test #7: runner_contract_test .............   Passed    0.86 sec
+
+100% tests passed, 0 tests failed out of 1
+
+Total Test time (real) =   0.86 sec

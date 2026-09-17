@@ -1,0 +1,33 @@
+{
+  "nsys": "/usr/local/cuda/bin/nsys",
+  "gpuctxsw_option_present": true,
+  "event_collection_verified": false,
+  "cupti": [
+    {
+      "header": "/usr/local/cuda-12.8/extras/CUPTI/include/cupti_activity.h",
+      "header_sha256": "9246274bed672964e1d8464e299de252e826070bce64588adc7c339df3d6c5ce",
+      "has_compute_engine_ctx_switch": false,
+      "api_version_header": [
+        "26"
+      ],
+      "enable_attempted": false,
+      "records_received": null,
+      "library": "/usr/local/cuda-12.8/extras/CUPTI/lib64/libcupti.so.2025.1.0",
+      "get_version_returncode": 0,
+      "api_version_loaded": 26
+    },
+    {
+      "header": "/usr/local/lib/python3.10/dist-packages/nvidia/cu13/include/cupti_activity.h",
+      "header_sha256": "914cd60f2d76af0d9d3c8d680d14099922aedaebcd8156111c6a070bda6b3fff",
+      "has_compute_engine_ctx_switch": false,
+      "api_version_header": [
+        "130001"
+      ],
+      "enable_attempted": false,
+      "records_received": null,
+      "library": "/usr/local/lib/python3.10/dist-packages/nvidia/cu13/lib/libcupti.so.13",
+      "get_version_returncode": 0,
+      "api_version_loaded": 130001
+    }
+  ]
+}

@@ -1,0 +1,17 @@
+{
+  "requested_url": "https://docs.nvidia.com/nsight-systems/2024.6/UserGuide/index.html",
+  "source_version": "2024.6",
+  "retrieval": "urllib.request succeeded; browser reader rejected redirect; parsed with Python HTMLParser",
+  "html_sha256": "3a95012c6398e8d61a0e905bc98f715904b11f35833dba43a399633a777d0dfa",
+  "sections_used": [
+    "GPU Context Switch",
+    "GPU Context Switch Events Enumeration",
+    "SQLite schema",
+    "CLI profile/export options"
+  ],
+  "source_notes": [
+    "Guide mentions root requirement and also documents ordinary-user own-PID records. Actual D0/D1 collection succeeded without changing permissions.",
+    "Serialized GlobalId PID extraction follows the versioned SQL example. Raw enum labels come from each actual export.",
+    "SAVE_END and RESTORE_START are retained literally; no SM residency, save-duration, or CUPTI START/END interpretation."
+  ]
+}

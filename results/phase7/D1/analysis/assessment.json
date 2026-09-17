@@ -1,0 +1,222 @@
+{
+  "run_kind": "diagnostic",
+  "backend_ready_for_d1": true,
+  "status": "OBSERVED_AND_ASSOCIATED",
+  "ordering_relative_to_actual_rm": "ordering_ambiguous",
+  "exact_preempt_completion": "unmeasured",
+  "context_save_duration": "unmeasured",
+  "BG_resume_latency": "unmeasured",
+  "dropped_records": null,
+  "drop_count_reason": "No authoritative dropped-record count exported; not assumed zero",
+  "target_gpu": {
+    "vmId": 281474976710656,
+    "id": 0,
+    "name": "NVIDIA A100-PCIE-40GB",
+    "busLocation": "0000:18:00.0",
+    "isDiscrete": 1,
+    "l2CacheSize": 41943040,
+    "totalMemory": 42405855232,
+    "memoryBandwidth": 1555200000000,
+    "clockRate": 1410000000,
+    "smCount": 108,
+    "pwGpuId": 0,
+    "uuid": "99e4e85f-1945-866c-9e00-130b51df7908",
+    "luid": 0,
+    "chipName": "GA100",
+    "cuDevice": 0,
+    "ctxswDevPath": "",
+    "ctrlDevPath": "",
+    "revision": 161,
+    "nodeMask": 0,
+    "constantMemory": 65536,
+    "maxIPC": 4,
+    "maxRegistersPerBlock": 65536,
+    "maxShmemPerBlock": 49152,
+    "maxShmemPerBlockOptin": 166912,
+    "maxShmemPerSm": 167936,
+    "maxRegistersPerSm": 65536,
+    "threadsPerWarp": 32,
+    "asyncEngines": 3,
+    "maxWarpsPerSm": 64,
+    "maxBlocksPerSm": 32,
+    "maxThreadsPerBlock": 1024,
+    "maxBlockDimX": 1024,
+    "maxBlockDimY": 1024,
+    "maxBlockDimZ": 64,
+    "maxGridDimX": 2147483647,
+    "maxGridDimY": 65535,
+    "maxGridDimZ": 65535,
+    "computeMajor": 8,
+    "computeMinor": 0,
+    "smMajor": 8,
+    "smMinor": 2
+  },
+  "trace_origin": [
+    {
+      "utcEpochNs": 1789637393612174045,
+      "utcTime": "2026-09-17T09:29:53",
+      "localTime": "2026-09-17T09:29:53"
+    }
+  ],
+  "trace_span": [
+    {
+      "globalVid": 281474976710656,
+      "duration": 2019619769,
+      "startTime": 4305553269,
+      "stopTime": 6325173038
+    }
+  ],
+  "clock_contract": "Session-relative exported ns with TIME_NORMALIZE=false/TIME_SHIFT=0; origin retained. RAW/globaltimer are NOT converted.",
+  "trial_window_ns": [
+    1540015914,
+    1608485715
+  ],
+  "interaction_trace_ns": 1543368432,
+  "switch_records_total": 18,
+  "own_switch_records": 18,
+  "trial_switch_records": 6,
+  "tool_warnings": [
+    {
+      "rowid": 8,
+      "timestamp": 225693462,
+      "timestampType": 1,
+      "source": 1,
+      "severity": 2,
+      "text": "Installed CUDA driver version (13.2) is not supported by this build of Nsight Systems. CUDA trace will be collected using libraries for driver version 12.8",
+      "globalPid": 321629229940736
+    },
+    {
+      "rowid": 19,
+      "timestamp": 1034505787,
+      "timestampType": 1,
+      "source": 1,
+      "severity": 2,
+      "text": "Installed CUDA driver version (13.2) is not supported by this build of Nsight Systems. CUDA trace will be collected using libraries for driver version 12.8",
+      "globalPid": 321627904540672
+    }
+  ],
+  "known_loss_records": [],
+  "effective_timestamp_precision_ns": null,
+  "observed_seq_gaps": [],
+  "project_controls": {
+    "get_info": 2,
+    "preempt": 1,
+    "preempt_unknown": false,
+    "other_project_controls": [],
+    "pending": 0
+  },
+  "worker_complete_correct_cleanup": true,
+  "application_dimensions": {
+    "application_valid": "1",
+    "control_status": "CONTROL_ACCEPTED_EFFECT_UNVERIFIED",
+    "ordering_relative_to_rm": "ordering_ambiguous",
+    "gpu_overlap": "lifetime_overlap",
+    "correctness_status": "PASS",
+    "trial_state": "complete"
+  },
+  "workload_kernels": {
+    "BG": {
+      "rowid": 13,
+      "start": 1540356044,
+      "end": 1605308240,
+      "deviceId": 0,
+      "contextId": 1,
+      "greenContextId": 0,
+      "streamId": 13,
+      "correlationId": 380927,
+      "globalPid": 321629229940736,
+      "demangledName": 42,
+      "shortName": 43,
+      "mangledName": 27,
+      "launchType": 1,
+      "cacheConfig": 1,
+      "registersPerThread": 25,
+      "gridX": 216,
+      "gridY": 1,
+      "gridZ": 1,
+      "blockX": 256,
+      "blockY": 1,
+      "blockZ": 1,
+      "staticSharedMemory": 0,
+      "dynamicSharedMemory": 65536,
+      "localMemoryPerThread": 0,
+      "localMemoryTotal": 127401984,
+      "gridId": 8,
+      "sharedMemoryExecuted": 135168,
+      "graphNodeId": null,
+      "sharedMemoryLimitConfig": 1,
+      "name": "ap::arithmetic(unsigned int *, unsigned long, ap::Telemetry *, unsigned long, bool, bool, unsigned int, unsigned int, unsigned long long *)"
+    },
+    "INT": {
+      "rowid": 14,
+      "start": 1543776187,
+      "end": 1544024637,
+      "deviceId": 0,
+      "contextId": 1,
+      "greenContextId": 0,
+      "streamId": 13,
+      "correlationId": 1402,
+      "globalPid": 321627904540672,
+      "demangledName": 42,
+      "shortName": 43,
+      "mangledName": 27,
+      "launchType": 1,
+      "cacheConfig": 1,
+      "registersPerThread": 25,
+      "gridX": 216,
+      "gridY": 1,
+      "gridZ": 1,
+      "blockX": 256,
+      "blockY": 1,
+      "blockZ": 1,
+      "staticSharedMemory": 0,
+      "dynamicSharedMemory": 65536,
+      "localMemoryPerThread": 0,
+      "localMemoryTotal": 127401984,
+      "gridId": 6,
+      "sharedMemoryExecuted": 135168,
+      "graphNodeId": null,
+      "sharedMemoryLimitConfig": 1,
+      "name": "ap::arithmetic(unsigned int *, unsigned long, ap::Telemetry *, unsigned long, bool, bool, unsigned int, unsigned int, unsigned long long *)"
+    }
+  },
+  "marker_consistency": {
+    "BG": {
+      "entry_node": "main",
+      "launch_id": "0",
+      "trace_arithmetic_duration_ns": 64952196,
+      "marker_entry_to_done_globaltimer_ns": 64954528,
+      "clock_comparison": "durations in their own domains only; marker is inside kernel, not exact activity start; no epoch subtraction"
+    },
+    "INT": {
+      "entry_node": "0",
+      "launch_id": null,
+      "trace_arithmetic_duration_ns": 248450,
+      "marker_entry_to_done_globaltimer_ns": 249696,
+      "clock_comparison": "durations in their own domains only; marker is inside kernel, not exact activity start; no epoch subtraction"
+    }
+  },
+  "preempt_envelope": {
+    "nvtx_rowid": 8,
+    "operation_seq": 3,
+    "start": 1543460894,
+    "end": 1543965311,
+    "meaning": "annotation brackets the synchronous call plus small host bookkeeping; exact syscall timestamps remain in RAW journal"
+  },
+  "BG_original_lifetime_contains_INT": true,
+  "INT_start_after_interaction_trace_ns": 407755,
+  "original_BG_end_after_INT_end_trace_ns": 61283603,
+  "request_associated_observations": {
+    "switch_rowids_in_ioctl_envelope": [
+      10,
+      11
+    ],
+    "INT_kernel_start_in_envelope": true,
+    "BG_switch_rowids_after_INT_end_before_original_BG_end": [
+      13
+    ],
+    "interpretation": "observed temporal association, not exclusive causality or exact syscall/hardware duration"
+  },
+  "association_strength": "scoped process/GPU/workload + unique current compute group; no native switch-ID to TSG-ID equality",
+  "limitations": []
+}

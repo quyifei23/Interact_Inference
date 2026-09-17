@@ -1,0 +1,68 @@
+{
+  "BG": {
+    "pid": 2385047,
+    "gpu_uuid": "99e4e85f1945866c9e00130b51df7908",
+    "group_handle": 1543503948,
+    "group_generation": 87,
+    "hardware_tsg_id": 6,
+    "captured_members": 8,
+    "CUDA_context_records": [
+      {
+        "rowid": 2,
+        "nullStreamId": 7,
+        "hwId": 0,
+        "vmId": 1,
+        "processId": 2385047,
+        "deviceId": 0,
+        "contextId": 1,
+        "parentContextId": 0,
+        "isGreenContext": 0
+      }
+    ],
+    "CUDA_workload_context_id": 1,
+    "CUcontext_address_in_owner": 94731206429152,
+    "scoped_association_valid": true,
+    "method": "NVTX submit range -> same-PID CUDA API correlationId -> arithmetic activity context; same-PID/same-GPU current unique compute-group GET_INFO",
+    "limitation": "No numerical equivalence of CUDA context ID, switch context ID, RM handle or TSG ID. Context-info hwId is recorded literally, not used as a guessed join. Not all CUDA resources.",
+    "trial_switch_context_ids": [
+      476279
+    ],
+    "switch_association_window_ns": [
+      1540449310,
+      1612052695
+    ]
+  },
+  "INT": {
+    "pid": 2384964,
+    "gpu_uuid": "99e4e85f1945866c9e00130b51df7908",
+    "group_handle": 1543503948,
+    "group_generation": 87,
+    "hardware_tsg_id": 10,
+    "captured_members": 8,
+    "CUDA_context_records": [
+      {
+        "rowid": 1,
+        "nullStreamId": 7,
+        "hwId": 0,
+        "vmId": 1,
+        "processId": 2384964,
+        "deviceId": 0,
+        "contextId": 1,
+        "parentContextId": 0,
+        "isGreenContext": 0
+      }
+    ],
+    "CUDA_workload_context_id": 1,
+    "CUcontext_address_in_owner": 94867206895696,
+    "scoped_association_valid": true,
+    "method": "NVTX submit range -> same-PID CUDA API correlationId -> arithmetic activity context; same-PID/same-GPU current unique compute-group GET_INFO",
+    "limitation": "No numerical equivalence of CUDA context ID, switch context ID, RM handle or TSG ID. Context-info hwId is recorded literally, not used as a guessed join. Not all CUDA resources.",
+    "trial_switch_context_ids": [
+      476303
+    ],
+    "switch_association_window_ns": [
+      1543727977,
+      1612052695
+    ]
+  }
+}

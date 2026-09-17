@@ -4,3 +4,9 @@ __pycache__/
 *.pyc
 /.agents/
 /.codex/
+
+# Original Nsight reports embed inherited environment and system process metadata.
+# Keep locally as primary evidence; never stage these opaque captures by default.
+/results/phase7/*/trace.nsys-rep
+/results/phase7/*/trace.sqlite
+/results/phase7/*/trace.info

@@ -1,0 +1,70 @@
+{
+  "run_kind": "diagnostic",
+  "condition": "D0",
+  "gpu_uuid": "GPU-99e4e85f-1945-866c-9e00-130b51df7908",
+  "frozen": {
+    "bg_iterations": 1630976,
+    "int_iterations": 5888,
+    "cta_waves": 1,
+    "heartbeat_ns": 2000,
+    "trigger_delay_us": 3000
+  },
+  "repo_commit": "5140fe0c3a3b8781329534e131145520ed25a7b5",
+  "worktree": " M active-preempt/CMakeLists.txt\n M active-preempt/src/bg_worker.cu\n M active-preempt/src/group_preempt_test.cpp\n M active-preempt/src/group_query_internal.cpp\n M active-preempt/src/int_worker.cu\n M active-preempt/src/options.h\n M active-preempt/src/rm_control.cpp\n M active-preempt/src/worker_common.cuh\n?? active-preempt/scripts/probe_diagnostic.py\n?? active-preempt/scripts/run_diagnostic.py\n?? active-preempt/src/diagnostic_trace.cpp\n?? active-preempt/src/diagnostic_trace.h\n?? results/phase7/\n",
+  "binary_sha256": {
+    "int_worker": "e62ff3b6d6d5b16d74821b2eff506110587ec805031a516113304481d5525941",
+    "bg_worker": "8f3ec9953504ef2dc3c85c9e043d52da28389d9dffdb920b44152d32b639e5b0",
+    "librm_control.so": "df2fc3963ba7dfe7857a5967062649a9cb475ac8546b59b41fae7fc8c0b75a5a",
+    "preflight_cuda": "4e69c20f2095f15e5e3c14bc85d6fb0059efb2d31c2be11c777523466ef326c7"
+  },
+  "command": [
+    "/usr/local/cuda/bin/nsys",
+    "profile",
+    "--trace=cuda,nvtx",
+    "--gpuctxsw=true",
+    "--sample=none",
+    "--cpuctxsw=none",
+    "--trace-fork-before-exec=false",
+    "--wait=all",
+    "--kill=none",
+    "--stop-on-exit=true",
+    "--duration=0",
+    "--export=none",
+    "--force-overwrite=false",
+    "--output=/home/quyifei/multimodal/workspace/Interception/results/phase7/D0/trace",
+    "--env-var=LD_PRELOAD=/home/quyifei/multimodal/workspace/Interception/active-preempt/build-595/librm_control.so",
+    "/home/quyifei/multimodal/workspace/Interception/active-preempt/build-595/int_worker",
+    "--run-dir",
+    "/home/quyifei/multimodal/workspace/Interception/results/phase7/D0/worker",
+    "--mode",
+    "group-bound-none",
+    "--trials",
+    "1",
+    "--diagnostic-trace",
+    "--run-id",
+    "D0",
+    "--bg-iterations",
+    "1630976",
+    "--int-iterations",
+    "5888",
+    "--cta-waves",
+    "1",
+    "--heartbeat-ns",
+    "2000",
+    "--trigger-delay-us",
+    "3000"
+  ],
+  "tool_version": {
+    "call": [
+      "/usr/local/cuda/bin/nsys",
+      "--version"
+    ],
+    "returncode": 0,
+    "stdout": "NVIDIA Nsight Systems version 2024.6.2.225-246235244400v0\n",
+    "stderr": ""
+  },
+  "active_authorized": false,
+  "automatic_retry": false,
+  "collection_scope": "system GPU context-switch records; derived analysis only this run owners; no deanonymization",
+  "profiler_termination": "kill=none, duration=0, wait=all; owner cleanup must complete; outer failure is unconfirmed"
+}

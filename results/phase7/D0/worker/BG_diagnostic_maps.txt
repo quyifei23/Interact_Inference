@@ -1,0 +1,273 @@
+200000000-200400000 ---p 00000000 00:00 0 
+200400000-200600000 rw-s 00000000 00:05 1350                             /dev/nvidia0
+200600000-203e00000 rw-s 00000000 00:05 1346                             /dev/nvidiactl
+203e00000-205c00000 ---p 00000000 00:00 0 
+205c00000-205e00000 rw-s 00000000 00:05 1346                             /dev/nvidiactl
+205e00000-206000000 rw-s 00000000 00:05 1346                             /dev/nvidiactl
+206000000-206200000 rw-s 206000000 00:05 1451                            /dev/nvidia-uvm
+206200000-300200000 ---p 00000000 00:00 0 
+10000000000-10004000000 ---p 00000000 00:00 0 
+3bf5b800000-3bf5bb80000 rw-p 00000000 00:00 0 
+3bf5bb80000-3bf5c000000 ---p 00000000 00:00 0 
+3bf5c000000-3bf5c2c0000 rw-p 00000000 00:00 0 
+3bf5c2c0000-3bf5c800000 ---p 00000000 00:00 0 
+3bf5c800000-3bf5f0a0000 rw-p 00000000 00:00 0 
+3bf5f0a0000-3bf5f800000 ---p 00000000 00:00 0 
+3bf5f800000-3bf64880000 rw-p 00000000 00:00 0 
+3bf64880000-3bf65000000 ---p 00000000 00:00 0 
+3bf65000000-3bf67800000 rw-p 00000000 00:00 0 
+562837462000-562837466000 r--p 00000000 103:04 44182317                  /home/quyifei/multimodal/workspace/Interception/active-preempt/build-595/bg_worker
+562837466000-562837473000 r-xp 00004000 103:04 44182317                  /home/quyifei/multimodal/workspace/Interception/active-preempt/build-595/bg_worker
+562837473000-56283747d000 r--p 00011000 103:04 44182317                  /home/quyifei/multimodal/workspace/Interception/active-preempt/build-595/bg_worker
+56283747d000-56283747e000 r--p 0001a000 103:04 44182317                  /home/quyifei/multimodal/workspace/Interception/active-preempt/build-595/bg_worker
+56283747e000-56283747f000 rw-p 0001b000 103:04 44182317                  /home/quyifei/multimodal/workspace/Interception/active-preempt/build-595/bg_worker
+562853d41000-562854ad1000 rw-p 00000000 00:00 0                          [heap]
+7f424c000000-7f424c021000 rw-p 00000000 00:00 0 
+7f424c021000-7f4250000000 ---p 00000000 00:00 0 
+7f4252000000-7f426c000000 ---p 00000000 00:00 0 
+7f426c000000-7f426c021000 rw-p 00000000 00:00 0 
+7f426c021000-7f4270000000 ---p 00000000 00:00 0 
+7f42703fd000-7f4272000000 rw-p 00000000 00:00 0 
+7f4272000000-7f4272400000 ---p 00000000 00:00 0 
+7f4272400000-7f4272600000 rw-s 00000000 00:05 1346                       /dev/nvidiactl
+7f4272600000-7f4272800000 rw-s 00000000 00:01 1793551                    /dev/zero (deleted)
+7f4272800000-7f4272a00000 rw-s 00000000 00:01 1793552                    /dev/zero (deleted)
+7f4272a00000-7f4273000000 ---p 00000000 00:00 0 
+7f4273000000-7f4273200000 rw-s 00000000 00:05 1346                       /dev/nvidiactl
+7f4273200000-7f4273400000 ---p 00000000 00:00 0 
+7f4273400000-7f4273600000 rw-s 00000000 00:01 1793554                    /dev/zero (deleted)
+7f4273600000-7f4273b33000 rw-s 00000000 00:05 1346                       /dev/nvidiactl
+7f4273b33000-7f4274000000 ---p 00000000 00:00 0 
+7f4274000000-7f4274021000 rw-p 00000000 00:00 0 
+7f4274021000-7f4278000000 ---p 00000000 00:00 0 
+7f42783bb000-7f42783bc000 ---p 00000000 00:00 0 
+7f42783bc000-7f4278bbc000 rw-p 00000000 00:00 0 
+7f4278bbc000-7f4278bbd000 rw-s 00000000 00:05 1346                       /dev/nvidiactl
+7f4278bbd000-7f4278bbe000 rw-s 00000000 00:05 1346                       /dev/nvidiactl
+7f4278bbe000-7f4278bbf000 rw-s 00000000 00:05 1346                       /dev/nvidiactl
+7f4278bbf000-7f4278bc0000 rw-s 00000000 00:05 1346                       /dev/nvidiactl
+7f4278bc0000-7f4278bc1000 rw-s 00000000 00:05 1346                       /dev/nvidiactl
+7f4278bc1000-7f4278bc2000 rw-s 00000000 00:05 1346                       /dev/nvidiactl
+7f4278bc2000-7f4278bc3000 rw-s 00000000 00:05 1346                       /dev/nvidiactl
+7f4278bc3000-7f4278bc4000 rw-s 00000000 00:05 1346                       /dev/nvidiactl
+7f4278bc4000-7f4278bc5000 rw-s 00000000 00:05 1346                       /dev/nvidiactl
+7f4278bc5000-7f4278bc6000 rw-s 00000000 00:05 1346                       /dev/nvidiactl
+7f4278bc6000-7f4278bc7000 rw-s 00000000 00:05 1346                       /dev/nvidiactl
+7f4278bc7000-7f4278bc8000 rw-s 00000000 00:05 1346                       /dev/nvidiactl
+7f4278bc8000-7f4278bc9000 rw-s 00000000 00:05 1346                       /dev/nvidiactl
+7f4278bc9000-7f4278bca000 rw-s 00000000 00:05 1346                       /dev/nvidiactl
+7f4278bca000-7f4278bcb000 rw-s 00000000 00:05 1346                       /dev/nvidiactl
+7f4278bcb000-7f4278bcc000 rw-s 00000000 00:05 1346                       /dev/nvidiactl
+7f4278bcc000-7f4278bcd000 rw-s 00000000 00:05 1346                       /dev/nvidiactl
+7f4278bcd000-7f4278bce000 rw-s 00000000 00:05 1346                       /dev/nvidiactl
+7f4278bce000-7f4278bcf000 rw-s 00000000 00:05 1346                       /dev/nvidiactl
+7f4278bcf000-7f4278bd0000 rw-s 00000000 00:05 1346                       /dev/nvidiactl
+7f4278bd0000-7f4279dde000 ---p 00000000 00:00 0 
+7f4279dde000-7f427a5de000 rw-p 00000000 00:00 0 
+7f427a5de000-7f427a5df000 ---p 00000000 00:00 0 
+7f427a5df000-7f427addf000 rw-p 00000000 00:00 0 
+7f427addf000-7f4282000000 ---p 00000000 00:00 0 
+7f4282000000-7f4282b00000 rw-p 00000000 00:00 0 
+7f4283000000-7f4283b00000 rw-p 00000000 00:00 0 
+7f4284000000-7f4284b00000 rw-p 00000000 00:00 0 
+7f4285000000-7f4285b00000 rw-p 00000000 00:00 0 
+7f4286000000-7f4286b00000 rw-p 00000000 00:00 0 
+7f4287000000-7f4287b00000 rw-p 00000000 00:00 0 
+7f4288000000-7f4288b00000 rw-p 00000000 00:00 0 
+7f4289000000-7f4289b00000 rw-p 00000000 00:00 0 
+7f428a000000-7f428ab00000 rw-p 00000000 00:00 0 
+7f428b000000-7f428bb00000 rw-p 00000000 00:00 0 
+7f428c000000-7f428cb00000 rw-p 00000000 00:00 0 
+7f428d000000-7f428db00000 rw-p 00000000 00:00 0 
+7f428e000000-7f428eb00000 rw-p 00000000 00:00 0 
+7f428f000000-7f428fb00000 rw-p 00000000 00:00 0 
+7f4290000000-7f4290b00000 rw-p 00000000 00:00 0 
+7f4291000000-7f4291b00000 rw-p 00000000 00:00 0 
+7f4292000000-7f4292b00000 rw-p 00000000 00:00 0 
+7f4293000000-7f4293b00000 rw-p 00000000 00:00 0 
+7f4294000000-7f4294b00000 rw-p 00000000 00:00 0 
+7f4295000000-7f4295b00000 rw-p 00000000 00:00 0 
+7f4296000000-7f4296b00000 rw-p 00000000 00:00 0 
+7f4297000000-7f4297b00000 rw-p 00000000 00:00 0 
+7f4298000000-7f4298b00000 rw-p 00000000 00:00 0 
+7f4299000000-7f4299b00000 rw-p 00000000 00:00 0 
+7f429a000000-7f429ab00000 rw-p 00000000 00:00 0 
+7f429b000000-7f429bb00000 rw-p 00000000 00:00 0 
+7f429c000000-7f429cb00000 rw-p 00000000 00:00 0 
+7f429d000000-7f429db00000 rw-p 00000000 00:00 0 
+7f429e000000-7f429eb00000 rw-p 00000000 00:00 0 
+7f429f000000-7f429fb00000 rw-p 00000000 00:00 0 
+7f42a0000000-7f42a0b00000 rw-p 00000000 00:00 0 
+7f42a1000000-7f42a1b00000 rw-p 00000000 00:00 0 
+7f42a2000000-7f42a2b00000 rw-p 00000000 00:00 0 
+7f42a3000000-7f42a3b00000 rw-p 00000000 00:00 0 
+7f42a4000000-7f42a4b00000 rw-p 00000000 00:00 0 
+7f42a4ef6000-7f42a5000000 rw-p 00000000 00:00 0 
+7f42a5000000-7f42a5b00000 rw-p 00000000 00:00 0 
+7f42a5b53000-7f42a6000000 rw-p 00000000 00:00 0 
+7f42a6000000-7f42a6b00000 rw-p 00000000 00:00 0 
+7f42a6b53000-7f42a7000000 rw-p 00000000 00:00 0 
+7f42a7000000-7f42a7b00000 rw-p 00000000 00:00 0 
+7f42a7b53000-7f42a8000000 rw-p 00000000 00:00 0 
+7f42a8000000-7f42a8b00000 rw-p 00000000 00:00 0 
+7f42a8b53000-7f42a9000000 rw-p 00000000 00:00 0 
+7f42a9000000-7f42a9b00000 rw-p 00000000 00:00 0 
+7f42a9b5d000-7f42a9be2000 rw-p 00000000 00:00 0 
+7f42a9be2000-7f42a9ce2000 rw-s 04301000 103:04 40521160                  /tmp/nvidia/nsight_systems/quadd_session_102384955/injection_files/injection_2385047_1004_storage.dat
+7f42a9ce2000-7f42aa000000 rw-p 00000000 00:00 0 
+7f42aa000000-7f42aab00000 rw-p 00000000 00:00 0 
+7f42aab53000-7f42ab000000 rw-p 00000000 00:00 0 
+7f42ab000000-7f42abb00000 rw-p 00000000 00:00 0 
+7f42abb53000-7f42ac000000 rw-p 00000000 00:00 0 
+7f42ac000000-7f42acb00000 rw-p 00000000 00:00 0 
+7f42acb53000-7f42ad000000 rw-p 00000000 00:00 0 
+7f42ad000000-7f42adb00000 rw-p 00000000 00:00 0 
+7f42adb5d000-7f42addf6000 rw-p 00000000 00:00 0 
+7f42ade71000-7f42ae000000 rw-p 00000000 00:00 0 
+7f42ae000000-7f42aeb00000 rw-p 00000000 00:00 0 
+7f42aeb5d000-7f42aebe2000 rw-p 00000000 00:00 0 
+7f42aec5d000-7f42af000000 rw-p 00000000 00:00 0 
+7f42af000000-7f42afb00000 rw-p 00000000 00:00 0 
+7f42afb53000-7f42b0000000 rw-p 00000000 00:00 0 
+7f42b0000000-7f42b0021000 rw-p 00000000 00:00 0 
+7f42b0021000-7f42b4000000 ---p 00000000 00:00 0 
+7f42b403e000-7f42b42d7000 rw-p 00000000 00:00 0 
+7f42b4352000-7f42b47ff000 rw-p 00000000 00:00 0 
+7f42b47ff000-7f42b4800000 ---p 00000000 00:00 0 
+7f42b4800000-7f42b5000000 rw-p 00000000 00:00 0 
+7f42b5000000-7f42b5b00000 rw-p 00000000 00:00 0 
+7f42b5b63000-7f42b6000000 rw-p 00000000 00:00 0 
+7f42b6000000-7f42b6b00000 rw-p 00000000 00:00 0 
+7f42b6b63000-7f42b7000000 rw-p 00000000 00:00 0 
+7f42b7000000-7f42b7b00000 rw-p 00000000 00:00 0 
+7f42b7b63000-7f42b8000000 rw-p 00000000 00:00 0 
+7f42b8000000-7f42b8021000 rw-p 00000000 00:00 0 
+7f42b8021000-7f42bc000000 ---p 00000000 00:00 0 
+7f42bc021000-7f42bc392000 rw-p 00000000 00:00 0 
+7f42bc392000-7f42bc592000 rw-s 00000000 00:01 1793553                    /dev/zero (deleted)
+7f42bc592000-7f42bc800000 rw-p 00000000 00:00 0 
+7f42bc800000-7f42bd300000 rw-p 00000000 00:00 0 
+7f42bd316000-7f42bd43e000 rw-p 00000000 00:00 0 
+7f42bd43e000-7f42bd43f000 ---p 00000000 00:00 0 
+7f42bd43f000-7f42bdc3f000 rw-p 00000000 00:00 0 
+7f42bdc3f000-7f42bdcdb000 r--p 00000000 103:04 5900772                   /usr/local/cuda-12.8/nsight-systems-2024.6.2/target-linux-x64/libcupti.so.12.8
+7f42bdcdb000-7f42be022000 r-xp 0009c000 103:04 5900772                   /usr/local/cuda-12.8/nsight-systems-2024.6.2/target-linux-x64/libcupti.so.12.8
+7f42be022000-7f42be13c000 r--p 003e3000 103:04 5900772                   /usr/local/cuda-12.8/nsight-systems-2024.6.2/target-linux-x64/libcupti.so.12.8
+7f42be13c000-7f42be17f000 r--p 004fc000 103:04 5900772                   /usr/local/cuda-12.8/nsight-systems-2024.6.2/target-linux-x64/libcupti.so.12.8
+7f42be17f000-7f42be251000 rw-p 0053f000 103:04 5900772                   /usr/local/cuda-12.8/nsight-systems-2024.6.2/target-linux-x64/libcupti.so.12.8
+7f42be251000-7f42be27e000 rw-p 00000000 00:00 0 
+7f42be27e000-7f42be27f000 ---p 00000000 00:00 0 
+7f42be27f000-7f42bea7f000 rw-p 00000000 00:00 0 
+7f42bea7f000-7f42c0000000 rw-s 00000000 103:04 47220520                  /home/quyifei/multimodal/workspace/Interception/results/phase7/D0/worker/bg_control_events.bin
+7f42c0000000-7f42c0021000 rw-p 00000000 00:00 0 
+7f42c0021000-7f42c4000000 ---p 00000000 00:00 0 
+7f42c4000000-7f42c4021000 rw-p 00000000 00:00 0 
+7f42c4021000-7f42c8000000 ---p 00000000 00:00 0 
+7f42c8000000-7f42c8021000 rw-p 00000000 00:00 0 
+7f42c8021000-7f42cc000000 ---p 00000000 00:00 0 
+7f42cc020000-7f42cc21b000 rw-p 00000000 00:00 0 
+7f42cc21b000-7f42cc21d000 rw-p 00000000 00:00 0 
+7f42cc21d000-7f42cc5b1000 rw-p 00000000 00:00 0 
+7f42cc5b1000-7f42cc622000 ---p 00000000 00:00 0 
+7f42cc69d000-7f42cc7a7000 rw-p 00000000 00:00 0 
+7f42cc7a7000-7f42cc8ca000 rw-s 00000000 103:04 40413777                  /tmp/active-preempt-mUS3EM
+7f42cc8ca000-7f42ccf55000 rw-p 00000000 00:00 0 
+7f42ccf55000-7f42ccf56000 ---p 00000000 00:00 0 
+7f42ccf56000-7f42cd756000 rw-p 00000000 00:00 0 
+7f42cd756000-7f42cd757000 ---p 00000000 00:00 0 
+7f42cd757000-7f42cdf57000 rw-p 00000000 00:00 0 
+7f42cdf57000-7f42cdf58000 ---p 00000000 00:00 0 
+7f42cdf58000-7f42ce758000 rw-p 00000000 00:00 0 
+7f42ce758000-7f42cf525000 r-xp 00000000 103:04 5900805                   /usr/local/cuda-12.8/nsight-systems-2024.6.2/target-linux-x64/libToolsInjection64.so
+7f42cf525000-7f42cf569000 r--p 00dcc000 103:04 5900805                   /usr/local/cuda-12.8/nsight-systems-2024.6.2/target-linux-x64/libToolsInjection64.so
+7f42cf569000-7f42cf56c000 rw-p 00e10000 103:04 5900805                   /usr/local/cuda-12.8/nsight-systems-2024.6.2/target-linux-x64/libToolsInjection64.so
+7f42cf56c000-7f42cf5ab000 rw-p 00000000 00:00 0 
+7f42cf5ab000-7f42cf5d3000 r--p 00000000 103:04 5390231                   /usr/lib/x86_64-linux-gnu/libc.so.6
+7f42cf5d3000-7f42cf768000 r-xp 00028000 103:04 5390231                   /usr/lib/x86_64-linux-gnu/libc.so.6
+7f42cf768000-7f42cf7c0000 r--p 001bd000 103:04 5390231                   /usr/lib/x86_64-linux-gnu/libc.so.6
+7f42cf7c0000-7f42cf7c1000 ---p 00215000 103:04 5390231                   /usr/lib/x86_64-linux-gnu/libc.so.6
+7f42cf7c1000-7f42cf7c5000 r--p 00215000 103:04 5390231                   /usr/lib/x86_64-linux-gnu/libc.so.6
+7f42cf7c5000-7f42cf7c7000 rw-p 00219000 103:04 5390231                   /usr/lib/x86_64-linux-gnu/libc.so.6
+7f42cf7c7000-7f42cf7d4000 rw-p 00000000 00:00 0 
+7f42cf7d4000-7f42cf86e000 r--p 00000000 103:04 5391542                   /usr/lib/x86_64-linux-gnu/libstdc++.so.6.0.30
+7f42cf86e000-7f42cf97f000 r-xp 0009a000 103:04 5391542                   /usr/lib/x86_64-linux-gnu/libstdc++.so.6.0.30
+7f42cf97f000-7f42cf9ee000 r--p 001ab000 103:04 5391542                   /usr/lib/x86_64-linux-gnu/libstdc++.so.6.0.30
+7f42cf9ee000-7f42cf9ef000 ---p 0021a000 103:04 5391542                   /usr/lib/x86_64-linux-gnu/libstdc++.so.6.0.30
+7f42cf9ef000-7f42cf9fa000 r--p 0021a000 103:04 5391542                   /usr/lib/x86_64-linux-gnu/libstdc++.so.6.0.30
+7f42cf9fa000-7f42cf9fd000 rw-p 00225000 103:04 5391542                   /usr/lib/x86_64-linux-gnu/libstdc++.so.6.0.30
+7f42cf9fd000-7f42cfa00000 rw-p 00000000 00:00 0 
+7f42cfa00000-7f42cfaad000 r-xp 00000000 103:04 5769154                   /usr/local/cuda-12.8/targets/x86_64-linux/lib/libcudart.so.12.8.57
+7f42cfaad000-7f42cfcad000 ---p 000ad000 103:04 5769154                   /usr/local/cuda-12.8/targets/x86_64-linux/lib/libcudart.so.12.8.57
+7f42cfcad000-7f42cfcb1000 r--p 000ad000 103:04 5769154                   /usr/local/cuda-12.8/targets/x86_64-linux/lib/libcudart.so.12.8.57
+7f42cfcb1000-7f42cfcb2000 rw-p 000b1000 103:04 5769154                   /usr/local/cuda-12.8/targets/x86_64-linux/lib/libcudart.so.12.8.57
+7f42cfcb2000-7f42cfcb4000 rw-p 00000000 00:00 0 
+7f42cfcb4000-7f42cfcc4000 -w-s 00000000 00:05 1350                       /dev/nvidia0
+7f42cfcc4000-7f42cfcce000 rw-p 00000000 00:00 0 
+7f42cfcce000-7f42cfcdc000 r--p 00000000 103:04 5390236                   /usr/lib/x86_64-linux-gnu/libm.so.6
+7f42cfcdc000-7f42cfd58000 r-xp 0000e000 103:04 5390236                   /usr/lib/x86_64-linux-gnu/libm.so.6
+7f42cfd58000-7f42cfdb3000 r--p 0008a000 103:04 5390236                   /usr/lib/x86_64-linux-gnu/libm.so.6
+7f42cfdb3000-7f42cfdb4000 r--p 000e4000 103:04 5390236                   /usr/lib/x86_64-linux-gnu/libm.so.6
+7f42cfdb4000-7f42cfdb5000 rw-p 000e5000 103:04 5390236                   /usr/lib/x86_64-linux-gnu/libm.so.6
+7f42cfdb5000-7f42cfdc9000 r-xp 00000000 103:04 5900800                   /usr/local/cuda-12.8/nsight-systems-2024.6.2/target-linux-x64/libToolsInjectionMemoryAllocator.so
+7f42cfdc9000-7f42cfdcb000 r--p 00013000 103:04 5900800                   /usr/local/cuda-12.8/nsight-systems-2024.6.2/target-linux-x64/libToolsInjectionMemoryAllocator.so
+7f42cfdcb000-7f42cfdcd000 rw-p 00015000 103:04 5900800                   /usr/local/cuda-12.8/nsight-systems-2024.6.2/target-linux-x64/libToolsInjectionMemoryAllocator.so
+7f42cfdcd000-7f42cfe2f000 rw-p 00000000 00:00 0 
+7f42cfe2f000-7f42cfe30000 r--p 00000000 103:04 5390249                   /usr/lib/x86_64-linux-gnu/libutil.so.1
+7f42cfe30000-7f42cfe31000 r-xp 00001000 103:04 5390249                   /usr/lib/x86_64-linux-gnu/libutil.so.1
+7f42cfe31000-7f42cfe32000 r--p 00002000 103:04 5390249                   /usr/lib/x86_64-linux-gnu/libutil.so.1
+7f42cfe32000-7f42cfe33000 r--p 00002000 103:04 5390249                   /usr/lib/x86_64-linux-gnu/libutil.so.1
+7f42cfe33000-7f42cfe34000 rw-p 00003000 103:04 5390249                   /usr/lib/x86_64-linux-gnu/libutil.so.1
+7f42cfe34000-7f42cfe35000 r--p 00000000 103:04 5390235                   /usr/lib/x86_64-linux-gnu/libdl.so.2
+7f42cfe35000-7f42cfe36000 r-xp 00001000 103:04 5390235                   /usr/lib/x86_64-linux-gnu/libdl.so.2
+7f42cfe36000-7f42cfe37000 r--p 00002000 103:04 5390235                   /usr/lib/x86_64-linux-gnu/libdl.so.2
+7f42cfe37000-7f42cfe38000 r--p 00002000 103:04 5390235                   /usr/lib/x86_64-linux-gnu/libdl.so.2
+7f42cfe38000-7f42cfe39000 rw-p 00003000 103:04 5390235                   /usr/lib/x86_64-linux-gnu/libdl.so.2
+7f42cfe39000-7f42cfe3a000 r--p 00000000 103:04 5390247                   /usr/lib/x86_64-linux-gnu/librt.so.1
+7f42cfe3a000-7f42cfe3b000 r-xp 00001000 103:04 5390247                   /usr/lib/x86_64-linux-gnu/librt.so.1
+7f42cfe3b000-7f42cfe3c000 r--p 00002000 103:04 5390247                   /usr/lib/x86_64-linux-gnu/librt.so.1
+7f42cfe3c000-7f42cfe3d000 r--p 00002000 103:04 5390247                   /usr/lib/x86_64-linux-gnu/librt.so.1
+7f42cfe3d000-7f42cfe3e000 rw-p 00003000 103:04 5390247                   /usr/lib/x86_64-linux-gnu/librt.so.1
+7f42cfe3e000-7f42cfe40000 rw-p 00000000 00:00 0 
+7f42cfe40000-7f42cfe41000 r--p 00000000 103:04 5390245                   /usr/lib/x86_64-linux-gnu/libpthread.so.0
+7f42cfe41000-7f42cfe42000 r-xp 00001000 103:04 5390245                   /usr/lib/x86_64-linux-gnu/libpthread.so.0
+7f42cfe42000-7f42cfe43000 r--p 00002000 103:04 5390245                   /usr/lib/x86_64-linux-gnu/libpthread.so.0
+7f42cfe43000-7f42cfe44000 r--p 00002000 103:04 5390245                   /usr/lib/x86_64-linux-gnu/libpthread.so.0
+7f42cfe44000-7f42cfe45000 rw-p 00003000 103:04 5390245                   /usr/lib/x86_64-linux-gnu/libpthread.so.0
+7f42cfe45000-7f42cfe48000 r--p 00000000 103:04 5391540                   /usr/lib/x86_64-linux-gnu/libgcc_s.so.1
+7f42cfe48000-7f42cfe5f000 r-xp 00003000 103:04 5391540                   /usr/lib/x86_64-linux-gnu/libgcc_s.so.1
+7f42cfe5f000-7f42cfe63000 r--p 0001a000 103:04 5391540                   /usr/lib/x86_64-linux-gnu/libgcc_s.so.1
+7f42cfe63000-7f42cfe64000 r--p 0001d000 103:04 5391540                   /usr/lib/x86_64-linux-gnu/libgcc_s.so.1
+7f42cfe64000-7f42cfe65000 rw-p 0001e000 103:04 5391540                   /usr/lib/x86_64-linux-gnu/libgcc_s.so.1
+7f42cfe65000-7f42cfe67000 rw-p 00000000 00:00 0 
+7f42cfe67000-7f42cffc9000 r--p 00000000 103:04 5411939                   /usr/lib/x86_64-linux-gnu/libcuda.so.595.58.03
+7f42cffc9000-7f42d10a2000 r-xp 00162000 103:04 5411939                   /usr/lib/x86_64-linux-gnu/libcuda.so.595.58.03
+7f42d10a2000-7f42d5442000 r--p 0123b000 103:04 5411939                   /usr/lib/x86_64-linux-gnu/libcuda.so.595.58.03
+7f42d5442000-7f42d557a000 r--p 055da000 103:04 5411939                   /usr/lib/x86_64-linux-gnu/libcuda.so.595.58.03
+7f42d557a000-7f42d557f000 rw-p 05712000 103:04 5411939                   /usr/lib/x86_64-linux-gnu/libcuda.so.595.58.03
+7f42d557f000-7f42d55e5000 rw-p 00000000 00:00 0 
+7f42d55e5000-7f42d55eb000 ---p 00000000 00:00 0 
+7f42d55eb000-7f42d55ec000 r--s 00000000 00:05 1346                       /dev/nvidiactl
+7f42d55ec000-7f42d55f0000 rw-p 00000000 00:00 0 
+7f42d55f0000-7f42d5611000 r-xp 00000000 103:04 5900708                   /usr/local/cuda-12.8/nsight-systems-2024.6.2/target-linux-x64/libLinuxKeyboardInterceptorProxy.so
+7f42d5611000-7f42d5613000 r--p 00020000 103:04 5900708                   /usr/local/cuda-12.8/nsight-systems-2024.6.2/target-linux-x64/libLinuxKeyboardInterceptorProxy.so
+7f42d5613000-7f42d5614000 rw-p 00022000 103:04 5900708                   /usr/local/cuda-12.8/nsight-systems-2024.6.2/target-linux-x64/libLinuxKeyboardInterceptorProxy.so
+7f42d5614000-7f42d56d5000 r-xp 00000000 103:04 5900466                   /usr/local/cuda-12.8/nsight-systems-2024.6.2/target-linux-x64/libToolsInjectionProxy64.so
+7f42d56d5000-7f42d56dc000 r--p 000c0000 103:04 5900466                   /usr/local/cuda-12.8/nsight-systems-2024.6.2/target-linux-x64/libToolsInjectionProxy64.so
+7f42d56dc000-7f42d56dd000 rw-p 000c7000 103:04 5900466                   /usr/local/cuda-12.8/nsight-systems-2024.6.2/target-linux-x64/libToolsInjectionProxy64.so
+7f42d56dd000-7f42d56de000 rw-p 00000000 00:00 0 
+7f42d56de000-7f42d56e6000 r--p 00000000 103:04 44182332                  /home/quyifei/multimodal/workspace/Interception/active-preempt/build-595/librm_control.so
+7f42d56e6000-7f42d5709000 r-xp 00008000 103:04 44182332                  /home/quyifei/multimodal/workspace/Interception/active-preempt/build-595/librm_control.so
+7f42d5709000-7f42d5711000 r--p 0002b000 103:04 44182332                  /home/quyifei/multimodal/workspace/Interception/active-preempt/build-595/librm_control.so
+7f42d5711000-7f42d5712000 r--p 00032000 103:04 44182332                  /home/quyifei/multimodal/workspace/Interception/active-preempt/build-595/librm_control.so
+7f42d5712000-7f42d5713000 rw-p 00033000 103:04 44182332                  /home/quyifei/multimodal/workspace/Interception/active-preempt/build-595/librm_control.so
+7f42d5713000-7f42d571f000 rw-p 00000000 00:00 0 
+7f42d571f000-7f42d5721000 r--p 00000000 103:04 5382977                   /usr/lib/x86_64-linux-gnu/ld-linux-x86-64.so.2
+7f42d5721000-7f42d574b000 r-xp 00002000 103:04 5382977                   /usr/lib/x86_64-linux-gnu/ld-linux-x86-64.so.2
+7f42d574b000-7f42d5756000 r--p 0002c000 103:04 5382977                   /usr/lib/x86_64-linux-gnu/ld-linux-x86-64.so.2
+7f42d5756000-7f42d5757000 rw-s 00000000 103:04 40521160                  /tmp/nvidia/nsight_systems/quadd_session_102384955/injection_files/injection_2385047_1004_storage.dat
+7f42d5757000-7f42d5759000 r--p 00037000 103:04 5382977                   /usr/lib/x86_64-linux-gnu/ld-linux-x86-64.so.2
+7f42d5759000-7f42d575b000 rw-p 00039000 103:04 5382977                   /usr/lib/x86_64-linux-gnu/ld-linux-x86-64.so.2
+7fff6696a000-7fff6698c000 rw-p 00000000 00:00 0                          [stack]
+7fff669c6000-7fff669ca000 r--p 00000000 00:00 0                          [vvar]
+7fff669ca000-7fff669cc000 r-xp 00000000 00:00 0                          [vdso]
+ffffffffff600000-ffffffffff601000 --xp 00000000 00:00 0                  [vsyscall]

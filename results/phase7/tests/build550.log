@@ -1,0 +1,25 @@
+-- Configuring done
+-- Generating done
+-- Build files have been written to: /home/quyifei/multimodal/workspace/Interception/active-preempt/build
+Consolidate compiler generated dependencies of target preflight_cuda
+Consolidate compiler generated dependencies of target rm_control
+[  7%] Built target preflight_cuda
+[ 38%] Built target rm_control
+Consolidate compiler generated dependencies of target rm_contract_test
+Consolidate compiler generated dependencies of target bg_worker
+Consolidate compiler generated dependencies of target event_dump
+Consolidate compiler generated dependencies of target int_worker
+Consolidate compiler generated dependencies of target phase3_profile_test
+Consolidate compiler generated dependencies of target phase2_contract_test
+[ 53%] Built target rm_contract_test
+[ 53%] Built target event_dump
+[ 65%] Built target phase3_profile_test
+[ 69%] Built target bg_worker
+[ 76%] Built target int_worker
+[ 84%] Built target phase2_contract_test
+Consolidate compiler generated dependencies of target group_binding_test
+Consolidate compiler generated dependencies of target group_preempt_test
+[ 92%] Built target group_binding_test
+[ 96%] Building CXX object CMakeFiles/group_preempt_test.dir/src/group_preempt_test.cpp.o
+[100%] Linking CXX executable group_preempt_test
+[100%] Built target group_preempt_test

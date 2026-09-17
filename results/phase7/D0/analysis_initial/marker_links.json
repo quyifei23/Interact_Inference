@@ -1,0 +1,192 @@
+[
+  {
+    "raw_marker": {
+      "run_kind": "diagnostic",
+      "pid": 2385047,
+      "role": "BG",
+      "record": 0,
+      "label": "AP/phase7/D0/BG/2385047/0/owner_init",
+      "operation_seq": 0,
+      "kind": "mark",
+      "clock_domain": "CLOCK_MONOTONIC_RAW",
+      "begin_before_ns": 3815431432117293,
+      "begin_after_ns": 3815431432155292,
+      "end_before_ns": null,
+      "end_after_ns": null
+    },
+    "nvtx_rowid": 1,
+    "clock_mapping": "not applied",
+    "model_boundary": "NVTX trace timestamp is expected inside recorded RAW API-call bracket; affine interpolation would need explicit drift/error assumptions"
+  },
+  {
+    "raw_marker": {
+      "run_kind": "diagnostic",
+      "pid": 2385047,
+      "role": "BG",
+      "record": 1,
+      "label": "AP/phase7/D0/BG/2385047/0/bg_submit",
+      "operation_seq": 0,
+      "kind": "range",
+      "clock_domain": "CLOCK_MONOTONIC_RAW",
+      "begin_before_ns": 3815432763802885,
+      "begin_after_ns": 3815432763829456,
+      "end_before_ns": 3815432763931021,
+      "end_after_ns": 3815432763931804
+    },
+    "nvtx_rowid": 4,
+    "clock_mapping": "not applied",
+    "model_boundary": "NVTX trace timestamp is expected inside recorded RAW API-call bracket; affine interpolation would need explicit drift/error assumptions"
+  },
+  {
+    "raw_marker": {
+      "run_kind": "diagnostic",
+      "pid": 2385047,
+      "role": "BG",
+      "record": 2,
+      "label": "AP/phase7/D0/BG/2385047/2/owner_prepare_and_action",
+      "operation_seq": 2,
+      "kind": "range",
+      "clock_domain": "CLOCK_MONOTONIC_RAW",
+      "begin_before_ns": 3815432767149471,
+      "begin_after_ns": 3815432767150121,
+      "end_before_ns": 3815432767173944,
+      "end_after_ns": 3815432767174256
+    },
+    "nvtx_rowid": 7,
+    "clock_mapping": "not applied",
+    "model_boundary": "NVTX trace timestamp is expected inside recorded RAW API-call bracket; affine interpolation would need explicit drift/error assumptions"
+  },
+  {
+    "raw_marker": {
+      "run_kind": "diagnostic",
+      "pid": 2385047,
+      "role": "BG",
+      "record": 3,
+      "label": "AP/phase7/D0/BG/2385047/0/bg_original_complete",
+      "operation_seq": 0,
+      "kind": "mark",
+      "clock_domain": "CLOCK_MONOTONIC_RAW",
+      "begin_before_ns": 3815432832868854,
+      "begin_after_ns": 3815432832875268,
+      "end_before_ns": null,
+      "end_after_ns": null
+    },
+    "nvtx_rowid": 8,
+    "clock_mapping": "not applied",
+    "model_boundary": "NVTX trace timestamp is expected inside recorded RAW API-call bracket; affine interpolation would need explicit drift/error assumptions"
+  },
+  {
+    "raw_marker": {
+      "run_kind": "diagnostic",
+      "pid": 2385047,
+      "role": "BG",
+      "record": 4,
+      "label": "AP/phase7/D0/BG/2385047/0/bg_short_reuse",
+      "operation_seq": 0,
+      "kind": "range",
+      "clock_domain": "CLOCK_MONOTONIC_RAW",
+      "begin_before_ns": 3815432835118733,
+      "begin_after_ns": 3815432835119945,
+      "end_before_ns": 3815432835415972,
+      "end_after_ns": 3815432835417019
+    },
+    "nvtx_rowid": 10,
+    "clock_mapping": "not applied",
+    "model_boundary": "NVTX trace timestamp is expected inside recorded RAW API-call bracket; affine interpolation would need explicit drift/error assumptions"
+  },
+  {
+    "raw_marker": {
+      "run_kind": "diagnostic",
+      "pid": 2384964,
+      "role": "INT",
+      "record": 0,
+      "label": "AP/phase7/D0/INT/2384964/0/owner_init",
+      "operation_seq": 0,
+      "kind": "mark",
+      "clock_domain": "CLOCK_MONOTONIC_RAW",
+      "begin_before_ns": 3815432257884842,
+      "begin_after_ns": 3815432257966166,
+      "end_before_ns": null,
+      "end_after_ns": null
+    },
+    "nvtx_rowid": 2,
+    "clock_mapping": "not applied",
+    "model_boundary": "NVTX trace timestamp is expected inside recorded RAW API-call bracket; affine interpolation would need explicit drift/error assumptions"
+  },
+  {
+    "raw_marker": {
+      "run_kind": "diagnostic",
+      "pid": 2384964,
+      "role": "INT",
+      "record": 1,
+      "label": "AP/phase7/D0/INT/2384964/0/trial",
+      "operation_seq": 0,
+      "kind": "range",
+      "clock_domain": "CLOCK_MONOTONIC_RAW",
+      "begin_before_ns": 3815432763718798,
+      "begin_after_ns": 3815432763727807,
+      "end_before_ns": 3815432835417386,
+      "end_after_ns": 3815432835418180
+    },
+    "nvtx_rowid": 3,
+    "clock_mapping": "not applied",
+    "model_boundary": "NVTX trace timestamp is expected inside recorded RAW API-call bracket; affine interpolation would need explicit drift/error assumptions"
+  },
+  {
+    "raw_marker": {
+      "run_kind": "diagnostic",
+      "pid": 2384964,
+      "role": "INT",
+      "record": 2,
+      "label": "AP/phase7/D0/INT/2384964/0/interaction",
+      "operation_seq": 0,
+      "kind": "mark",
+      "clock_domain": "CLOCK_MONOTONIC_RAW",
+      "begin_before_ns": 3815432767088486,
+      "begin_after_ns": 3815432767089796,
+      "end_before_ns": null,
+      "end_after_ns": null
+    },
+    "nvtx_rowid": 5,
+    "clock_mapping": "not applied",
+    "model_boundary": "NVTX trace timestamp is expected inside recorded RAW API-call bracket; affine interpolation would need explicit drift/error assumptions"
+  },
+  {
+    "raw_marker": {
+      "run_kind": "diagnostic",
+      "pid": 2384964,
+      "role": "INT",
+      "record": 3,
+      "label": "AP/phase7/D0/INT/2384964/0/int_submit",
+      "operation_seq": 0,
+      "kind": "range",
+      "clock_domain": "CLOCK_MONOTONIC_RAW",
+      "begin_before_ns": 3815432767091755,
+      "begin_after_ns": 3815432767092166,
+      "end_before_ns": 3815432767129557,
+      "end_after_ns": 3815432767130017
+    },
+    "nvtx_rowid": 6,
+    "clock_mapping": "not applied",
+    "model_boundary": "NVTX trace timestamp is expected inside recorded RAW API-call bracket; affine interpolation would need explicit drift/error assumptions"
+  },
+  {
+    "raw_marker": {
+      "run_kind": "diagnostic",
+      "pid": 2384964,
+      "role": "INT",
+      "record": 4,
+      "label": "AP/phase7/D0/INT/2384964/0/trial_done",
+      "operation_seq": 0,
+      "kind": "mark",
+      "clock_domain": "CLOCK_MONOTONIC_RAW",
+      "begin_before_ns": 3815432833304724,
+      "begin_after_ns": 3815432833307597,
+      "end_before_ns": null,
+      "end_after_ns": null
+    },
+    "nvtx_rowid": 9,
+    "clock_mapping": "not applied",
+    "model_boundary": "NVTX trace timestamp is expected inside recorded RAW API-call bracket; affine interpolation would need explicit drift/error assumptions"
+  }
+]

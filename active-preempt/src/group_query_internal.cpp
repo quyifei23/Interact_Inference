@@ -1,4 +1,5 @@
 #include "group_query_internal.h"
+#include "diagnostic_trace.h"
 #include <nvos.h>
 #include <nv_escape.h>
 #include <ctrl/ctrla06c.h>
@@ -75,6 +76,7 @@ ControlResult GroupPreemptOnce::action(const ObjectRegistry& registry,ProfileSta
     PreparationEvent local;local.noop=noop;local.timing=timing;
     auto* preparation=journal.begin(nullptr,b.group.token.handle,0,&local,sizeof(local),trial,&b);
     timing.preparation_seq=preparation?preparation->sequence:0;r.operation_seq=timing.preparation_seq;
+    DiagnosticRange owner_action("owner_prepare_and_action",timing.preparation_seq);
     const auto& profile=build_profile();
     // Common preparation: same checks, same order, exactly once per condition.
     const bool query_matches=info.verified_for(b,state);
@@ -111,6 +113,7 @@ ControlResult GroupPreemptOnce::action(const ObjectRegistry& registry,ProfileSta
             consumed_=true; // failed/timeout attempts consume the same owner gate
             NVOS54_PARAMETERS args{};args.hClient=b.client;args.hObject=b.group.token.handle;
             args.cmd=NVA06C_CTRL_CMD_PREEMPT;args.params=&params;args.paramsSize=sizeof(params);args.status=0xffffffff;
+            DiagnosticRange ioctl_envelope("preempt_ioctl_envelope",r.operation_seq);
             r.begin_ns=monotonic_ns();r.attempted=true;event->result.begin_ns=r.begin_ns;
             ++state.project_controls_attempted;++state.project_active_controls_attempted;++state.project_group_preempt_attempted;
             errno=0;r.syscall_result=transport(b.fd,_IOWR('F',NV_ESC_RM_CONTROL,NVOS54_PARAMETERS),&args,context);

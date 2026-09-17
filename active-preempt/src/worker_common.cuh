@@ -2,6 +2,7 @@
 #include "protocol.h"
 #include "options.h"
 #include "json_log.h"
+#include "diagnostic_trace.h"
 #include <cuda.h>
 #include <cuda_runtime.h>
 #include <algorithm>

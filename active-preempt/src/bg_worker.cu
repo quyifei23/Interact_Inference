@@ -23,6 +23,7 @@ int main(int argc,char** argv){
         mapping=std::make_unique<ap::Mapping>(o.shared_path.c_str());auto& s=*mapping->shared;
         if(prctl(PR_SET_PDEATHSIG,SIGTERM)!=0)throw std::runtime_error("PR_SET_PDEATHSIG failed");
         if(getppid()!=pid_t(s.host.controller_pid))throw std::runtime_error("Controller exited before BG startup");
+        ap::diagnostic_init(o.diagnostic_trace,o.run_id,"BG",run_dir);
         ap::open_control_journal(run_dir,"bg");
         gpu=std::make_unique<ap::GpuWorker>(s.bg,o.bg_us,o.waves,o.heartbeat_ns,o.graph,o.bg_iterations,o.diagnostic);
         gpu->cleanup_log=run_dir+"/bg_cuda_cleanup.log";
@@ -64,9 +65,10 @@ int main(int argc,char** argv){
                 gpu->reset();gpu->host->launch_id=s.host.trial_id;s.host.bg_correct=0;prepared=true;break;
             case ap::Command::Launch:
                 if(!prepared)throw std::runtime_error("BG launch requires Prepare before observer starts");
-                prepared=false;work_in_flight=true;s.host.bg_submit_begin=ap::monotonic_ns();gpu->launch();s.host.bg_submit_end=ap::monotonic_ns();break;
+                {ap::DiagnosticRange launch("bg_submit");prepared=false;work_in_flight=true;s.host.bg_submit_begin=ap::monotonic_ns();gpu->launch();s.host.bg_submit_end=ap::monotonic_ns();}break;
             case ap::Command::Drain:
                 s.host.bg_correct=gpu->correct();s.host.bg_progress_correct=gpu->progress_correct;work_in_flight=false;
+                ap::diagnostic_mark("bg_original_complete");
                 if(group_request_attempted)ap::note_active_result_measured();
                 if(rm)rm->mark_work_drained();ap::save_control_journal();break;
             case ap::Command::GroupPrepareNoop:
@@ -80,6 +82,7 @@ int main(int argc,char** argv){
                 group_request_attempted=s.host.result.attempted;break; // mmap journal already published
             case ap::Command::CheckReuse:{
                 if(work_in_flight)throw std::runtime_error("BG reuse check requires completed drain");
+                ap::DiagnosticRange reuse("bg_short_reuse");
                 auto context=gpu->context;auto stream=gpu->stream;
                 s.host.bg_reuse_ok=gpu->check_short_reuse();
                 std::ofstream f(run_dir+"/bg_context_usability.json");

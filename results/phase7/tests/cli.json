@@ -1,0 +1,80 @@
+{
+  "synthetic_offline_only": true,
+  "gpu_trials": 0,
+  "calls": [
+    {
+      "call": [
+        "active-preempt/build/int_worker",
+        "--help"
+      ],
+      "returncode": 0,
+      "stdout": "int_worker --probe-cuda | --probe-rm-observe | --probe-rm-identity | --probe-rm-readonly | --probe-rm-group-info [--run-dir DIR]\nGroup-info requires CUDA_VISIBLE_DEVICES=<one full GPU UUID>; adds GET_INFO once, no other controls.\nint_worker --run-dir DIR --mode int-only|none|timeslice|preempt-wait|group-bound-none|group-preempt-wait|preempt-async|realtime-only|realtime-restart|realtime|disable|disable-split\n[--trials 1] [--cta-waves 1..16] [--bg-iterations N] [--int-iterations N] [--bg-us 80000] [--int-us 300]\n[--trigger-delay-us 1000..5000] [--heartbeat-ns 2000] [--timeslice-us 1] [--force 0|1] [--bypass 0|1] [--diagnostic-progress]\nActive modes require --test-host-confirmed. Async/force/bypass/D also require --allow-extended.\ngroup-preempt-wait: one plain trial, fixed BG/INT iterations, one explicit GPU UUID; BG owner only.\n--diagnostic-trace: optional NVTX host markers for one group-bound-none/group-preempt-wait trial; requires --run-id. No progress kernel changes.\nGraph requires --graph --graph-evidence-reviewed after independent plain-kernel evidence review. --probe aliases --probe-cuda.\n",
+      "stderr": ""
+    },
+    {
+      "call": [
+        "active-preempt/build/int_worker",
+        "--mode",
+        "group-preempt-wait",
+        "--diagnostic-trace",
+        "--run-id",
+        "invalid-synthetic"
+      ],
+      "returncode": 1,
+      "stdout": "",
+      "stderr": "Error: Active mode requires --test-host-confirmed (isolated authorized GPU host)\n"
+    },
+    {
+      "call": [
+        "active-preempt/build-595/int_worker",
+        "--help"
+      ],
+      "returncode": 0,
+      "stdout": "int_worker --probe-cuda | --probe-rm-observe | --probe-rm-identity | --probe-rm-readonly | --probe-rm-group-info [--run-dir DIR]\nGroup-info requires CUDA_VISIBLE_DEVICES=<one full GPU UUID>; adds GET_INFO once, no other controls.\nint_worker --run-dir DIR --mode int-only|none|timeslice|preempt-wait|group-bound-none|group-preempt-wait|preempt-async|realtime-only|realtime-restart|realtime|disable|disable-split\n[--trials 1] [--cta-waves 1..16] [--bg-iterations N] [--int-iterations N] [--bg-us 80000] [--int-us 300]\n[--trigger-delay-us 1000..5000] [--heartbeat-ns 2000] [--timeslice-us 1] [--force 0|1] [--bypass 0|1] [--diagnostic-progress]\nActive modes require --test-host-confirmed. Async/force/bypass/D also require --allow-extended.\ngroup-preempt-wait: one plain trial, fixed BG/INT iterations, one explicit GPU UUID; BG owner only.\n--diagnostic-trace: optional NVTX host markers for one group-bound-none/group-preempt-wait trial; requires --run-id. No progress kernel changes.\nGraph requires --graph --graph-evidence-reviewed after independent plain-kernel evidence review. --probe aliases --probe-cuda.\n",
+      "stderr": ""
+    },
+    {
+      "call": [
+        "active-preempt/build-595/int_worker",
+        "--mode",
+        "group-preempt-wait",
+        "--diagnostic-trace",
+        "--run-id",
+        "invalid-synthetic"
+      ],
+      "returncode": 1,
+      "stdout": "",
+      "stderr": "Error: Active mode requires --test-host-confirmed (isolated authorized GPU host)\n"
+    },
+    {
+      "call": [
+        "python3",
+        "active-preempt/scripts/probe_diagnostic.py",
+        "--help"
+      ],
+      "returncode": 0,
+      "stdout": "usage: probe_diagnostic.py [-h] --output OUTPUT\n\nRead-only Phase 7 tool inventory. Tool presence is not event availability.\n\noptions:\n  -h, --help       show this help message and exit\n  --output OUTPUT\n",
+      "stderr": ""
+    },
+    {
+      "call": [
+        "python3",
+        "active-preempt/scripts/run_diagnostic.py",
+        "--help"
+      ],
+      "returncode": 0,
+      "stdout": "usage: run_diagnostic.py [-h] --build BUILD --output OUTPUT --gpu GPU\n                         --condition {D0,D1} [--d0 D0] [--test-host-confirmed]\n\nOne Nsight D0 or D1. No retries, kernel replay, permission changes or\nautomatic D1.\n\noptions:\n  -h, --help            show this help message and exit\n  --build BUILD\n  --output OUTPUT\n  --gpu GPU\n  --condition {D0,D1}\n  --d0 D0\n  --test-host-confirmed\n",
+      "stderr": ""
+    },
+    {
+      "call": [
+        "python3",
+        "active-preempt/scripts/analyze_diagnostic.py",
+        "--help"
+      ],
+      "returncode": 0,
+      "stdout": "usage: analyze_diagnostic.py [-h] --run RUN --output OUTPUT\n\nNsight 2024.6 / SQLite 3.16.1 diagnostic only. Never infer residency or\ncausality. Schema was inspected in the real Phase7 D0 export before this\nadapter was added. Keep the original report/SQLite locally; every derived\nevent retains its rowid.\n\noptions:\n  -h, --help       show this help message and exit\n  --run RUN\n  --output OUTPUT\n",
+      "stderr": ""
+    }
+  ]
+}

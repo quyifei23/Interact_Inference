@@ -1,0 +1,10 @@
+{
+  "call": [
+    "/usr/local/cuda/bin/nsys",
+    "status",
+    "--help"
+  ],
+  "returncode": 0,
+  "stdout": "\nusage: nsys status [<args>]\n\n\t--all\n\n\t   Prints information for all the available profiling environments.\n\n\t-e, --environment\n\n\t   Check system's profiling environment.\n\n\t-h, --help=[<tag>]\n\n\t   Print the command's help menu. The switch can take one optional\n\t   argument that will be used as a tag. If a tag is provided, only options\n\t   relevant to the tag will be printed.\n\t   The available help menu tags for this command are:\n\n\t   env, environment, interactive, network, session, and status.\n\n\t-n, --network\n\n\t   Check network's profiling environment.\n\n\t--session=\n\n\t   Print the status of the given session. The option argument must represent a\n\t   valid session name or ID as reported by 'nsys sessions list'.\n\t   Any '%q{ENV_VAR}' pattern in the option argument will be substituted with the value of the\n\t   environment variable.\n\t   Any '%h' pattern in the option argument will be substituted with the hostname of the system.\n\t   Any '%%' pattern in the option argument will be substituted with '%'.\n\n",
+  "stderr": ""
+}

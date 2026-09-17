@@ -1,0 +1,5 @@
+{
+  "synthetic_only": true,
+  "matching_survivors": [],
+  "explanation": "One runner assertion failed during parallel profile regression; no cause inferred from this later snapshot."
+}

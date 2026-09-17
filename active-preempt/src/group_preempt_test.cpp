@@ -3,6 +3,7 @@
 #include "options.h"
 #include "protocol.h"
 #include "trial_record.h"
+#include "diagnostic_trace.h"
 #include <nvos.h>
 #include <nv_escape.h>
 #include <nvstatus.h>
@@ -151,6 +152,10 @@ void routing(){
     std::vector<std::string> argv={"test","--mode","group-preempt-wait","--test-host-confirmed","--bg-iterations","8192","--int-iterations","256"};
     auto parse=[&](){std::vector<char*> args;for(auto& a:argv)args.push_back(a.data());return ap::parse(args.size(),args.data());};
     need(parse().mode==p.name,"group CLI rejected valid fixed smoke");
+    argv.push_back("--diagnostic-trace");rejects(parse);
+    argv.insert(argv.end(),{"--run-id","synthetic-phase7"});
+    need(parse().diagnostic_trace&&!parse().diagnostic,"trace flag changes progress workload");
+    argv.resize(argv.size()-3);
     for(const auto& flag:{"--graph","--diagnostic-progress","--allow-extended"}){argv.push_back(flag);rejects(parse);argv.pop_back();}
     argv.insert(argv.end(),{"--trials","2"});rejects(parse);argv.resize(argv.size()-2);
     argv.erase(argv.begin()+3);rejects(parse);
@@ -215,7 +220,29 @@ void owner_process(){
     need(WIFEXITED(status)&&WEXITSTATUS(status)==0&&count==sizeof(response),"BG mock process failed");
     need(response[0]==uint32_t(child)&&response[1]==uint32_t(child)&&response[1]!=uint32_t(getpid())&&response[2]==1&&response[3]==1,"controller borrowed BG binding or multiple controls issued");
 }
+void diagnostic_annotations(){
+    // No profiler or GPU needed: annotations retain journal sequence and RAW
+    // call brackets. Actual NVTX export requires a separate real D0.
+    char temp[]="/tmp/ap-diagnostic-test-XXXXXX";need(mkdtemp(temp),"diagnostic temp directory");
+    ap::diagnostic_init(false,"synthetic","BG",temp);ap::diagnostic_mark("disabled");ap::diagnostic_save();
+    need(std::filesystem::is_empty(temp),"disabled diagnostics wrote files");
+    ap::diagnostic_init(true,"synthetic","BG",temp);
+    Fixture f;f.verify();auto r=f.issue();need(r.ok()&&f.mock.preempts==1,"diagnostic fixture");
+    need(!f.issue().attempted&&f.mock.preempts==1,"diagnostics bypassed once gate");
+    {Fixture denied(8,ap::RmStage::GroupActive,false);denied.verify();
+     need(denied.issue().rejection==ap::ControlResult::Rejection::Authorization&&!denied.mock.preempts,"NVTX enabled unauthorized control");}
+    {Fixture noop(8,ap::RmStage::GroupNoop,false);noop.verify();
+     auto r=noop.preempt.prepare_noop(noop.registry,noop.state,noop.binding,noop.query,true,noop.journal,0,true);
+     need(r.rejection==ap::ControlResult::Rejection::SkippedByDesign&&!noop.mock.preempts,"diagnostic D0 preempted");}
+    ap::diagnostic_save();std::ifstream file(std::string(temp)+"/BG_diagnostic_markers.jsonl");
+    std::string line;unsigned envelopes=0;
+    while(std::getline(file,line))if(line.find("preempt_ioctl_envelope")!=std::string::npos){
+        ++envelopes;need(line.find("\"operation_seq\":"+std::to_string(r.operation_seq)+",")!=std::string::npos,"marker/journal sequence mismatch");
+        need(line.find("CLOCK_MONOTONIC_RAW")!=std::string::npos&&line.find("\"end_after_ns\":null")==std::string::npos,"marker RAW brackets missing");
+    }
+    need(envelopes==1,"one-shot emitted wrong number of ioctl ranges");std::filesystem::remove_all(temp);
 }
-int main(){try{successful_path();gates();failures_and_timeout_journal();routing();matched_preparation();owner_process();
+}
+int main(){try{successful_path();gates();failures_and_timeout_journal();routing();matched_preparation();owner_process();diagnostic_annotations();
     std::cout<<"Synthetic group PREEMPT: exact GET_INFO binding, multichannel, ownership/stage/auth/scope/generation gates, bounded wait, one-shot, raw failures, timeout journal and owner-process routing passed. GPU controls/trials=0.\n";return 0;
 }catch(const std::exception& e){std::cerr<<e.what()<<'\n';return 1;}}

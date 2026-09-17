@@ -1,0 +1,10 @@
+{
+  "argv": [
+    "nsys",
+    "status",
+    "--environment"
+  ],
+  "returncode": 0,
+  "stdout": "Timestamp counter supported: Yes\n\nCPU Profiling Environment Check\nRoot privilege: disabled\nLinux Kernel Paranoid Level = 4\nLinux Distribution = Ubuntu\nLinux Kernel Version = 5.15.0-186-generic: OK\nLinux perf_event_open syscall available: Fail\nSampling trigger event available: Fail\nIntel(c) Last Branch Record support: Not Available\nCPU Profiling Environment (process-tree): Fail\nCPU Profiling Environment (system-wide): Fail\n\nSee the product documentation at https://docs.nvidia.com/nsight-systems for more information,\nincluding information on how to set the Linux Kernel Paranoid Level.\n",
+  "stderr": ""
+}

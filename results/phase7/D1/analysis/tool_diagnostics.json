@@ -1,0 +1,218 @@
+[
+  {
+    "rowid": 1,
+    "timestamp": 0,
+    "timestampType": 1,
+    "source": 3,
+    "severity": 1,
+    "text": "Profiling has started.",
+    "globalPid": -144115188075855872
+  },
+  {
+    "rowid": 2,
+    "timestamp": 102705654,
+    "timestampType": 1,
+    "source": 2,
+    "severity": 1,
+    "text": "Process was launched by the profiler, see /tmp/nvidia/nsight_systems/quadd_session_102393292/streams/pid_2393301_stdout.log and stderr.log for program output",
+    "globalPid": 321627904540672
+  },
+  {
+    "rowid": 3,
+    "timestamp": 122007369,
+    "timestampType": 1,
+    "source": 1,
+    "severity": 1,
+    "text": "Common injection library initialized successfully.",
+    "globalPid": 321627904540672
+  },
+  {
+    "rowid": 4,
+    "timestamp": 145127631,
+    "timestampType": 1,
+    "source": 1,
+    "severity": 1,
+    "text": "Common injection library initialized successfully.",
+    "globalPid": 321629229940736
+  },
+  {
+    "rowid": 5,
+    "timestamp": 145435746,
+    "timestampType": 1,
+    "source": 1,
+    "severity": 1,
+    "text": "NVTX injection initialized successfully.",
+    "globalPid": 321629229940736
+  },
+  {
+    "rowid": 6,
+    "timestamp": 189241403,
+    "timestampType": 1,
+    "source": 1,
+    "severity": 1,
+    "text": "Buffers holding CUDA trace data will be flushed on CudaProfilerStop() call. See --flush-on-cudaprofilerstop to control this behavior.",
+    "globalPid": 321629229940736
+  },
+  {
+    "rowid": 7,
+    "timestamp": 225687823,
+    "timestampType": 1,
+    "source": 1,
+    "severity": 1,
+    "text": "Loaded CUPTI library: /usr/local/cuda-12.8/nsight-systems-2024.6.2/target-linux-x64/libcupti.so.12.8",
+    "globalPid": 321629229940736
+  },
+  {
+    "rowid": 8,
+    "timestamp": 225693462,
+    "timestampType": 1,
+    "source": 1,
+    "severity": 2,
+    "text": "Installed CUDA driver version (13.2) is not supported by this build of Nsight Systems. CUDA trace will be collected using libraries for driver version 12.8",
+    "globalPid": 321629229940736
+  },
+  {
+    "rowid": 9,
+    "timestamp": 443106943,
+    "timestampType": 1,
+    "source": 1,
+    "severity": 1,
+    "text": "Enabling trace for device graph launch",
+    "globalPid": 321629229940736
+  },
+  {
+    "rowid": 10,
+    "timestamp": 451623126,
+    "timestampType": 1,
+    "source": 1,
+    "severity": 1,
+    "text": "CUDA injection initialized successfully.",
+    "globalPid": 321629229940736
+  },
+  {
+    "rowid": 11,
+    "timestamp": 927095789,
+    "timestampType": 2,
+    "source": 3,
+    "severity": 1,
+    "text": "Number of NVTX events collected: \t5.",
+    "globalPid": 321627904540672
+  },
+  {
+    "rowid": 12,
+    "timestamp": 927100421,
+    "timestampType": 2,
+    "source": 3,
+    "severity": 1,
+    "text": "Number of NVTX events collected: \t6.",
+    "globalPid": 321629229940736
+  },
+  {
+    "rowid": 13,
+    "timestamp": 927102409,
+    "timestampType": 2,
+    "source": 3,
+    "severity": 1,
+    "text": "Number of CUDA events collected: \t1303.",
+    "globalPid": 321627904540672
+  },
+  {
+    "rowid": 14,
+    "timestamp": 927103427,
+    "timestampType": 2,
+    "source": 3,
+    "severity": 1,
+    "text": "Number of CUDA events collected: \t380874.",
+    "globalPid": 321629229940736
+  },
+  {
+    "rowid": 15,
+    "timestamp": 927116683,
+    "timestampType": 2,
+    "source": 3,
+    "severity": 1,
+    "text": "Number of GPU context switch events collected: \t18.",
+    "globalPid": 281474976710656
+  },
+  {
+    "rowid": 16,
+    "timestamp": 988861022,
+    "timestampType": 1,
+    "source": 1,
+    "severity": 1,
+    "text": "NVTX injection initialized successfully.",
+    "globalPid": 321627904540672
+  },
+  {
+    "rowid": 17,
+    "timestamp": 1025176845,
+    "timestampType": 1,
+    "source": 1,
+    "severity": 1,
+    "text": "Buffers holding CUDA trace data will be flushed on CudaProfilerStop() call. See --flush-on-cudaprofilerstop to control this behavior.",
+    "globalPid": 321627904540672
+  },
+  {
+    "rowid": 18,
+    "timestamp": 1034494964,
+    "timestampType": 1,
+    "source": 1,
+    "severity": 1,
+    "text": "Loaded CUPTI library: /usr/local/cuda-12.8/nsight-systems-2024.6.2/target-linux-x64/libcupti.so.12.8",
+    "globalPid": 321627904540672
+  },
+  {
+    "rowid": 19,
+    "timestamp": 1034505787,
+    "timestampType": 1,
+    "source": 1,
+    "severity": 2,
+    "text": "Installed CUDA driver version (13.2) is not supported by this build of Nsight Systems. CUDA trace will be collected using libraries for driver version 12.8",
+    "globalPid": 321627904540672
+  },
+  {
+    "rowid": 20,
+    "timestamp": 1240303325,
+    "timestampType": 1,
+    "source": 1,
+    "severity": 1,
+    "text": "Enabling trace for device graph launch",
+    "globalPid": 321627904540672
+  },
+  {
+    "rowid": 21,
+    "timestamp": 1248877571,
+    "timestampType": 1,
+    "source": 1,
+    "severity": 1,
+    "text": "CUDA injection initialized successfully.",
+    "globalPid": 321627904540672
+  },
+  {
+    "rowid": 22,
+    "timestamp": 1733803812,
+    "timestampType": 1,
+    "source": 1,
+    "severity": 1,
+    "text": "Number of CUPTI events produced: \t761330, CUPTI buffers: 50.",
+    "globalPid": 321629229940736
+  },
+  {
+    "rowid": 23,
+    "timestamp": 1925267780,
+    "timestampType": 1,
+    "source": 1,
+    "severity": 1,
+    "text": "Number of CUPTI events produced: \t2186, CUPTI buffers: 50.",
+    "globalPid": 321627904540672
+  },
+  {
+    "rowid": 24,
+    "timestamp": 2019619769,
+    "timestampType": 1,
+    "source": 3,
+    "severity": 1,
+    "text": "Profiling has stopped.",
+    "globalPid": -144115188075855872
+  }
+]

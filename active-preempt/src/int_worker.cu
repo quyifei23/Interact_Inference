@@ -223,6 +223,7 @@ int main(int argc,char** argv){
             uint64_t deadline=ap::monotonic_ns()+ap::host_timeout_ns;
             while(!ap::acquire(&s.host.ready)){ap::check_stop();ap::check_peer(s);if(ap::monotonic_ns()>deadline)throw std::runtime_error("BG initialization timeout");std::this_thread::yield();}
         }
+        ap::diagnostic_init(o.diagnostic_trace,o.run_id,"INT",run_dir);
         ap::open_control_journal(run_dir,"int");
         gpu=std::make_unique<ap::GpuWorker>(s.interactive,o.int_us,1,o.heartbeat_ns,o.graph,o.int_iterations,o.diagnostic);
         gpu->cleanup_log=run_dir+"/int_cuda_cleanup.log";
@@ -244,7 +245,7 @@ int main(int argc,char** argv){
         }
         std::ofstream identity(run_dir+"/int_identity.txt");ap::write_identity(identity,*gpu,rm.get());
         if(group)ap::write_group_identity(identity,*group);
-        identity<<"mode="<<o.mode<<" force="<<o.force<<" bypass="<<o.bypass<<" graph="<<o.graph<<" run_kind="<<(o.diagnostic?"diagnostic":"performance")<<" trials="<<o.trials<<"\n";
+        identity<<"mode="<<o.mode<<" force="<<o.force<<" bypass="<<o.bypass<<" graph="<<o.graph<<" run_kind="<<((o.diagnostic||o.diagnostic_trace)?"diagnostic":"performance")<<" trials="<<o.trials<<"\n";
         bool realtime_accepted=false;
         if(plan.timeslice){
             ap::require_ok(rm->get_timeslice(recovery.original_timeslice),"INT GET_TIMESLICE");recovery.timeslice=true;ap::require_ok(rm->timeslice(1000000),"INT SET_TIMESLICE");
@@ -255,7 +256,7 @@ int main(int argc,char** argv){
         identity.flush();ap::save_control_journal();
         std::ofstream configuration(run_dir+"/configuration.json");
         configuration<<"{\"schema_version\":2,\"mode\":"<<ap::json_string(o.mode)
-            <<",\"run_kind\":"<<ap::json_string(o.diagnostic?"diagnostic":"performance")
+            <<",\"run_kind\":"<<ap::json_string((o.diagnostic||o.diagnostic_trace)?"diagnostic":"performance")
             <<",\"gpu_uuid\":"<<ap::json_string(ap::uuid_string(gpu->prop.uuid))
             <<",\"driver_profile\":"<<ap::json_string(plan.identity||plan.group_identity?ap::build_profile().version:"CUDA_BASELINE_NO_RM_PROFILE")
             <<",\"build_profile\":"<<ap::json_string(ap::build_profile().version)<<",\"nvidia_source_commit\":"<<ap::json_string(ap::build_profile().source_commit)
@@ -288,13 +289,14 @@ int main(int argc,char** argv){
         ap::TrialRecord::header(raw);if(child){heartbeats<<"schema_version,trial,sample,gpu_ns,cpu_observed_ns\n";ctas<<"schema_version,trial,cta,start_gpu_ns,end_gpu_ns\n";}
         std::minstd_rand rng(20260917);
         for(unsigned trial=0;trial<o.trials;++trial){
-            ap::TrialRecord row;row.trial=trial;row.mode=o.mode;row.graph=o.graph;row.force=o.force;row.bypass=o.bypass;row.bg_present=plan.background;row.run_kind=o.diagnostic?"diagnostic":"performance";
+            ap::TrialRecord row;row.trial=trial;row.mode=o.mode;row.graph=o.graph;row.force=o.force;row.bypass=o.bypass;row.bg_present=plan.background;row.run_kind=(o.diagnostic||o.diagnostic_trace)?"diagnostic":"performance";
             row.batch_id=o.batch_id;row.pair_id=o.pair_id;row.pair_order=o.pair_order;row.condition=o.condition;row.run_id=o.run_id;
             std::unique_ptr<Observer> observer;
             try{
                 ap::record_trial(trial);gpu->reset();gpu->host->launch_id=trial;
                 if(group&&!ap::verified_group_current(group->identity))throw std::runtime_error("OBJECT_BINDING_UNAVAILABLE: stale INT group before trial");
                 if(child)child->command(ap::Command::Prepare,trial); // reset before observer, never concurrently
+                ap::DiagnosticRange trial_range("trial");
                 observer=std::make_unique<Observer>(s,plan.background);
                 if(child){child->command(ap::Command::Launch,trial);ap::wait_value(&s.bg.started,1,"BG main_entry");row.bg_main_observed=ap::monotonic_ns();
                     row.planned_delay_us=o.trigger_delay_us?o.trigger_delay_us:1000+rng()%4000;
@@ -302,7 +304,9 @@ int main(int argc,char** argv){
                     while(ap::monotonic_ns()<trigger_at){ap::check_stop();ap::check_peer(s);ap::relax();}
                 }
                 if(child)row.bg_done_before=ap::acquire(&s.bg.done)!=0;
-                row.trigger=ap::monotonic_ns();row.submit_begin=ap::monotonic_ns();gpu->launch();row.submit_end=ap::monotonic_ns();
+                ap::diagnostic_mark("interaction");
+                row.trigger=ap::monotonic_ns();
+                {ap::DiagnosticRange submit("int_submit");row.submit_begin=ap::monotonic_ns();gpu->launch();row.submit_end=ap::monotonic_ns();}
                 auto trigger=plan.trigger(bool(rm)||bool(group),realtime_accepted);
                 if(child){
                     ap::Command cmd=ap::Command::None;
@@ -334,6 +338,7 @@ int main(int argc,char** argv){
                 if(rm)rm->mark_work_drained();
                 if(child){ap::wait_value(&s.bg.done,1,"BG completion");child->command(ap::Command::Drain,trial);row.bg_correct=s.host.bg_correct;if(o.diagnostic)row.progress_correct&=s.host.bg_progress_correct;}
                 observer->finish();snapshot(row,s,observer.get());row.complete=true;row.write(raw);
+                ap::diagnostic_mark("trial_done");
                 if(row.control.attempted)ap::note_active_result_measured();
                 for(size_t i=0;i<observer->data.heartbeat.size();++i)heartbeats<<2<<','<<trial<<','<<i<<','<<observer->data.heartbeat[i].first<<','<<observer->data.heartbeat[i].second<<'\n';
                 if(child)for(unsigned b=0;b<s.host.bg_blocks;++b)ctas<<2<<','<<trial<<','<<b<<','<<s.bg.cta_start_gpu_ns[b]<<','<<s.bg.cta_end_gpu_ns[b]<<'\n';

@@ -1,0 +1,22 @@
+[
+  {
+    "source": "/tmp/nvidia/nsight_systems/quadd_session_102393292/streams/pid_2393380_stdout.log",
+    "exists": false,
+    "saved_as": null
+  },
+  {
+    "source": "/tmp/nvidia/nsight_systems/quadd_session_102393292/streams/pid_2393380_stderr.log",
+    "exists": false,
+    "saved_as": null
+  },
+  {
+    "source": "/tmp/nvidia/nsight_systems/quadd_session_102393292/streams/pid_2393301_stdout.log",
+    "exists": false,
+    "saved_as": null
+  },
+  {
+    "source": "/tmp/nvidia/nsight_systems/quadd_session_102393292/streams/pid_2393301_stderr.log",
+    "exists": false,
+    "saved_as": null
+  }
+]

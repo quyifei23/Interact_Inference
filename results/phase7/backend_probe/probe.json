@@ -1,0 +1,71 @@
+{
+  "run_kind": "diagnostic",
+  "nsys": "/usr/local/cuda/bin/nsys",
+  "version": {
+    "call": [
+      "/usr/local/cuda/bin/nsys",
+      "--version"
+    ],
+    "returncode": 0,
+    "stdout": "NVIDIA Nsight Systems version 2024.6.2.225-246235244400v0\n",
+    "stderr": ""
+  },
+  "gpuctxsw_option_present": true,
+  "event_collection_verified": false,
+  "bg_int_association_verified": false,
+  "scope": "gpuctxsw is system scope in this installed CLI; CUDA/NVTX follow the application process tree",
+  "raw_export_options": "sqlite/text/json reported by installed export help; verify actual report schema",
+  "clock": "exported trace clock/origin must be read from report; not CPU RAW or GPU globaltimer by unit alone",
+  "permissions": "No changes. CPU perf probe failure is not proof of GPU context-switch denial. Test actual collection.",
+  "cupti": [
+    {
+      "header": "/usr/local/cuda-12.8/extras/CUPTI/include/cupti_activity.h",
+      "header_sha256": "9246274bed672964e1d8464e299de252e826070bce64588adc7c339df3d6c5ce",
+      "has_compute_engine_ctx_switch": false,
+      "api_version_header": [
+        "26"
+      ],
+      "enable_attempted": false,
+      "records_received": null,
+      "library": "/usr/local/cuda-12.8/extras/CUPTI/lib64/libcupti.so.2025.1.0",
+      "get_version_returncode": 0,
+      "api_version_loaded": 26
+    },
+    {
+      "header": "/usr/local/lib/python3.10/dist-packages/nvidia/cu13/include/cupti_activity.h",
+      "header_sha256": "914cd60f2d76af0d9d3c8d680d14099922aedaebcd8156111c6a070bda6b3fff",
+      "has_compute_engine_ctx_switch": false,
+      "api_version_header": [
+        "130001"
+      ],
+      "enable_attempted": false,
+      "records_received": null,
+      "library": "/usr/local/lib/python3.10/dist-packages/nvidia/cu13/lib/libcupti.so.13",
+      "get_version_returncode": 0,
+      "api_version_loaded": 130001
+    }
+  ],
+  "uid": 1004,
+  "process_security": [
+    "CapInh:\t0000000000000000",
+    "CapPrm:\t0000000000000000",
+    "CapEff:\t0000000000000000",
+    "CapBnd:\t000001ffffffffff",
+    "CapAmb:\t0000000000000000",
+    "NoNewPrivs:\t0",
+    "Seccomp:\t0",
+    "Seccomp_filters:\t0"
+  ],
+  "driver": {
+    "call": [
+      "cat",
+      "/proc/driver/nvidia/version"
+    ],
+    "returncode": 0,
+    "stdout": "NVRM version: NVIDIA UNIX x86_64 Kernel Module  595.58.03  Tue Mar 17 19:54:55 UTC 2026\nGCC version:  gcc version 11.4.0 (Ubuntu 11.4.0-1ubuntu1~22.04.3) \n",
+    "stderr": ""
+  },
+  "profiling_parameter": [
+    "RmProfilingAdminOnly: 0"
+  ]
+}

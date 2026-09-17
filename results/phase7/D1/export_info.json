@@ -1,0 +1,13 @@
+{
+  "call": [
+    "/usr/local/cuda/bin/nsys",
+    "export",
+    "--type=info",
+    "--force-overwrite=false",
+    "--output=/home/quyifei/multimodal/workspace/Interception/results/phase7/D1/trace.info",
+    "/home/quyifei/multimodal/workspace/Interception/results/phase7/D1/trace.nsys-rep"
+  ],
+  "returncode": 0,
+  "stdout": "",
+  "stderr": ""
+}

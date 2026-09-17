@@ -1,0 +1,3640 @@
+{
+  "StringIds": {
+    "sql": "CREATE TABLE StringIds (\n    -- Consolidation of repetitive string values.\n\n    id                          INTEGER   NOT NULL   PRIMARY KEY,      -- ID reference value.\n    value                       TEXT      NOT NULL                     -- String value.\n)",
+    "columns": [
+      {
+        "cid": 0,
+        "name": "id",
+        "type": "INTEGER",
+        "notnull": 1,
+        "dflt_value": null,
+        "pk": 1
+      },
+      {
+        "cid": 1,
+        "name": "value",
+        "type": "TEXT",
+        "notnull": 1,
+        "dflt_value": null,
+        "pk": 0
+      }
+    ],
+    "count": 1302
+  },
+  "ANALYSIS_FILE": {
+    "sql": "CREATE TABLE ANALYSIS_FILE (\n    -- Analysis file content\n\n    id                          INTEGER   NOT NULL   PRIMARY KEY,      -- ID reference value.\n    filename                    TEXT,                                  -- File path\n    contentId                   INTEGER,                               -- REFERENCES StringIds(id) -- File content\n    globalPid                   INTEGER   NOT NULL                     -- Serialized GlobalId.\n)",
+    "columns": [
+      {
+        "cid": 0,
+        "name": "id",
+        "type": "INTEGER",
+        "notnull": 1,
+        "dflt_value": null,
+        "pk": 1
+      },
+      {
+        "cid": 1,
+        "name": "filename",
+        "type": "TEXT",
+        "notnull": 0,
+        "dflt_value": null,
+        "pk": 0
+      },
+      {
+        "cid": 2,
+        "name": "contentId",
+        "type": "INTEGER",
+        "notnull": 0,
+        "dflt_value": null,
+        "pk": 0
+      },
+      {
+        "cid": 3,
+        "name": "globalPid",
+        "type": "INTEGER",
+        "notnull": 1,
+        "dflt_value": null,
+        "pk": 0
+      }
+    ],
+    "count": 2
+  },
+  "ProcessStreams": {
+    "sql": "CREATE TABLE ProcessStreams (\n    globalPid                   INTEGER   NOT NULL,                    -- Serialized GlobalId.\n    filenameId                  INTEGER   NOT NULL,                    -- REFERENCES StringIds(id) -- File name\n    contentId                   INTEGER   NOT NULL                     -- REFERENCES StringIds(id) -- Stream content\n)",
+    "columns": [
+      {
+        "cid": 0,
+        "name": "globalPid",
+        "type": "INTEGER",
+        "notnull": 1,
+        "dflt_value": null,
+        "pk": 0
+      },
+      {
+        "cid": 1,
+        "name": "filenameId",
+        "type": "INTEGER",
+        "notnull": 1,
+        "dflt_value": null,
+        "pk": 0
+      },
+      {
+        "cid": 2,
+        "name": "contentId",
+        "type": "INTEGER",
+        "notnull": 1,
+        "dflt_value": null,
+        "pk": 0
+      }
+    ],
+    "count": 2
+  },
+  "TARGET_INFO_SYSTEM_ENV": {
+    "sql": "CREATE TABLE TARGET_INFO_SYSTEM_ENV (\n    globalVid                   INTEGER,                               -- Serialized GlobalId.\n    devStateName                TEXT      NOT NULL,                    -- Device state name.\n    name                        TEXT      NOT NULL,                    -- Property name.\n    nameEnum                    INTEGER   NOT NULL,                    -- Property enum value.\n    value                       TEXT      NOT NULL                     -- Property value.\n)",
+    "columns": [
+      {
+        "cid": 0,
+        "name": "globalVid",
+        "type": "INTEGER",
+        "notnull": 0,
+        "dflt_value": null,
+        "pk": 0
+      },
+      {
+        "cid": 1,
+        "name": "devStateName",
+        "type": "TEXT",
+        "notnull": 1,
+        "dflt_value": null,
+        "pk": 0
+      },
+      {
+        "cid": 2,
+        "name": "name",
+        "type": "TEXT",
+        "notnull": 1,
+        "dflt_value": null,
+        "pk": 0
+      },
+      {
+        "cid": 3,
+        "name": "nameEnum",
+        "type": "INTEGER",
+        "notnull": 1,
+        "dflt_value": null,
+        "pk": 0
+      },
+      {
+        "cid": 4,
+        "name": "value",
+        "type": "TEXT",
+        "notnull": 1,
+        "dflt_value": null,
+        "pk": 0
+      }
+    ],
+    "count": 85
+  },
+  "TARGET_INFO_NIC_INFO": {
+    "sql": "CREATE TABLE TARGET_INFO_NIC_INFO (\n    GUID                        INTEGER   NOT NULL,                    -- Network interface GUID\n    stateName                   TEXT      NOT NULL,                    -- Device state name\n    nicId                       INTEGER   NOT NULL,                    -- Network interface Id\n    name                        TEXT      NOT NULL,                    -- Network interface name\n    deviceId                    INTEGER   NOT NULL,                    -- REFERENCES ENUM_NET_DEVICE_ID(id)\n    vendorId                    INTEGER   NOT NULL,                    -- REFERENCES ENUM_NET_VENDOR_ID(id)\n    linkLayer                   INTEGER   NOT NULL                     -- REFERENCES ENUM_NET_LINK_TYPE(id)\n)",
+    "columns": [
+      {
+        "cid": 0,
+        "name": "GUID",
+        "type": "INTEGER",
+        "notnull": 1,
+        "dflt_value": null,
+        "pk": 0
+      },
+      {
+        "cid": 1,
+        "name": "stateName",
+        "type": "TEXT",
+        "notnull": 1,
+        "dflt_value": null,
+        "pk": 0
+      },
+      {
+        "cid": 2,
+        "name": "nicId",
+        "type": "INTEGER",
+        "notnull": 1,
+        "dflt_value": null,
+        "pk": 0
+      },
+      {
+        "cid": 3,
+        "name": "name",
+        "type": "TEXT",
+        "notnull": 1,
+        "dflt_value": null,
+        "pk": 0
+      },
+      {
+        "cid": 4,
+        "name": "deviceId",
+        "type": "INTEGER",
+        "notnull": 1,
+        "dflt_value": null,
+        "pk": 0
+      },
+      {
+        "cid": 5,
+        "name": "vendorId",
+        "type": "INTEGER",
+        "notnull": 1,
+        "dflt_value": null,
+        "pk": 0
+      },
+      {
+        "cid": 6,
+        "name": "linkLayer",
+        "type": "INTEGER",
+        "notnull": 1,
+        "dflt_value": null,
+        "pk": 0
+      }
+    ],
+    "count": 2
+  },
+  "TARGET_INFO_SESSION_START_TIME": {
+    "sql": "CREATE TABLE TARGET_INFO_SESSION_START_TIME (\n    utcEpochNs                  INTEGER,                               -- UTC Epoch timestamp at start of the capture (ns).\n    utcTime                     TEXT,                                  -- Start of the capture in UTC.\n    localTime                   TEXT                                   -- Start of the capture in local time of target.\n)",
+    "columns": [
+      {
+        "cid": 0,
+        "name": "utcEpochNs",
+        "type": "INTEGER",
+        "notnull": 0,
+        "dflt_value": null,
+        "pk": 0
+      },
+      {
+        "cid": 1,
+        "name": "utcTime",
+        "type": "TEXT",
+        "notnull": 0,
+        "dflt_value": null,
+        "pk": 0
+      },
+      {
+        "cid": 2,
+        "name": "localTime",
+        "type": "TEXT",
+        "notnull": 0,
+        "dflt_value": null,
+        "pk": 0
+      }
+    ],
+    "count": 1
+  },
+  "ANALYSIS_DETAILS": {
+    "sql": "CREATE TABLE ANALYSIS_DETAILS (\n    -- Details about the analysis session.\n\n    globalVid                   INTEGER   NOT NULL,                    -- Serialized GlobalId.\n    duration                    INTEGER   NOT NULL,                    -- The total time span of the entire trace (ns).\n    startTime                   INTEGER   NOT NULL,                    -- Trace start timestamp in nanoseconds.\n    stopTime                    INTEGER   NOT NULL                     -- Trace stop timestamp in nanoseconds.\n)",
+    "columns": [
+      {
+        "cid": 0,
+        "name": "globalVid",
+        "type": "INTEGER",
+        "notnull": 1,
+        "dflt_value": null,
+        "pk": 0
+      },
+      {
+        "cid": 1,
+        "name": "duration",
+        "type": "INTEGER",
+        "notnull": 1,
+        "dflt_value": null,
+        "pk": 0
+      },
+      {
+        "cid": 2,
+        "name": "startTime",
+        "type": "INTEGER",
+        "notnull": 1,
+        "dflt_value": null,
+        "pk": 0
+      },
+      {
+        "cid": 3,
+        "name": "stopTime",
+        "type": "INTEGER",
+        "notnull": 1,
+        "dflt_value": null,
+        "pk": 0
+      }
+    ],
+    "count": 1
+  },
+  "CUPTI_ACTIVITY_KIND_CUDA_EVENT": {
+    "sql": "CREATE TABLE CUPTI_ACTIVITY_KIND_CUDA_EVENT (\n    deviceId                    INTEGER   NOT NULL,                    -- Device ID.\n    contextId                   INTEGER   NOT NULL,                    -- Context ID.\n    greenContextId              INTEGER,                               -- Green context ID.\n    streamId                    INTEGER   NOT NULL,                    -- Stream ID.\n    correlationId               INTEGER,                               -- Correlation ID of the event record API to which this result is associated.\n    globalPid                   INTEGER,                               -- Serialized GlobalId.\n    eventId                     INTEGER   NOT NULL                     -- Event ID for which the event record API is called.\n)",
+    "columns": [
+      {
+        "cid": 0,
+        "name": "deviceId",
+        "type": "INTEGER",
+        "notnull": 1,
+        "dflt_value": null,
+        "pk": 0
+      },
+      {
+        "cid": 1,
+        "name": "contextId",
+        "type": "INTEGER",
+        "notnull": 1,
+        "dflt_value": null,
+        "pk": 0
+      },
+      {
+        "cid": 2,
+        "name": "greenContextId",
+        "type": "INTEGER",
+        "notnull": 0,
+        "dflt_value": null,
+        "pk": 0
+      },
+      {
+        "cid": 3,
+        "name": "streamId",
+        "type": "INTEGER",
+        "notnull": 1,
+        "dflt_value": null,
+        "pk": 0
+      },
+      {
+        "cid": 4,
+        "name": "correlationId",
+        "type": "INTEGER",
+        "notnull": 0,
+        "dflt_value": null,
+        "pk": 0
+      },
+      {
+        "cid": 5,
+        "name": "globalPid",
+        "type": "INTEGER",
+        "notnull": 0,
+        "dflt_value": null,
+        "pk": 0
+      },
+      {
+        "cid": 6,
+        "name": "eventId",
+        "type": "INTEGER",
+        "notnull": 1,
+        "dflt_value": null,
+        "pk": 0
+      }
+    ],
+    "count": 17
+  },
+  "DIAGNOSTIC_EVENT": {
+    "sql": "CREATE TABLE DIAGNOSTIC_EVENT (\n    timestamp                   INTEGER   NOT NULL,                    -- Event timestamp (ns).\n    timestampType               INTEGER   NOT NULL,                    -- REFERENCES ENUM_DIAGNOSTIC_TIMESTAMP_SOURCE(id)\n    source                      INTEGER   NOT NULL,                    -- REFERENCES ENUM_DIAGNOSTIC_SOURCE_TYPE(id)\n    severity                    INTEGER   NOT NULL,                    -- REFERENCES ENUM_DIAGNOSTIC_SEVERITY_LEVEL(id)\n    text                        TEXT      NOT NULL,                    -- Diagnostic message text\n    globalPid                   INTEGER                                -- Serialized GlobalId.\n)",
+    "columns": [
+      {
+        "cid": 0,
+        "name": "timestamp",
+        "type": "INTEGER",
+        "notnull": 1,
+        "dflt_value": null,
+        "pk": 0
+      },
+      {
+        "cid": 1,
+        "name": "timestampType",
+        "type": "INTEGER",
+        "notnull": 1,
+        "dflt_value": null,
+        "pk": 0
+      },
+      {
+        "cid": 2,
+        "name": "source",
+        "type": "INTEGER",
+        "notnull": 1,
+        "dflt_value": null,
+        "pk": 0
+      },
+      {
+        "cid": 3,
+        "name": "severity",
+        "type": "INTEGER",
+        "notnull": 1,
+        "dflt_value": null,
+        "pk": 0
+      },
+      {
+        "cid": 4,
+        "name": "text",
+        "type": "TEXT",
+        "notnull": 1,
+        "dflt_value": null,
+        "pk": 0
+      },
+      {
+        "cid": 5,
+        "name": "globalPid",
+        "type": "INTEGER",
+        "notnull": 0,
+        "dflt_value": null,
+        "pk": 0
+      }
+    ],
+    "count": 24
+  },
+  "PROFILER_OVERHEAD": {
+    "sql": "CREATE TABLE PROFILER_OVERHEAD (\n    start                       INTEGER   NOT NULL,                    -- Event start timestamp (ns).\n    end                         INTEGER   NOT NULL,                    -- Event end timestamp (ns).\n    globalTid                   INTEGER,                               -- Serialized GlobalId.\n    nameId                      INTEGER   NOT NULL,                    -- REFERENCES StringIds(id) -- Function name\n    returnValue                 INTEGER   NOT NULL                     -- Return value of the function call.\n)",
+    "columns": [
+      {
+        "cid": 0,
+        "name": "start",
+        "type": "INTEGER",
+        "notnull": 1,
+        "dflt_value": null,
+        "pk": 0
+      },
+      {
+        "cid": 1,
+        "name": "end",
+        "type": "INTEGER",
+        "notnull": 1,
+        "dflt_value": null,
+        "pk": 0
+      },
+      {
+        "cid": 2,
+        "name": "globalTid",
+        "type": "INTEGER",
+        "notnull": 0,
+        "dflt_value": null,
+        "pk": 0
+      },
+      {
+        "cid": 3,
+        "name": "nameId",
+        "type": "INTEGER",
+        "notnull": 1,
+        "dflt_value": null,
+        "pk": 0
+      },
+      {
+        "cid": 4,
+        "name": "returnValue",
+        "type": "INTEGER",
+        "notnull": 1,
+        "dflt_value": null,
+        "pk": 0
+      }
+    ],
+    "count": 62
+  },
+  "NVTX_EVENTS": {
+    "sql": "CREATE TABLE NVTX_EVENTS (\n    start                       INTEGER   NOT NULL,                    -- Event start timestamp (ns).\n    end                         INTEGER,                               -- Event end timestamp (ns).\n    eventType                   INTEGER   NOT NULL,                    -- REFERENCES ENUM_NSYS_EVENT_TYPE(id)\n    rangeId                     INTEGER,                               -- Correlation ID returned from a nvtxRangeStart call.\n    category                    INTEGER,                               -- User-controlled ID that can be used to group events.\n    color                       INTEGER,                               -- Encoded ARGB color value.\n    text                        TEXT,                                  -- Explicit name/text (non-registered string)\n    globalTid                   INTEGER,                               -- Serialized GlobalId.\n    endGlobalTid                INTEGER,                               -- Serialized GlobalId.\n    textId                      INTEGER,                               -- REFERENCES StringIds(id) -- Registered NVTX domain/string\n    domainId                    INTEGER,                               -- User-controlled ID that can be used to group events.\n    uint64Value                 INTEGER,                               -- One of possible payload value union members.\n    int64Value                  INTEGER,                               -- One of possible payload value union members.\n    doubleValue                 REAL,                                  -- One of possible payload value union members.\n    uint32Value                 INTEGER,                               -- One of possible payload value union members.\n    int32Value                  INTEGER,                               -- One of possible payload value union members.\n    floatValue                  REAL,                                  -- One of possible payload value union members.\n    jsonTextId                  INTEGER,                               -- One of possible payload value union members.\n    jsonText                    TEXT,                                  -- One of possible payload value union members.\n    binaryData                  TEXT                                   -- Binary payload. See docs for format.\n)",
+    "columns": [
+      {
+        "cid": 0,
+        "name": "start",
+        "type": "INTEGER",
+        "notnull": 1,
+        "dflt_value": null,
+        "pk": 0
+      },
+      {
+        "cid": 1,
+        "name": "end",
+        "type": "INTEGER",
+        "notnull": 0,
+        "dflt_value": null,
+        "pk": 0
+      },
+      {
+        "cid": 2,
+        "name": "eventType",
+        "type": "INTEGER",
+        "notnull": 1,
+        "dflt_value": null,
+        "pk": 0
+      },
+      {
+        "cid": 3,
+        "name": "rangeId",
+        "type": "INTEGER",
+        "notnull": 0,
+        "dflt_value": null,
+        "pk": 0
+      },
+      {
+        "cid": 4,
+        "name": "category",
+        "type": "INTEGER",
+        "notnull": 0,
+        "dflt_value": null,
+        "pk": 0
+      },
+      {
+        "cid": 5,
+        "name": "color",
+        "type": "INTEGER",
+        "notnull": 0,
+        "dflt_value": null,
+        "pk": 0
+      },
+      {
+        "cid": 6,
+        "name": "text",
+        "type": "TEXT",
+        "notnull": 0,
+        "dflt_value": null,
+        "pk": 0
+      },
+      {
+        "cid": 7,
+        "name": "globalTid",
+        "type": "INTEGER",
+        "notnull": 0,
+        "dflt_value": null,
+        "pk": 0
+      },
+      {
+        "cid": 8,
+        "name": "endGlobalTid",
+        "type": "INTEGER",
+        "notnull": 0,
+        "dflt_value": null,
+        "pk": 0
+      },
+      {
+        "cid": 9,
+        "name": "textId",
+        "type": "INTEGER",
+        "notnull": 0,
+        "dflt_value": null,
+        "pk": 0
+      },
+      {
+        "cid": 10,
+        "name": "domainId",
+        "type": "INTEGER",
+        "notnull": 0,
+        "dflt_value": null,
+        "pk": 0
+      },
+      {
+        "cid": 11,
+        "name": "uint64Value",
+        "type": "INTEGER",
+        "notnull": 0,
+        "dflt_value": null,
+        "pk": 0
+      },
+      {
+        "cid": 12,
+        "name": "int64Value",
+        "type": "INTEGER",
+        "notnull": 0,
+        "dflt_value": null,
+        "pk": 0
+      },
+      {
+        "cid": 13,
+        "name": "doubleValue",
+        "type": "REAL",
+        "notnull": 0,
+        "dflt_value": null,
+        "pk": 0
+      },
+      {
+        "cid": 14,
+        "name": "uint32Value",
+        "type": "INTEGER",
+        "notnull": 0,
+        "dflt_value": null,
+        "pk": 0
+      },
+      {
+        "cid": 15,
+        "name": "int32Value",
+        "type": "INTEGER",
+        "notnull": 0,
+        "dflt_value": null,
+        "pk": 0
+      },
+      {
+        "cid": 16,
+        "name": "floatValue",
+        "type": "REAL",
+        "notnull": 0,
+        "dflt_value": null,
+        "pk": 0
+      },
+      {
+        "cid": 17,
+        "name": "jsonTextId",
+        "type": "INTEGER",
+        "notnull": 0,
+        "dflt_value": null,
+        "pk": 0
+      },
+      {
+        "cid": 18,
+        "name": "jsonText",
+        "type": "TEXT",
+        "notnull": 0,
+        "dflt_value": null,
+        "pk": 0
+      },
+      {
+        "cid": 19,
+        "name": "binaryData",
+        "type": "TEXT",
+        "notnull": 0,
+        "dflt_value": null,
+        "pk": 0
+      }
+    ],
+    "count": 10
+  },
+  "CUPTI_ACTIVITY_KIND_RUNTIME": {
+    "sql": "CREATE TABLE CUPTI_ACTIVITY_KIND_RUNTIME (\n    start                       INTEGER   NOT NULL,                    -- Event start timestamp (ns).\n    end                         INTEGER   NOT NULL,                    -- Event end timestamp (ns).\n    eventClass                  INTEGER   NOT NULL,                    -- REFERENCES ENUM_NSYS_EVENT_CLASS(id)\n    globalTid                   INTEGER,                               -- Serialized GlobalId.\n    correlationId               INTEGER,                               -- ID used to identify events that this function call has triggered.\n    nameId                      INTEGER   NOT NULL,                    -- REFERENCES StringIds(id) -- Function name\n    returnValue                 INTEGER   NOT NULL,                    -- Return value of the function call.\n    callchainId                 INTEGER                                -- REFERENCES CUDA_CALLCHAINS(id)\n)",
+    "columns": [
+      {
+        "cid": 0,
+        "name": "start",
+        "type": "INTEGER",
+        "notnull": 1,
+        "dflt_value": null,
+        "pk": 0
+      },
+      {
+        "cid": 1,
+        "name": "end",
+        "type": "INTEGER",
+        "notnull": 1,
+        "dflt_value": null,
+        "pk": 0
+      },
+      {
+        "cid": 2,
+        "name": "eventClass",
+        "type": "INTEGER",
+        "notnull": 1,
+        "dflt_value": null,
+        "pk": 0
+      },
+      {
+        "cid": 3,
+        "name": "globalTid",
+        "type": "INTEGER",
+        "notnull": 0,
+        "dflt_value": null,
+        "pk": 0
+      },
+      {
+        "cid": 4,
+        "name": "correlationId",
+        "type": "INTEGER",
+        "notnull": 0,
+        "dflt_value": null,
+        "pk": 0
+      },
+      {
+        "cid": 5,
+        "name": "nameId",
+        "type": "INTEGER",
+        "notnull": 1,
+        "dflt_value": null,
+        "pk": 0
+      },
+      {
+        "cid": 6,
+        "name": "returnValue",
+        "type": "INTEGER",
+        "notnull": 1,
+        "dflt_value": null,
+        "pk": 0
+      },
+      {
+        "cid": 7,
+        "name": "callchainId",
+        "type": "INTEGER",
+        "notnull": 0,
+        "dflt_value": null,
+        "pk": 0
+      }
+    ],
+    "count": 385759
+  },
+  "GPU_CONTEXT_SWITCH_EVENTS": {
+    "sql": "CREATE TABLE GPU_CONTEXT_SWITCH_EVENTS (\n    tag                         INTEGER   NOT NULL,                    -- REFERENCES ENUM_GPU_CTX_SWITCH(id)\n    vmId                        INTEGER   NOT NULL,                    -- VM ID.\n    seqNo                       INTEGER   NOT NULL,                    -- Sequential event number.\n    contextId                   INTEGER   NOT NULL,                    -- Context ID.\n    timestamp                   INTEGER   NOT NULL,                    -- Event start timestamp (ns).\n    globalPid                   INTEGER,                               -- Serialized GlobalId.\n    gpuId                       INTEGER                                -- GPU index.\n)",
+    "columns": [
+      {
+        "cid": 0,
+        "name": "tag",
+        "type": "INTEGER",
+        "notnull": 1,
+        "dflt_value": null,
+        "pk": 0
+      },
+      {
+        "cid": 1,
+        "name": "vmId",
+        "type": "INTEGER",
+        "notnull": 1,
+        "dflt_value": null,
+        "pk": 0
+      },
+      {
+        "cid": 2,
+        "name": "seqNo",
+        "type": "INTEGER",
+        "notnull": 1,
+        "dflt_value": null,
+        "pk": 0
+      },
+      {
+        "cid": 3,
+        "name": "contextId",
+        "type": "INTEGER",
+        "notnull": 1,
+        "dflt_value": null,
+        "pk": 0
+      },
+      {
+        "cid": 4,
+        "name": "timestamp",
+        "type": "INTEGER",
+        "notnull": 1,
+        "dflt_value": null,
+        "pk": 0
+      },
+      {
+        "cid": 5,
+        "name": "globalPid",
+        "type": "INTEGER",
+        "notnull": 0,
+        "dflt_value": null,
+        "pk": 0
+      },
+      {
+        "cid": 6,
+        "name": "gpuId",
+        "type": "INTEGER",
+        "notnull": 0,
+        "dflt_value": null,
+        "pk": 0
+      }
+    ],
+    "count": 18
+  },
+  "CUPTI_ACTIVITY_KIND_KERNEL": {
+    "sql": "CREATE TABLE CUPTI_ACTIVITY_KIND_KERNEL (\n    start                       INTEGER   NOT NULL,                    -- Event start timestamp (ns).\n    end                         INTEGER   NOT NULL,                    -- Event end timestamp (ns).\n    deviceId                    INTEGER   NOT NULL,                    -- Device ID.\n    contextId                   INTEGER   NOT NULL,                    -- Context ID.\n    greenContextId              INTEGER,                               -- Green context ID.\n    streamId                    INTEGER   NOT NULL,                    -- Stream ID.\n    correlationId               INTEGER,                               -- REFERENCES CUPTI_ACTIVITY_KIND_RUNTIME(correlationId)\n    globalPid                   INTEGER,                               -- Serialized GlobalId.\n    demangledName               INTEGER   NOT NULL,                    -- REFERENCES StringIds(id) -- Kernel function name w/ templates\n    shortName                   INTEGER   NOT NULL,                    -- REFERENCES StringIds(id) -- Base kernel function name\n    mangledName                 INTEGER,                               -- REFERENCES StringIds(id) -- Raw C++ mangled kernel function name\n    launchType                  INTEGER,                               -- REFERENCES ENUM_CUDA_KERNEL_LAUNCH_TYPE(id)\n    cacheConfig                 INTEGER,                               -- REFERENCES ENUM_CUDA_FUNC_CACHE_CONFIG(id)\n    registersPerThread          INTEGER   NOT NULL,                    -- Number of registers required for each thread executing the kernel.\n    gridX                       INTEGER   NOT NULL,                    -- X-dimension grid size.\n    gridY                       INTEGER   NOT NULL,                    -- Y-dimension grid size.\n    gridZ                       INTEGER   NOT NULL,                    -- Z-dimension grid size.\n    blockX                      INTEGER   NOT NULL,                    -- X-dimension block size.\n    blockY                      INTEGER   NOT NULL,                    -- Y-dimension block size.\n    blockZ                      INTEGER   NOT NULL,                    -- Z-dimension block size.\n    staticSharedMemory          INTEGER   NOT NULL,                    -- Static shared memory allocated for the kernel (B).\n    dynamicSharedMemory         INTEGER   NOT NULL,                    -- Dynamic shared memory reserved for the kernel (B).\n    localMemoryPerThread        INTEGER   NOT NULL,                    -- Amount of local memory reserved for each thread (B).\n    localMemoryTotal            INTEGER   NOT NULL,                    -- Total amount of local memory reserved for the kernel (B).\n    gridId                      INTEGER   NOT NULL,                    -- Unique grid ID of the kernel assigned at runtime.\n    sharedMemoryExecuted        INTEGER,                               -- Shared memory size set by the driver.\n    graphNodeId                 INTEGER,                               -- REFERENCES CUDA_GRAPH_NODE_EVENTS(graphNodeId)\n    sharedMemoryLimitConfig     INTEGER                                -- REFERENCES ENUM_CUDA_SHARED_MEM_LIMIT_CONFIG(id)\n)",
+    "columns": [
+      {
+        "cid": 0,
+        "name": "start",
+        "type": "INTEGER",
+        "notnull": 1,
+        "dflt_value": null,
+        "pk": 0
+      },
+      {
+        "cid": 1,
+        "name": "end",
+        "type": "INTEGER",
+        "notnull": 1,
+        "dflt_value": null,
+        "pk": 0
+      },
+      {
+        "cid": 2,
+        "name": "deviceId",
+        "type": "INTEGER",
+        "notnull": 1,
+        "dflt_value": null,
+        "pk": 0
+      },
+      {
+        "cid": 3,
+        "name": "contextId",
+        "type": "INTEGER",
+        "notnull": 1,
+        "dflt_value": null,
+        "pk": 0
+      },
+      {
+        "cid": 4,
+        "name": "greenContextId",
+        "type": "INTEGER",
+        "notnull": 0,
+        "dflt_value": null,
+        "pk": 0
+      },
+      {
+        "cid": 5,
+        "name": "streamId",
+        "type": "INTEGER",
+        "notnull": 1,
+        "dflt_value": null,
+        "pk": 0
+      },
+      {
+        "cid": 6,
+        "name": "correlationId",
+        "type": "INTEGER",
+        "notnull": 0,
+        "dflt_value": null,
+        "pk": 0
+      },
+      {
+        "cid": 7,
+        "name": "globalPid",
+        "type": "INTEGER",
+        "notnull": 0,
+        "dflt_value": null,
+        "pk": 0
+      },
+      {
+        "cid": 8,
+        "name": "demangledName",
+        "type": "INTEGER",
+        "notnull": 1,
+        "dflt_value": null,
+        "pk": 0
+      },
+      {
+        "cid": 9,
+        "name": "shortName",
+        "type": "INTEGER",
+        "notnull": 1,
+        "dflt_value": null,
+        "pk": 0
+      },
+      {
+        "cid": 10,
+        "name": "mangledName",
+        "type": "INTEGER",
+        "notnull": 0,
+        "dflt_value": null,
+        "pk": 0
+      },
+      {
+        "cid": 11,
+        "name": "launchType",
+        "type": "INTEGER",
+        "notnull": 0,
+        "dflt_value": null,
+        "pk": 0
+      },
+      {
+        "cid": 12,
+        "name": "cacheConfig",
+        "type": "INTEGER",
+        "notnull": 0,
+        "dflt_value": null,
+        "pk": 0
+      },
+      {
+        "cid": 13,
+        "name": "registersPerThread",
+        "type": "INTEGER",
+        "notnull": 1,
+        "dflt_value": null,
+        "pk": 0
+      },
+      {
+        "cid": 14,
+        "name": "gridX",
+        "type": "INTEGER",
+        "notnull": 1,
+        "dflt_value": null,
+        "pk": 0
+      },
+      {
+        "cid": 15,
+        "name": "gridY",
+        "type": "INTEGER",
+        "notnull": 1,
+        "dflt_value": null,
+        "pk": 0
+      },
+      {
+        "cid": 16,
+        "name": "gridZ",
+        "type": "INTEGER",
+        "notnull": 1,
+        "dflt_value": null,
+        "pk": 0
+      },
+      {
+        "cid": 17,
+        "name": "blockX",
+        "type": "INTEGER",
+        "notnull": 1,
+        "dflt_value": null,
+        "pk": 0
+      },
+      {
+        "cid": 18,
+        "name": "blockY",
+        "type": "INTEGER",
+        "notnull": 1,
+        "dflt_value": null,
+        "pk": 0
+      },
+      {
+        "cid": 19,
+        "name": "blockZ",
+        "type": "INTEGER",
+        "notnull": 1,
+        "dflt_value": null,
+        "pk": 0
+      },
+      {
+        "cid": 20,
+        "name": "staticSharedMemory",
+        "type": "INTEGER",
+        "notnull": 1,
+        "dflt_value": null,
+        "pk": 0
+      },
+      {
+        "cid": 21,
+        "name": "dynamicSharedMemory",
+        "type": "INTEGER",
+        "notnull": 1,
+        "dflt_value": null,
+        "pk": 0
+      },
+      {
+        "cid": 22,
+        "name": "localMemoryPerThread",
+        "type": "INTEGER",
+        "notnull": 1,
+        "dflt_value": null,
+        "pk": 0
+      },
+      {
+        "cid": 23,
+        "name": "localMemoryTotal",
+        "type": "INTEGER",
+        "notnull": 1,
+        "dflt_value": null,
+        "pk": 0
+      },
+      {
+        "cid": 24,
+        "name": "gridId",
+        "type": "INTEGER",
+        "notnull": 1,
+        "dflt_value": null,
+        "pk": 0
+      },
+      {
+        "cid": 25,
+        "name": "sharedMemoryExecuted",
+        "type": "INTEGER",
+        "notnull": 0,
+        "dflt_value": null,
+        "pk": 0
+      },
+      {
+        "cid": 26,
+        "name": "graphNodeId",
+        "type": "INTEGER",
+        "notnull": 0,
+        "dflt_value": null,
+        "pk": 0
+      },
+      {
+        "cid": 27,
+        "name": "sharedMemoryLimitConfig",
+        "type": "INTEGER",
+        "notnull": 0,
+        "dflt_value": null,
+        "pk": 0
+      }
+    ],
+    "count": 20
+  },
+  "CUPTI_ACTIVITY_KIND_SYNCHRONIZATION": {
+    "sql": "CREATE TABLE CUPTI_ACTIVITY_KIND_SYNCHRONIZATION (\n    start                       INTEGER   NOT NULL,                    -- Event start timestamp (ns).\n    end                         INTEGER   NOT NULL,                    -- Event end timestamp (ns).\n    deviceId                    INTEGER   NOT NULL,                    -- Device ID.\n    contextId                   INTEGER   NOT NULL,                    -- Context ID.\n    greenContextId              INTEGER,                               -- Green context ID.\n    streamId                    INTEGER   NOT NULL,                    -- Stream ID.\n    correlationId               INTEGER,                               -- Correlation ID of the synchronization API to which this result is associated.\n    globalPid                   INTEGER,                               -- Serialized GlobalId.\n    syncType                    INTEGER   NOT NULL,                    -- REFERENCES ENUM_CUPTI_SYNC_TYPE(id)\n    eventId                     INTEGER   NOT NULL                     -- Event ID for which the synchronization API is called.\n)",
+    "columns": [
+      {
+        "cid": 0,
+        "name": "start",
+        "type": "INTEGER",
+        "notnull": 1,
+        "dflt_value": null,
+        "pk": 0
+      },
+      {
+        "cid": 1,
+        "name": "end",
+        "type": "INTEGER",
+        "notnull": 1,
+        "dflt_value": null,
+        "pk": 0
+      },
+      {
+        "cid": 2,
+        "name": "deviceId",
+        "type": "INTEGER",
+        "notnull": 1,
+        "dflt_value": null,
+        "pk": 0
+      },
+      {
+        "cid": 3,
+        "name": "contextId",
+        "type": "INTEGER",
+        "notnull": 1,
+        "dflt_value": null,
+        "pk": 0
+      },
+      {
+        "cid": 4,
+        "name": "greenContextId",
+        "type": "INTEGER",
+        "notnull": 0,
+        "dflt_value": null,
+        "pk": 0
+      },
+      {
+        "cid": 5,
+        "name": "streamId",
+        "type": "INTEGER",
+        "notnull": 1,
+        "dflt_value": null,
+        "pk": 0
+      },
+      {
+        "cid": 6,
+        "name": "correlationId",
+        "type": "INTEGER",
+        "notnull": 0,
+        "dflt_value": null,
+        "pk": 0
+      },
+      {
+        "cid": 7,
+        "name": "globalPid",
+        "type": "INTEGER",
+        "notnull": 0,
+        "dflt_value": null,
+        "pk": 0
+      },
+      {
+        "cid": 8,
+        "name": "syncType",
+        "type": "INTEGER",
+        "notnull": 1,
+        "dflt_value": null,
+        "pk": 0
+      },
+      {
+        "cid": 9,
+        "name": "eventId",
+        "type": "INTEGER",
+        "notnull": 1,
+        "dflt_value": null,
+        "pk": 0
+      }
+    ],
+    "count": 384848
+  },
+  "CUPTI_ACTIVITY_KIND_MEMCPY": {
+    "sql": "CREATE TABLE CUPTI_ACTIVITY_KIND_MEMCPY (\n    start                       INTEGER   NOT NULL,                    -- Event start timestamp (ns).\n    end                         INTEGER   NOT NULL,                    -- Event end timestamp (ns).\n    deviceId                    INTEGER   NOT NULL,                    -- Device ID.\n    contextId                   INTEGER   NOT NULL,                    -- Context ID.\n    greenContextId              INTEGER,                               -- Green context ID.\n    streamId                    INTEGER   NOT NULL,                    -- Stream ID.\n    correlationId               INTEGER,                               -- REFERENCES CUPTI_ACTIVITY_KIND_RUNTIME(correlationId)\n    globalPid                   INTEGER,                               -- Serialized GlobalId.\n    bytes                       INTEGER   NOT NULL,                    -- Number of bytes transferred (B).\n    copyKind                    INTEGER   NOT NULL,                    -- REFERENCES ENUM_CUDA_MEMCPY_OPER(id)\n    deprecatedSrcId             INTEGER,                               -- Deprecated, use srcDeviceId instead.\n    srcKind                     INTEGER,                               -- REFERENCES ENUM_CUDA_MEM_KIND(id)\n    dstKind                     INTEGER,                               -- REFERENCES ENUM_CUDA_MEM_KIND(id)\n    srcDeviceId                 INTEGER,                               -- Source device ID.\n    srcContextId                INTEGER,                               -- Source context ID.\n    dstDeviceId                 INTEGER,                               -- Destination device ID.\n    dstContextId                INTEGER,                               -- Destination context ID.\n    migrationCause              INTEGER,                               -- REFERENCES ENUM_CUDA_UNIF_MEM_MIGRATION(id)\n    graphNodeId                 INTEGER,                               -- REFERENCES CUDA_GRAPH_NODE_EVENTS(graphNodeId)\n    virtualAddress              INTEGER                                -- Virtual base address of the page/s being transferred.\n)",
+    "columns": [
+      {
+        "cid": 0,
+        "name": "start",
+        "type": "INTEGER",
+        "notnull": 1,
+        "dflt_value": null,
+        "pk": 0
+      },
+      {
+        "cid": 1,
+        "name": "end",
+        "type": "INTEGER",
+        "notnull": 1,
+        "dflt_value": null,
+        "pk": 0
+      },
+      {
+        "cid": 2,
+        "name": "deviceId",
+        "type": "INTEGER",
+        "notnull": 1,
+        "dflt_value": null,
+        "pk": 0
+      },
+      {
+        "cid": 3,
+        "name": "contextId",
+        "type": "INTEGER",
+        "notnull": 1,
+        "dflt_value": null,
+        "pk": 0
+      },
+      {
+        "cid": 4,
+        "name": "greenContextId",
+        "type": "INTEGER",
+        "notnull": 0,
+        "dflt_value": null,
+        "pk": 0
+      },
+      {
+        "cid": 5,
+        "name": "streamId",
+        "type": "INTEGER",
+        "notnull": 1,
+        "dflt_value": null,
+        "pk": 0
+      },
+      {
+        "cid": 6,
+        "name": "correlationId",
+        "type": "INTEGER",
+        "notnull": 0,
+        "dflt_value": null,
+        "pk": 0
+      },
+      {
+        "cid": 7,
+        "name": "globalPid",
+        "type": "INTEGER",
+        "notnull": 0,
+        "dflt_value": null,
+        "pk": 0
+      },
+      {
+        "cid": 8,
+        "name": "bytes",
+        "type": "INTEGER",
+        "notnull": 1,
+        "dflt_value": null,
+        "pk": 0
+      },
+      {
+        "cid": 9,
+        "name": "copyKind",
+        "type": "INTEGER",
+        "notnull": 1,
+        "dflt_value": null,
+        "pk": 0
+      },
+      {
+        "cid": 10,
+        "name": "deprecatedSrcId",
+        "type": "INTEGER",
+        "notnull": 0,
+        "dflt_value": null,
+        "pk": 0
+      },
+      {
+        "cid": 11,
+        "name": "srcKind",
+        "type": "INTEGER",
+        "notnull": 0,
+        "dflt_value": null,
+        "pk": 0
+      },
+      {
+        "cid": 12,
+        "name": "dstKind",
+        "type": "INTEGER",
+        "notnull": 0,
+        "dflt_value": null,
+        "pk": 0
+      },
+      {
+        "cid": 13,
+        "name": "srcDeviceId",
+        "type": "INTEGER",
+        "notnull": 0,
+        "dflt_value": null,
+        "pk": 0
+      },
+      {
+        "cid": 14,
+        "name": "srcContextId",
+        "type": "INTEGER",
+        "notnull": 0,
+        "dflt_value": null,
+        "pk": 0
+      },
+      {
+        "cid": 15,
+        "name": "dstDeviceId",
+        "type": "INTEGER",
+        "notnull": 0,
+        "dflt_value": null,
+        "pk": 0
+      },
+      {
+        "cid": 16,
+        "name": "dstContextId",
+        "type": "INTEGER",
+        "notnull": 0,
+        "dflt_value": null,
+        "pk": 0
+      },
+      {
+        "cid": 17,
+        "name": "migrationCause",
+        "type": "INTEGER",
+        "notnull": 0,
+        "dflt_value": null,
+        "pk": 0
+      },
+      {
+        "cid": 18,
+        "name": "graphNodeId",
+        "type": "INTEGER",
+        "notnull": 0,
+        "dflt_value": null,
+        "pk": 0
+      },
+      {
+        "cid": 19,
+        "name": "virtualAddress",
+        "type": "INTEGER",
+        "notnull": 0,
+        "dflt_value": null,
+        "pk": 0
+      }
+    ],
+    "count": 6
+  },
+  "PROCESSES": {
+    "sql": "CREATE TABLE PROCESSES (\n    -- Names and identifiers of processes captured in the report.\n\n    globalPid                   INTEGER,                               -- Serialized GlobalId.\n    pid                         INTEGER,                               -- The process ID.\n    name                        TEXT                                   -- The process name.\n)",
+    "columns": [
+      {
+        "cid": 0,
+        "name": "globalPid",
+        "type": "INTEGER",
+        "notnull": 0,
+        "dflt_value": null,
+        "pk": 0
+      },
+      {
+        "cid": 1,
+        "name": "pid",
+        "type": "INTEGER",
+        "notnull": 0,
+        "dflt_value": null,
+        "pk": 0
+      },
+      {
+        "cid": 2,
+        "name": "name",
+        "type": "TEXT",
+        "notnull": 0,
+        "dflt_value": null,
+        "pk": 0
+      }
+    ],
+    "count": 1232
+  },
+  "ThreadNames": {
+    "sql": "CREATE TABLE ThreadNames (\n    nameId                      INTEGER   NOT NULL,                    -- REFERENCES StringIds(id) -- Thread name\n    priority                    INTEGER,                               -- Priority of the thread.\n    globalTid                   INTEGER                                -- Serialized GlobalId.\n)",
+    "columns": [
+      {
+        "cid": 0,
+        "name": "nameId",
+        "type": "INTEGER",
+        "notnull": 1,
+        "dflt_value": null,
+        "pk": 0
+      },
+      {
+        "cid": 1,
+        "name": "priority",
+        "type": "INTEGER",
+        "notnull": 0,
+        "dflt_value": null,
+        "pk": 0
+      },
+      {
+        "cid": 2,
+        "name": "globalTid",
+        "type": "INTEGER",
+        "notnull": 0,
+        "dflt_value": null,
+        "pk": 0
+      }
+    ],
+    "count": 5134
+  },
+  "TARGET_INFO_GPU": {
+    "sql": "CREATE TABLE TARGET_INFO_GPU (\n    vmId                        INTEGER   NOT NULL,                    -- Serialized GlobalId.\n    id                          INTEGER   NOT NULL,                    -- Device ID.\n    name                        TEXT,                                  -- Device name.\n    busLocation                 TEXT,                                  -- PCI bus location.\n    isDiscrete                  INTEGER,                               -- True if discrete, false if integrated.\n    l2CacheSize                 INTEGER,                               -- Size of L2 cache (B).\n    totalMemory                 INTEGER,                               -- Total amount of memory on the device (B).\n    memoryBandwidth             INTEGER,                               -- Amount of memory transferred (B).\n    clockRate                   INTEGER,                               -- Clock frequency (Hz).\n    smCount                     INTEGER,                               -- Number of multiprocessors on the device.\n    pwGpuId                     INTEGER,                               -- PerfWorks GPU ID.\n    uuid                        TEXT,                                  -- Device UUID.\n    luid                        INTEGER,                               -- Device LUID.\n    chipName                    TEXT,                                  -- Chip name.\n    cuDevice                    INTEGER,                               -- CUDA device ID.\n    ctxswDevPath                TEXT,                                  -- GPU context switch device node path.\n    ctrlDevPath                 TEXT,                                  -- GPU control device node path.\n    revision                    INTEGER,                               -- Revision number.\n    nodeMask                    INTEGER,                               -- Device node mask.\n    constantMemory              INTEGER,                               -- Memory available on device for __constant__ variables (B).\n    maxIPC                      INTEGER,                               -- Maximum instructions per count.\n    maxRegistersPerBlock        INTEGER,                               -- Maximum number of 32-bit registers available per block.\n    maxShmemPerBlock            INTEGER,                               -- Maximum optin shared memory per block.\n    maxShmemPerBlockOptin       INTEGER,                               -- Maximum optin shared memory per block.\n    maxShmemPerSm               INTEGER,                               -- Maximum shared memory available per multiprocessor (B).\n    maxRegistersPerSm           INTEGER,                               -- Maximum number of 32-bit registers available per multiprocessor.\n    threadsPerWarp              INTEGER,                               -- Warp size in threads.\n    asyncEngines                INTEGER,                               -- Number of asynchronous engines.\n    maxWarpsPerSm               INTEGER,                               -- Maximum number of warps per multiprocessor.\n    maxBlocksPerSm              INTEGER,                               -- Maximum number of blocks per multiprocessor.\n    maxThreadsPerBlock          INTEGER,                               -- Maximum number of threads per block.\n    maxBlockDimX                INTEGER,                               -- Maximum X-dimension of a block.\n    maxBlockDimY                INTEGER,                               -- Maximum Y-dimension of a block.\n    maxBlockDimZ                INTEGER,                               -- Maximum Z-dimension of a block.\n    maxGridDimX                 INTEGER,                               -- Maximum X-dimension of a grid.\n    maxGridDimY                 INTEGER,                               -- Maximum Y-dimension of a grid.\n    maxGridDimZ                 INTEGER,                               -- Maximum Z-dimension of a grid.\n    computeMajor                INTEGER,                               -- Major compute capability version number.\n    computeMinor                INTEGER,                               -- Minor compute capability version number.\n    smMajor                     INTEGER,                               -- Major multiprocessor version number.\n    smMinor                     INTEGER                                -- Minor multiprocessor version number.\n)",
+    "columns": [
+      {
+        "cid": 0,
+        "name": "vmId",
+        "type": "INTEGER",
+        "notnull": 1,
+        "dflt_value": null,
+        "pk": 0
+      },
+      {
+        "cid": 1,
+        "name": "id",
+        "type": "INTEGER",
+        "notnull": 1,
+        "dflt_value": null,
+        "pk": 0
+      },
+      {
+        "cid": 2,
+        "name": "name",
+        "type": "TEXT",
+        "notnull": 0,
+        "dflt_value": null,
+        "pk": 0
+      },
+      {
+        "cid": 3,
+        "name": "busLocation",
+        "type": "TEXT",
+        "notnull": 0,
+        "dflt_value": null,
+        "pk": 0
+      },
+      {
+        "cid": 4,
+        "name": "isDiscrete",
+        "type": "INTEGER",
+        "notnull": 0,
+        "dflt_value": null,
+        "pk": 0
+      },
+      {
+        "cid": 5,
+        "name": "l2CacheSize",
+        "type": "INTEGER",
+        "notnull": 0,
+        "dflt_value": null,
+        "pk": 0
+      },
+      {
+        "cid": 6,
+        "name": "totalMemory",
+        "type": "INTEGER",
+        "notnull": 0,
+        "dflt_value": null,
+        "pk": 0
+      },
+      {
+        "cid": 7,
+        "name": "memoryBandwidth",
+        "type": "INTEGER",
+        "notnull": 0,
+        "dflt_value": null,
+        "pk": 0
+      },
+      {
+        "cid": 8,
+        "name": "clockRate",
+        "type": "INTEGER",
+        "notnull": 0,
+        "dflt_value": null,
+        "pk": 0
+      },
+      {
+        "cid": 9,
+        "name": "smCount",
+        "type": "INTEGER",
+        "notnull": 0,
+        "dflt_value": null,
+        "pk": 0
+      },
+      {
+        "cid": 10,
+        "name": "pwGpuId",
+        "type": "INTEGER",
+        "notnull": 0,
+        "dflt_value": null,
+        "pk": 0
+      },
+      {
+        "cid": 11,
+        "name": "uuid",
+        "type": "TEXT",
+        "notnull": 0,
+        "dflt_value": null,
+        "pk": 0
+      },
+      {
+        "cid": 12,
+        "name": "luid",
+        "type": "INTEGER",
+        "notnull": 0,
+        "dflt_value": null,
+        "pk": 0
+      },
+      {
+        "cid": 13,
+        "name": "chipName",
+        "type": "TEXT",
+        "notnull": 0,
+        "dflt_value": null,
+        "pk": 0
+      },
+      {
+        "cid": 14,
+        "name": "cuDevice",
+        "type": "INTEGER",
+        "notnull": 0,
+        "dflt_value": null,
+        "pk": 0
+      },
+      {
+        "cid": 15,
+        "name": "ctxswDevPath",
+        "type": "TEXT",
+        "notnull": 0,
+        "dflt_value": null,
+        "pk": 0
+      },
+      {
+        "cid": 16,
+        "name": "ctrlDevPath",
+        "type": "TEXT",
+        "notnull": 0,
+        "dflt_value": null,
+        "pk": 0
+      },
+      {
+        "cid": 17,
+        "name": "revision",
+        "type": "INTEGER",
+        "notnull": 0,
+        "dflt_value": null,
+        "pk": 0
+      },
+      {
+        "cid": 18,
+        "name": "nodeMask",
+        "type": "INTEGER",
+        "notnull": 0,
+        "dflt_value": null,
+        "pk": 0
+      },
+      {
+        "cid": 19,
+        "name": "constantMemory",
+        "type": "INTEGER",
+        "notnull": 0,
+        "dflt_value": null,
+        "pk": 0
+      },
+      {
+        "cid": 20,
+        "name": "maxIPC",
+        "type": "INTEGER",
+        "notnull": 0,
+        "dflt_value": null,
+        "pk": 0
+      },
+      {
+        "cid": 21,
+        "name": "maxRegistersPerBlock",
+        "type": "INTEGER",
+        "notnull": 0,
+        "dflt_value": null,
+        "pk": 0
+      },
+      {
+        "cid": 22,
+        "name": "maxShmemPerBlock",
+        "type": "INTEGER",
+        "notnull": 0,
+        "dflt_value": null,
+        "pk": 0
+      },
+      {
+        "cid": 23,
+        "name": "maxShmemPerBlockOptin",
+        "type": "INTEGER",
+        "notnull": 0,
+        "dflt_value": null,
+        "pk": 0
+      },
+      {
+        "cid": 24,
+        "name": "maxShmemPerSm",
+        "type": "INTEGER",
+        "notnull": 0,
+        "dflt_value": null,
+        "pk": 0
+      },
+      {
+        "cid": 25,
+        "name": "maxRegistersPerSm",
+        "type": "INTEGER",
+        "notnull": 0,
+        "dflt_value": null,
+        "pk": 0
+      },
+      {
+        "cid": 26,
+        "name": "threadsPerWarp",
+        "type": "INTEGER",
+        "notnull": 0,
+        "dflt_value": null,
+        "pk": 0
+      },
+      {
+        "cid": 27,
+        "name": "asyncEngines",
+        "type": "INTEGER",
+        "notnull": 0,
+        "dflt_value": null,
+        "pk": 0
+      },
+      {
+        "cid": 28,
+        "name": "maxWarpsPerSm",
+        "type": "INTEGER",
+        "notnull": 0,
+        "dflt_value": null,
+        "pk": 0
+      },
+      {
+        "cid": 29,
+        "name": "maxBlocksPerSm",
+        "type": "INTEGER",
+        "notnull": 0,
+        "dflt_value": null,
+        "pk": 0
+      },
+      {
+        "cid": 30,
+        "name": "maxThreadsPerBlock",
+        "type": "INTEGER",
+        "notnull": 0,
+        "dflt_value": null,
+        "pk": 0
+      },
+      {
+        "cid": 31,
+        "name": "maxBlockDimX",
+        "type": "INTEGER",
+        "notnull": 0,
+        "dflt_value": null,
+        "pk": 0
+      },
+      {
+        "cid": 32,
+        "name": "maxBlockDimY",
+        "type": "INTEGER",
+        "notnull": 0,
+        "dflt_value": null,
+        "pk": 0
+      },
+      {
+        "cid": 33,
+        "name": "maxBlockDimZ",
+        "type": "INTEGER",
+        "notnull": 0,
+        "dflt_value": null,
+        "pk": 0
+      },
+      {
+        "cid": 34,
+        "name": "maxGridDimX",
+        "type": "INTEGER",
+        "notnull": 0,
+        "dflt_value": null,
+        "pk": 0
+      },
+      {
+        "cid": 35,
+        "name": "maxGridDimY",
+        "type": "INTEGER",
+        "notnull": 0,
+        "dflt_value": null,
+        "pk": 0
+      },
+      {
+        "cid": 36,
+        "name": "maxGridDimZ",
+        "type": "INTEGER",
+        "notnull": 0,
+        "dflt_value": null,
+        "pk": 0
+      },
+      {
+        "cid": 37,
+        "name": "computeMajor",
+        "type": "INTEGER",
+        "notnull": 0,
+        "dflt_value": null,
+        "pk": 0
+      },
+      {
+        "cid": 38,
+        "name": "computeMinor",
+        "type": "INTEGER",
+        "notnull": 0,
+        "dflt_value": null,
+        "pk": 0
+      },
+      {
+        "cid": 39,
+        "name": "smMajor",
+        "type": "INTEGER",
+        "notnull": 0,
+        "dflt_value": null,
+        "pk": 0
+      },
+      {
+        "cid": 40,
+        "name": "smMinor",
+        "type": "INTEGER",
+        "notnull": 0,
+        "dflt_value": null,
+        "pk": 0
+      }
+    ],
+    "count": 8
+  },
+  "TARGET_INFO_CUDA_CONTEXT_INFO": {
+    "sql": "CREATE TABLE TARGET_INFO_CUDA_CONTEXT_INFO (\n    nullStreamId                INTEGER   NOT NULL,                    -- Stream ID.\n    hwId                        INTEGER   NOT NULL,                    -- Hardware ID.\n    vmId                        INTEGER   NOT NULL,                    -- VM ID.\n    processId                   INTEGER   NOT NULL,                    -- Process ID.\n    deviceId                    INTEGER   NOT NULL,                    -- Device ID.\n    contextId                   INTEGER   NOT NULL,                    -- Context ID.\n    parentContextId             INTEGER,                               -- For green context, this is the parent context id.\n    isGreenContext              INTEGER                                -- Is this a Green Context?\n)",
+    "columns": [
+      {
+        "cid": 0,
+        "name": "nullStreamId",
+        "type": "INTEGER",
+        "notnull": 1,
+        "dflt_value": null,
+        "pk": 0
+      },
+      {
+        "cid": 1,
+        "name": "hwId",
+        "type": "INTEGER",
+        "notnull": 1,
+        "dflt_value": null,
+        "pk": 0
+      },
+      {
+        "cid": 2,
+        "name": "vmId",
+        "type": "INTEGER",
+        "notnull": 1,
+        "dflt_value": null,
+        "pk": 0
+      },
+      {
+        "cid": 3,
+        "name": "processId",
+        "type": "INTEGER",
+        "notnull": 1,
+        "dflt_value": null,
+        "pk": 0
+      },
+      {
+        "cid": 4,
+        "name": "deviceId",
+        "type": "INTEGER",
+        "notnull": 1,
+        "dflt_value": null,
+        "pk": 0
+      },
+      {
+        "cid": 5,
+        "name": "contextId",
+        "type": "INTEGER",
+        "notnull": 1,
+        "dflt_value": null,
+        "pk": 0
+      },
+      {
+        "cid": 6,
+        "name": "parentContextId",
+        "type": "INTEGER",
+        "notnull": 0,
+        "dflt_value": null,
+        "pk": 0
+      },
+      {
+        "cid": 7,
+        "name": "isGreenContext",
+        "type": "INTEGER",
+        "notnull": 0,
+        "dflt_value": null,
+        "pk": 0
+      }
+    ],
+    "count": 2
+  },
+  "TARGET_INFO_CUDA_STREAM": {
+    "sql": "CREATE TABLE TARGET_INFO_CUDA_STREAM (\n    streamId                    INTEGER   NOT NULL,                    -- Stream ID.\n    hwId                        INTEGER   NOT NULL,                    -- Hardware ID.\n    vmId                        INTEGER   NOT NULL,                    -- VM ID.\n    processId                   INTEGER   NOT NULL,                    -- Process ID.\n    contextId                   INTEGER   NOT NULL,                    -- Context ID.\n    priority                    INTEGER   NOT NULL,                    -- Priority of the stream.\n    flag                        INTEGER   NOT NULL                     -- REFERENCES ENUM_CUPTI_STREAM_TYPE(id)\n)",
+    "columns": [
+      {
+        "cid": 0,
+        "name": "streamId",
+        "type": "INTEGER",
+        "notnull": 1,
+        "dflt_value": null,
+        "pk": 0
+      },
+      {
+        "cid": 1,
+        "name": "hwId",
+        "type": "INTEGER",
+        "notnull": 1,
+        "dflt_value": null,
+        "pk": 0
+      },
+      {
+        "cid": 2,
+        "name": "vmId",
+        "type": "INTEGER",
+        "notnull": 1,
+        "dflt_value": null,
+        "pk": 0
+      },
+      {
+        "cid": 3,
+        "name": "processId",
+        "type": "INTEGER",
+        "notnull": 1,
+        "dflt_value": null,
+        "pk": 0
+      },
+      {
+        "cid": 4,
+        "name": "contextId",
+        "type": "INTEGER",
+        "notnull": 1,
+        "dflt_value": null,
+        "pk": 0
+      },
+      {
+        "cid": 5,
+        "name": "priority",
+        "type": "INTEGER",
+        "notnull": 1,
+        "dflt_value": null,
+        "pk": 0
+      },
+      {
+        "cid": 6,
+        "name": "flag",
+        "type": "INTEGER",
+        "notnull": 1,
+        "dflt_value": null,
+        "pk": 0
+      }
+    ],
+    "count": 16
+  },
+  "ENUM_NSYS_EVENT_TYPE": {
+    "sql": "CREATE TABLE ENUM_NSYS_EVENT_TYPE (\n    -- Nsys event type labels\n\n    id                          INTEGER   NOT NULL   PRIMARY KEY,      -- Enum numerical value.\n    name                        TEXT,                                  -- Enum symbol name.\n    label                       TEXT                                   -- Enum human name.\n)",
+    "columns": [
+      {
+        "cid": 0,
+        "name": "id",
+        "type": "INTEGER",
+        "notnull": 1,
+        "dflt_value": null,
+        "pk": 1
+      },
+      {
+        "cid": 1,
+        "name": "name",
+        "type": "TEXT",
+        "notnull": 0,
+        "dflt_value": null,
+        "pk": 0
+      },
+      {
+        "cid": 2,
+        "name": "label",
+        "type": "TEXT",
+        "notnull": 0,
+        "dflt_value": null,
+        "pk": 0
+      }
+    ],
+    "count": 147
+  },
+  "ENUM_NSYS_EVENT_CLASS": {
+    "sql": "CREATE TABLE ENUM_NSYS_EVENT_CLASS (\n    -- Nsys event class labels\n\n    id                          INTEGER   NOT NULL   PRIMARY KEY,      -- Enum numerical value.\n    name                        TEXT,                                  -- Enum symbol name.\n    label                       TEXT                                   -- Enum human name.\n)",
+    "columns": [
+      {
+        "cid": 0,
+        "name": "id",
+        "type": "INTEGER",
+        "notnull": 1,
+        "dflt_value": null,
+        "pk": 1
+      },
+      {
+        "cid": 1,
+        "name": "name",
+        "type": "TEXT",
+        "notnull": 0,
+        "dflt_value": null,
+        "pk": 0
+      },
+      {
+        "cid": 2,
+        "name": "label",
+        "type": "TEXT",
+        "notnull": 0,
+        "dflt_value": null,
+        "pk": 0
+      }
+    ],
+    "count": 89
+  },
+  "ENUM_NSYS_GENERIC_EVENT_SOURCE": {
+    "sql": "CREATE TABLE ENUM_NSYS_GENERIC_EVENT_SOURCE (\n    -- Nsys generic event source labels\n\n    id                          INTEGER   NOT NULL   PRIMARY KEY,      -- Enum numerical value.\n    name                        TEXT,                                  -- Enum symbol name.\n    label                       TEXT                                   -- Enum human name.\n)",
+    "columns": [
+      {
+        "cid": 0,
+        "name": "id",
+        "type": "INTEGER",
+        "notnull": 1,
+        "dflt_value": null,
+        "pk": 1
+      },
+      {
+        "cid": 1,
+        "name": "name",
+        "type": "TEXT",
+        "notnull": 0,
+        "dflt_value": null,
+        "pk": 0
+      },
+      {
+        "cid": 2,
+        "name": "label",
+        "type": "TEXT",
+        "notnull": 0,
+        "dflt_value": null,
+        "pk": 0
+      }
+    ],
+    "count": 4
+  },
+  "ENUM_NSYS_GENERIC_EVENT_GROUP": {
+    "sql": "CREATE TABLE ENUM_NSYS_GENERIC_EVENT_GROUP (\n    -- Nsys generic event group labels\n\n    id                          INTEGER   NOT NULL   PRIMARY KEY,      -- Enum numerical value.\n    name                        TEXT,                                  -- Enum symbol name.\n    label                       TEXT                                   -- Enum human name.\n)",
+    "columns": [
+      {
+        "cid": 0,
+        "name": "id",
+        "type": "INTEGER",
+        "notnull": 1,
+        "dflt_value": null,
+        "pk": 1
+      },
+      {
+        "cid": 1,
+        "name": "name",
+        "type": "TEXT",
+        "notnull": 0,
+        "dflt_value": null,
+        "pk": 0
+      },
+      {
+        "cid": 2,
+        "name": "label",
+        "type": "TEXT",
+        "notnull": 0,
+        "dflt_value": null,
+        "pk": 0
+      }
+    ],
+    "count": 5
+  },
+  "ENUM_NSYS_GENERIC_EVENT_FIELD_TYPE": {
+    "sql": "CREATE TABLE ENUM_NSYS_GENERIC_EVENT_FIELD_TYPE (\n    -- Nsys generic event field type labels\n\n    id                          INTEGER   NOT NULL   PRIMARY KEY,      -- Enum numerical value.\n    name                        TEXT,                                  -- Enum symbol name.\n    label                       TEXT                                   -- Enum human name.\n)",
+    "columns": [
+      {
+        "cid": 0,
+        "name": "id",
+        "type": "INTEGER",
+        "notnull": 1,
+        "dflt_value": null,
+        "pk": 1
+      },
+      {
+        "cid": 1,
+        "name": "name",
+        "type": "TEXT",
+        "notnull": 0,
+        "dflt_value": null,
+        "pk": 0
+      },
+      {
+        "cid": 2,
+        "name": "label",
+        "type": "TEXT",
+        "notnull": 0,
+        "dflt_value": null,
+        "pk": 0
+      }
+    ],
+    "count": 4
+  },
+  "ENUM_NSYS_GENERIC_EVENT_FIELD_ETW_PROPERTY": {
+    "sql": "CREATE TABLE ENUM_NSYS_GENERIC_EVENT_FIELD_ETW_PROPERTY (\n    -- Nsys generic event field ETW property flag labels\n\n    id                          INTEGER   NOT NULL   PRIMARY KEY,      -- Enum numerical value.\n    name                        TEXT,                                  -- Enum symbol name.\n    label                       TEXT                                   -- Enum human name.\n)",
+    "columns": [
+      {
+        "cid": 0,
+        "name": "id",
+        "type": "INTEGER",
+        "notnull": 1,
+        "dflt_value": null,
+        "pk": 1
+      },
+      {
+        "cid": 1,
+        "name": "name",
+        "type": "TEXT",
+        "notnull": 0,
+        "dflt_value": null,
+        "pk": 0
+      },
+      {
+        "cid": 2,
+        "name": "label",
+        "type": "TEXT",
+        "notnull": 0,
+        "dflt_value": null,
+        "pk": 0
+      }
+    ],
+    "count": 8
+  },
+  "ENUM_NSYS_GENERIC_EVENT_FIELD_ETW_TYPE": {
+    "sql": "CREATE TABLE ENUM_NSYS_GENERIC_EVENT_FIELD_ETW_TYPE (\n    -- Nsys generic event field ETW type labels\n\n    id                          INTEGER   NOT NULL   PRIMARY KEY,      -- Enum numerical value.\n    name                        TEXT,                                  -- Enum symbol name.\n    label                       TEXT                                   -- Enum human name.\n)",
+    "columns": [
+      {
+        "cid": 0,
+        "name": "id",
+        "type": "INTEGER",
+        "notnull": 1,
+        "dflt_value": null,
+        "pk": 1
+      },
+      {
+        "cid": 1,
+        "name": "name",
+        "type": "TEXT",
+        "notnull": 0,
+        "dflt_value": null,
+        "pk": 0
+      },
+      {
+        "cid": 2,
+        "name": "label",
+        "type": "TEXT",
+        "notnull": 0,
+        "dflt_value": null,
+        "pk": 0
+      }
+    ],
+    "count": 22
+  },
+  "ENUM_NSYS_GENERIC_EVENT_FIELD_ETW_FLAGS": {
+    "sql": "CREATE TABLE ENUM_NSYS_GENERIC_EVENT_FIELD_ETW_FLAGS (\n    -- Nsys generic event field ETW map info flag labels\n\n    id                          INTEGER   NOT NULL   PRIMARY KEY,      -- Enum numerical value.\n    name                        TEXT,                                  -- Enum symbol name.\n    label                       TEXT                                   -- Enum human name.\n)",
+    "columns": [
+      {
+        "cid": 0,
+        "name": "id",
+        "type": "INTEGER",
+        "notnull": 1,
+        "dflt_value": null,
+        "pk": 1
+      },
+      {
+        "cid": 1,
+        "name": "name",
+        "type": "TEXT",
+        "notnull": 0,
+        "dflt_value": null,
+        "pk": 0
+      },
+      {
+        "cid": 2,
+        "name": "label",
+        "type": "TEXT",
+        "notnull": 0,
+        "dflt_value": null,
+        "pk": 0
+      }
+    ],
+    "count": 7
+  },
+  "ENUM_GPU_CTX_SWITCH": {
+    "sql": "CREATE TABLE ENUM_GPU_CTX_SWITCH (\n    -- GPU context switch labels\n\n    id                          INTEGER   NOT NULL   PRIMARY KEY,      -- Enum numerical value.\n    name                        TEXT,                                  -- Enum symbol name.\n    label                       TEXT                                   -- Enum human name.\n)",
+    "columns": [
+      {
+        "cid": 0,
+        "name": "id",
+        "type": "INTEGER",
+        "notnull": 1,
+        "dflt_value": null,
+        "pk": 1
+      },
+      {
+        "cid": 1,
+        "name": "name",
+        "type": "TEXT",
+        "notnull": 0,
+        "dflt_value": null,
+        "pk": 0
+      },
+      {
+        "cid": 2,
+        "name": "label",
+        "type": "TEXT",
+        "notnull": 0,
+        "dflt_value": null,
+        "pk": 0
+      }
+    ],
+    "count": 13
+  },
+  "ENUM_CUDA_MEMCPY_OPER": {
+    "sql": "CREATE TABLE ENUM_CUDA_MEMCPY_OPER (\n    -- CUDA memcpy operation labels\n\n    id                          INTEGER   NOT NULL   PRIMARY KEY,      -- Enum numerical value.\n    name                        TEXT,                                  -- Enum symbol name.\n    label                       TEXT                                   -- Enum human name.\n)",
+    "columns": [
+      {
+        "cid": 0,
+        "name": "id",
+        "type": "INTEGER",
+        "notnull": 1,
+        "dflt_value": null,
+        "pk": 1
+      },
+      {
+        "cid": 1,
+        "name": "name",
+        "type": "TEXT",
+        "notnull": 0,
+        "dflt_value": null,
+        "pk": 0
+      },
+      {
+        "cid": 2,
+        "name": "label",
+        "type": "TEXT",
+        "notnull": 0,
+        "dflt_value": null,
+        "pk": 0
+      }
+    ],
+    "count": 14
+  },
+  "ENUM_CUDA_MEM_KIND": {
+    "sql": "CREATE TABLE ENUM_CUDA_MEM_KIND (\n    -- CUDA memory kind labels\n\n    id                          INTEGER   NOT NULL   PRIMARY KEY,      -- Enum numerical value.\n    name                        TEXT,                                  -- Enum symbol name.\n    label                       TEXT                                   -- Enum human name.\n)",
+    "columns": [
+      {
+        "cid": 0,
+        "name": "id",
+        "type": "INTEGER",
+        "notnull": 1,
+        "dflt_value": null,
+        "pk": 1
+      },
+      {
+        "cid": 1,
+        "name": "name",
+        "type": "TEXT",
+        "notnull": 0,
+        "dflt_value": null,
+        "pk": 0
+      },
+      {
+        "cid": 2,
+        "name": "label",
+        "type": "TEXT",
+        "notnull": 0,
+        "dflt_value": null,
+        "pk": 0
+      }
+    ],
+    "count": 8
+  },
+  "ENUM_CUDA_MEMPOOL_TYPE": {
+    "sql": "CREATE TABLE ENUM_CUDA_MEMPOOL_TYPE (\n    -- CUDA mempool type labels\n\n    id                          INTEGER   NOT NULL   PRIMARY KEY,      -- Enum numerical value.\n    name                        TEXT,                                  -- Enum symbol name.\n    label                       TEXT                                   -- Enum human name.\n)",
+    "columns": [
+      {
+        "cid": 0,
+        "name": "id",
+        "type": "INTEGER",
+        "notnull": 1,
+        "dflt_value": null,
+        "pk": 1
+      },
+      {
+        "cid": 1,
+        "name": "name",
+        "type": "TEXT",
+        "notnull": 0,
+        "dflt_value": null,
+        "pk": 0
+      },
+      {
+        "cid": 2,
+        "name": "label",
+        "type": "TEXT",
+        "notnull": 0,
+        "dflt_value": null,
+        "pk": 0
+      }
+    ],
+    "count": 3
+  },
+  "ENUM_CUDA_MEMPOOL_OPER": {
+    "sql": "CREATE TABLE ENUM_CUDA_MEMPOOL_OPER (\n    -- CUDA mempool operation labels\n\n    id                          INTEGER   NOT NULL   PRIMARY KEY,      -- Enum numerical value.\n    name                        TEXT,                                  -- Enum symbol name.\n    label                       TEXT                                   -- Enum human name.\n)",
+    "columns": [
+      {
+        "cid": 0,
+        "name": "id",
+        "type": "INTEGER",
+        "notnull": 1,
+        "dflt_value": null,
+        "pk": 1
+      },
+      {
+        "cid": 1,
+        "name": "name",
+        "type": "TEXT",
+        "notnull": 0,
+        "dflt_value": null,
+        "pk": 0
+      },
+      {
+        "cid": 2,
+        "name": "label",
+        "type": "TEXT",
+        "notnull": 0,
+        "dflt_value": null,
+        "pk": 0
+      }
+    ],
+    "count": 4
+  },
+  "ENUM_CUDA_DEV_MEM_EVENT_OPER": {
+    "sql": "CREATE TABLE ENUM_CUDA_DEV_MEM_EVENT_OPER (\n    -- CUDA device mem event operation labels\n\n    id                          INTEGER   NOT NULL   PRIMARY KEY,      -- Enum numerical value.\n    name                        TEXT,                                  -- Enum symbol name.\n    label                       TEXT                                   -- Enum human name.\n)",
+    "columns": [
+      {
+        "cid": 0,
+        "name": "id",
+        "type": "INTEGER",
+        "notnull": 1,
+        "dflt_value": null,
+        "pk": 1
+      },
+      {
+        "cid": 1,
+        "name": "name",
+        "type": "TEXT",
+        "notnull": 0,
+        "dflt_value": null,
+        "pk": 0
+      },
+      {
+        "cid": 2,
+        "name": "label",
+        "type": "TEXT",
+        "notnull": 0,
+        "dflt_value": null,
+        "pk": 0
+      }
+    ],
+    "count": 2
+  },
+  "ENUM_CUDA_KERNEL_LAUNCH_TYPE": {
+    "sql": "CREATE TABLE ENUM_CUDA_KERNEL_LAUNCH_TYPE (\n    -- CUDA kernel launch type labels\n\n    id                          INTEGER   NOT NULL   PRIMARY KEY,      -- Enum numerical value.\n    name                        TEXT,                                  -- Enum symbol name.\n    label                       TEXT                                   -- Enum human name.\n)",
+    "columns": [
+      {
+        "cid": 0,
+        "name": "id",
+        "type": "INTEGER",
+        "notnull": 1,
+        "dflt_value": null,
+        "pk": 1
+      },
+      {
+        "cid": 1,
+        "name": "name",
+        "type": "TEXT",
+        "notnull": 0,
+        "dflt_value": null,
+        "pk": 0
+      },
+      {
+        "cid": 2,
+        "name": "label",
+        "type": "TEXT",
+        "notnull": 0,
+        "dflt_value": null,
+        "pk": 0
+      }
+    ],
+    "count": 4
+  },
+  "ENUM_CUDA_SHARED_MEM_LIMIT_CONFIG": {
+    "sql": "CREATE TABLE ENUM_CUDA_SHARED_MEM_LIMIT_CONFIG (\n    -- CUDA shared memory limit config labels\n\n    id                          INTEGER   NOT NULL   PRIMARY KEY,      -- Enum numerical value.\n    name                        TEXT,                                  -- Enum symbol name.\n    label                       TEXT                                   -- Enum human name.\n)",
+    "columns": [
+      {
+        "cid": 0,
+        "name": "id",
+        "type": "INTEGER",
+        "notnull": 1,
+        "dflt_value": null,
+        "pk": 1
+      },
+      {
+        "cid": 1,
+        "name": "name",
+        "type": "TEXT",
+        "notnull": 0,
+        "dflt_value": null,
+        "pk": 0
+      },
+      {
+        "cid": 2,
+        "name": "label",
+        "type": "TEXT",
+        "notnull": 0,
+        "dflt_value": null,
+        "pk": 0
+      }
+    ],
+    "count": 2
+  },
+  "ENUM_CUDA_UNIF_MEM_MIGRATION": {
+    "sql": "CREATE TABLE ENUM_CUDA_UNIF_MEM_MIGRATION (\n    -- CUDA unified memory migration cause labels\n\n    id                          INTEGER   NOT NULL   PRIMARY KEY,      -- Enum numerical value.\n    name                        TEXT,                                  -- Enum symbol name.\n    label                       TEXT                                   -- Enum human name.\n)",
+    "columns": [
+      {
+        "cid": 0,
+        "name": "id",
+        "type": "INTEGER",
+        "notnull": 1,
+        "dflt_value": null,
+        "pk": 1
+      },
+      {
+        "cid": 1,
+        "name": "name",
+        "type": "TEXT",
+        "notnull": 0,
+        "dflt_value": null,
+        "pk": 0
+      },
+      {
+        "cid": 2,
+        "name": "label",
+        "type": "TEXT",
+        "notnull": 0,
+        "dflt_value": null,
+        "pk": 0
+      }
+    ],
+    "count": 6
+  },
+  "ENUM_CUDA_UNIF_MEM_ACCESS_TYPE": {
+    "sql": "CREATE TABLE ENUM_CUDA_UNIF_MEM_ACCESS_TYPE (\n    -- CUDA unified memory access type labels\n\n    id                          INTEGER   NOT NULL   PRIMARY KEY,      -- Enum numerical value.\n    name                        TEXT,                                  -- Enum symbol name.\n    label                       TEXT                                   -- Enum human name.\n)",
+    "columns": [
+      {
+        "cid": 0,
+        "name": "id",
+        "type": "INTEGER",
+        "notnull": 1,
+        "dflt_value": null,
+        "pk": 1
+      },
+      {
+        "cid": 1,
+        "name": "name",
+        "type": "TEXT",
+        "notnull": 0,
+        "dflt_value": null,
+        "pk": 0
+      },
+      {
+        "cid": 2,
+        "name": "label",
+        "type": "TEXT",
+        "notnull": 0,
+        "dflt_value": null,
+        "pk": 0
+      }
+    ],
+    "count": 5
+  },
+  "ENUM_CUDA_FUNC_CACHE_CONFIG": {
+    "sql": "CREATE TABLE ENUM_CUDA_FUNC_CACHE_CONFIG (\n    -- CUDA function cache config labels\n\n    id                          INTEGER   NOT NULL   PRIMARY KEY,      -- Enum numerical value.\n    name                        TEXT,                                  -- Enum symbol name.\n    label                       TEXT                                   -- Enum human name.\n)",
+    "columns": [
+      {
+        "cid": 0,
+        "name": "id",
+        "type": "INTEGER",
+        "notnull": 1,
+        "dflt_value": null,
+        "pk": 1
+      },
+      {
+        "cid": 1,
+        "name": "name",
+        "type": "TEXT",
+        "notnull": 0,
+        "dflt_value": null,
+        "pk": 0
+      },
+      {
+        "cid": 2,
+        "name": "label",
+        "type": "TEXT",
+        "notnull": 0,
+        "dflt_value": null,
+        "pk": 0
+      }
+    ],
+    "count": 4
+  },
+  "ENUM_CUPTI_STREAM_TYPE": {
+    "sql": "CREATE TABLE ENUM_CUPTI_STREAM_TYPE (\n    -- CUPTI stream type labels\n\n    id                          INTEGER   NOT NULL   PRIMARY KEY,      -- Enum numerical value.\n    name                        TEXT,                                  -- Enum symbol name.\n    label                       TEXT                                   -- Enum human name.\n)",
+    "columns": [
+      {
+        "cid": 0,
+        "name": "id",
+        "type": "INTEGER",
+        "notnull": 1,
+        "dflt_value": null,
+        "pk": 1
+      },
+      {
+        "cid": 1,
+        "name": "name",
+        "type": "TEXT",
+        "notnull": 0,
+        "dflt_value": null,
+        "pk": 0
+      },
+      {
+        "cid": 2,
+        "name": "label",
+        "type": "TEXT",
+        "notnull": 0,
+        "dflt_value": null,
+        "pk": 0
+      }
+    ],
+    "count": 4
+  },
+  "ENUM_CUPTI_SYNC_TYPE": {
+    "sql": "CREATE TABLE ENUM_CUPTI_SYNC_TYPE (\n    -- CUPTI synchronization type labels\n\n    id                          INTEGER   NOT NULL   PRIMARY KEY,      -- Enum numerical value.\n    name                        TEXT,                                  -- Enum symbol name.\n    label                       TEXT                                   -- Enum human name.\n)",
+    "columns": [
+      {
+        "cid": 0,
+        "name": "id",
+        "type": "INTEGER",
+        "notnull": 1,
+        "dflt_value": null,
+        "pk": 1
+      },
+      {
+        "cid": 1,
+        "name": "name",
+        "type": "TEXT",
+        "notnull": 0,
+        "dflt_value": null,
+        "pk": 0
+      },
+      {
+        "cid": 2,
+        "name": "label",
+        "type": "TEXT",
+        "notnull": 0,
+        "dflt_value": null,
+        "pk": 0
+      }
+    ],
+    "count": 5
+  },
+  "ENUM_STACK_UNWIND_METHOD": {
+    "sql": "CREATE TABLE ENUM_STACK_UNWIND_METHOD (\n    -- Stack unwind method labels\n\n    id                          INTEGER   NOT NULL   PRIMARY KEY,      -- Enum numerical value.\n    name                        TEXT,                                  -- Enum symbol name.\n    label                       TEXT                                   -- Enum human name.\n)",
+    "columns": [
+      {
+        "cid": 0,
+        "name": "id",
+        "type": "INTEGER",
+        "notnull": 1,
+        "dflt_value": null,
+        "pk": 1
+      },
+      {
+        "cid": 1,
+        "name": "name",
+        "type": "TEXT",
+        "notnull": 0,
+        "dflt_value": null,
+        "pk": 0
+      },
+      {
+        "cid": 2,
+        "name": "label",
+        "type": "TEXT",
+        "notnull": 0,
+        "dflt_value": null,
+        "pk": 0
+      }
+    ],
+    "count": 10
+  },
+  "ENUM_SAMPLING_THREAD_STATE": {
+    "sql": "CREATE TABLE ENUM_SAMPLING_THREAD_STATE (\n    -- Sampling thread state labels\n\n    id                          INTEGER   NOT NULL   PRIMARY KEY,      -- Enum numerical value.\n    name                        TEXT,                                  -- Enum symbol name.\n    label                       TEXT                                   -- Enum human name.\n)",
+    "columns": [
+      {
+        "cid": 0,
+        "name": "id",
+        "type": "INTEGER",
+        "notnull": 1,
+        "dflt_value": null,
+        "pk": 1
+      },
+      {
+        "cid": 1,
+        "name": "name",
+        "type": "TEXT",
+        "notnull": 0,
+        "dflt_value": null,
+        "pk": 0
+      },
+      {
+        "cid": 2,
+        "name": "label",
+        "type": "TEXT",
+        "notnull": 0,
+        "dflt_value": null,
+        "pk": 0
+      }
+    ],
+    "count": 11
+  },
+  "ENUM_SCHEDULING_THREAD_BLOCK": {
+    "sql": "CREATE TABLE ENUM_SCHEDULING_THREAD_BLOCK (\n    -- Scheduling thread block labels\n\n    id                          INTEGER   NOT NULL   PRIMARY KEY,      -- Enum numerical value.\n    name                        TEXT,                                  -- Enum symbol name.\n    label                       TEXT                                   -- Enum human name.\n)",
+    "columns": [
+      {
+        "cid": 0,
+        "name": "id",
+        "type": "INTEGER",
+        "notnull": 1,
+        "dflt_value": null,
+        "pk": 1
+      },
+      {
+        "cid": 1,
+        "name": "name",
+        "type": "TEXT",
+        "notnull": 0,
+        "dflt_value": null,
+        "pk": 0
+      },
+      {
+        "cid": 2,
+        "name": "label",
+        "type": "TEXT",
+        "notnull": 0,
+        "dflt_value": null,
+        "pk": 0
+      }
+    ],
+    "count": 53
+  },
+  "ENUM_OPENGL_DEBUG_SOURCE": {
+    "sql": "CREATE TABLE ENUM_OPENGL_DEBUG_SOURCE (\n    -- OpenGL debug source labels\n\n    id                          INTEGER   NOT NULL   PRIMARY KEY,      -- Enum numerical value.\n    name                        TEXT,                                  -- Enum symbol name.\n    label                       TEXT                                   -- Enum human name.\n)",
+    "columns": [
+      {
+        "cid": 0,
+        "name": "id",
+        "type": "INTEGER",
+        "notnull": 1,
+        "dflt_value": null,
+        "pk": 1
+      },
+      {
+        "cid": 1,
+        "name": "name",
+        "type": "TEXT",
+        "notnull": 0,
+        "dflt_value": null,
+        "pk": 0
+      },
+      {
+        "cid": 2,
+        "name": "label",
+        "type": "TEXT",
+        "notnull": 0,
+        "dflt_value": null,
+        "pk": 0
+      }
+    ],
+    "count": 6
+  },
+  "ENUM_OPENGL_DEBUG_TYPE": {
+    "sql": "CREATE TABLE ENUM_OPENGL_DEBUG_TYPE (\n    -- OpenGL debug type labels\n\n    id                          INTEGER   NOT NULL   PRIMARY KEY,      -- Enum numerical value.\n    name                        TEXT,                                  -- Enum symbol name.\n    label                       TEXT                                   -- Enum human name.\n)",
+    "columns": [
+      {
+        "cid": 0,
+        "name": "id",
+        "type": "INTEGER",
+        "notnull": 1,
+        "dflt_value": null,
+        "pk": 1
+      },
+      {
+        "cid": 1,
+        "name": "name",
+        "type": "TEXT",
+        "notnull": 0,
+        "dflt_value": null,
+        "pk": 0
+      },
+      {
+        "cid": 2,
+        "name": "label",
+        "type": "TEXT",
+        "notnull": 0,
+        "dflt_value": null,
+        "pk": 0
+      }
+    ],
+    "count": 9
+  },
+  "ENUM_OPENGL_DEBUG_SEVERITY": {
+    "sql": "CREATE TABLE ENUM_OPENGL_DEBUG_SEVERITY (\n    -- OpenGL debug severity labels\n\n    id                          INTEGER   NOT NULL   PRIMARY KEY,      -- Enum numerical value.\n    name                        TEXT,                                  -- Enum symbol name.\n    label                       TEXT                                   -- Enum human name.\n)",
+    "columns": [
+      {
+        "cid": 0,
+        "name": "id",
+        "type": "INTEGER",
+        "notnull": 1,
+        "dflt_value": null,
+        "pk": 1
+      },
+      {
+        "cid": 1,
+        "name": "name",
+        "type": "TEXT",
+        "notnull": 0,
+        "dflt_value": null,
+        "pk": 0
+      },
+      {
+        "cid": 2,
+        "name": "label",
+        "type": "TEXT",
+        "notnull": 0,
+        "dflt_value": null,
+        "pk": 0
+      }
+    ],
+    "count": 4
+  },
+  "ENUM_VULKAN_PIPELINE_CREATION_FLAGS": {
+    "sql": "CREATE TABLE ENUM_VULKAN_PIPELINE_CREATION_FLAGS (\n    -- Vulkan pipeline creation feedback flag labels\n\n    id                          INTEGER   NOT NULL   PRIMARY KEY,      -- Enum numerical value.\n    name                        TEXT,                                  -- Enum symbol name.\n    label                       TEXT                                   -- Enum human name.\n)",
+    "columns": [
+      {
+        "cid": 0,
+        "name": "id",
+        "type": "INTEGER",
+        "notnull": 1,
+        "dflt_value": null,
+        "pk": 1
+      },
+      {
+        "cid": 1,
+        "name": "name",
+        "type": "TEXT",
+        "notnull": 0,
+        "dflt_value": null,
+        "pk": 0
+      },
+      {
+        "cid": 2,
+        "name": "label",
+        "type": "TEXT",
+        "notnull": 0,
+        "dflt_value": null,
+        "pk": 0
+      }
+    ],
+    "count": 3
+  },
+  "ENUM_D3D12_HEAP_TYPE": {
+    "sql": "CREATE TABLE ENUM_D3D12_HEAP_TYPE (\n    -- D3D12 heap type labels\n\n    id                          INTEGER   NOT NULL   PRIMARY KEY,      -- Enum numerical value.\n    name                        TEXT,                                  -- Enum symbol name.\n    label                       TEXT                                   -- Enum human name.\n)",
+    "columns": [
+      {
+        "cid": 0,
+        "name": "id",
+        "type": "INTEGER",
+        "notnull": 1,
+        "dflt_value": null,
+        "pk": 1
+      },
+      {
+        "cid": 1,
+        "name": "name",
+        "type": "TEXT",
+        "notnull": 0,
+        "dflt_value": null,
+        "pk": 0
+      },
+      {
+        "cid": 2,
+        "name": "label",
+        "type": "TEXT",
+        "notnull": 0,
+        "dflt_value": null,
+        "pk": 0
+      }
+    ],
+    "count": 4
+  },
+  "ENUM_D3D12_PAGE_PROPERTY": {
+    "sql": "CREATE TABLE ENUM_D3D12_PAGE_PROPERTY (\n    -- D3D12 CPU page property labels\n\n    id                          INTEGER   NOT NULL   PRIMARY KEY,      -- Enum numerical value.\n    name                        TEXT,                                  -- Enum symbol name.\n    label                       TEXT                                   -- Enum human name.\n)",
+    "columns": [
+      {
+        "cid": 0,
+        "name": "id",
+        "type": "INTEGER",
+        "notnull": 1,
+        "dflt_value": null,
+        "pk": 1
+      },
+      {
+        "cid": 1,
+        "name": "name",
+        "type": "TEXT",
+        "notnull": 0,
+        "dflt_value": null,
+        "pk": 0
+      },
+      {
+        "cid": 2,
+        "name": "label",
+        "type": "TEXT",
+        "notnull": 0,
+        "dflt_value": null,
+        "pk": 0
+      }
+    ],
+    "count": 4
+  },
+  "ENUM_D3D12_HEAP_FLAGS": {
+    "sql": "CREATE TABLE ENUM_D3D12_HEAP_FLAGS (\n    -- D3D12 heap flag labels\n\n    id                          INTEGER   NOT NULL   PRIMARY KEY,      -- Enum numerical value.\n    name                        TEXT,                                  -- Enum symbol name.\n    label                       TEXT                                   -- Enum human name.\n)",
+    "columns": [
+      {
+        "cid": 0,
+        "name": "id",
+        "type": "INTEGER",
+        "notnull": 1,
+        "dflt_value": null,
+        "pk": 1
+      },
+      {
+        "cid": 1,
+        "name": "name",
+        "type": "TEXT",
+        "notnull": 0,
+        "dflt_value": null,
+        "pk": 0
+      },
+      {
+        "cid": 2,
+        "name": "label",
+        "type": "TEXT",
+        "notnull": 0,
+        "dflt_value": null,
+        "pk": 0
+      }
+    ],
+    "count": 7
+  },
+  "ENUM_D3D12_CMD_LIST_TYPE": {
+    "sql": "CREATE TABLE ENUM_D3D12_CMD_LIST_TYPE (\n    -- D3D12 command list type labels\n\n    id                          INTEGER   NOT NULL   PRIMARY KEY,      -- Enum numerical value.\n    name                        TEXT,                                  -- Enum symbol name.\n    label                       TEXT                                   -- Enum human name.\n)",
+    "columns": [
+      {
+        "cid": 0,
+        "name": "id",
+        "type": "INTEGER",
+        "notnull": 1,
+        "dflt_value": null,
+        "pk": 1
+      },
+      {
+        "cid": 1,
+        "name": "name",
+        "type": "TEXT",
+        "notnull": 0,
+        "dflt_value": null,
+        "pk": 0
+      },
+      {
+        "cid": 2,
+        "name": "label",
+        "type": "TEXT",
+        "notnull": 0,
+        "dflt_value": null,
+        "pk": 0
+      }
+    ],
+    "count": 7
+  },
+  "ENUM_OPENACC_DEVICE": {
+    "sql": "CREATE TABLE ENUM_OPENACC_DEVICE (\n    -- OpenACC device type labels\n\n    id                          INTEGER   NOT NULL   PRIMARY KEY,      -- Enum numerical value.\n    name                        TEXT,                                  -- Enum symbol name.\n    label                       TEXT                                   -- Enum human name.\n)",
+    "columns": [
+      {
+        "cid": 0,
+        "name": "id",
+        "type": "INTEGER",
+        "notnull": 1,
+        "dflt_value": null,
+        "pk": 1
+      },
+      {
+        "cid": 1,
+        "name": "name",
+        "type": "TEXT",
+        "notnull": 0,
+        "dflt_value": null,
+        "pk": 0
+      },
+      {
+        "cid": 2,
+        "name": "label",
+        "type": "TEXT",
+        "notnull": 0,
+        "dflt_value": null,
+        "pk": 0
+      }
+    ],
+    "count": 10
+  },
+  "ENUM_OPENACC_EVENT_KIND": {
+    "sql": "CREATE TABLE ENUM_OPENACC_EVENT_KIND (\n    -- OpenACC event type labels\n\n    id                          INTEGER   NOT NULL   PRIMARY KEY,      -- Enum numerical value.\n    name                        TEXT,                                  -- Enum symbol name.\n    label                       TEXT                                   -- Enum human name.\n)",
+    "columns": [
+      {
+        "cid": 0,
+        "name": "id",
+        "type": "INTEGER",
+        "notnull": 1,
+        "dflt_value": null,
+        "pk": 1
+      },
+      {
+        "cid": 1,
+        "name": "name",
+        "type": "TEXT",
+        "notnull": 0,
+        "dflt_value": null,
+        "pk": 0
+      },
+      {
+        "cid": 2,
+        "name": "label",
+        "type": "TEXT",
+        "notnull": 0,
+        "dflt_value": null,
+        "pk": 0
+      }
+    ],
+    "count": 17
+  },
+  "ENUM_OPENMP_EVENT_KIND": {
+    "sql": "CREATE TABLE ENUM_OPENMP_EVENT_KIND (\n    -- OpenMP event kind labels\n\n    id                          INTEGER   NOT NULL   PRIMARY KEY,      -- Enum numerical value.\n    name                        TEXT,                                  -- Enum symbol name.\n    label                       TEXT                                   -- Enum human name.\n)",
+    "columns": [
+      {
+        "cid": 0,
+        "name": "id",
+        "type": "INTEGER",
+        "notnull": 1,
+        "dflt_value": null,
+        "pk": 1
+      },
+      {
+        "cid": 1,
+        "name": "name",
+        "type": "TEXT",
+        "notnull": 0,
+        "dflt_value": null,
+        "pk": 0
+      },
+      {
+        "cid": 2,
+        "name": "label",
+        "type": "TEXT",
+        "notnull": 0,
+        "dflt_value": null,
+        "pk": 0
+      }
+    ],
+    "count": 37
+  },
+  "ENUM_OPENMP_THREAD": {
+    "sql": "CREATE TABLE ENUM_OPENMP_THREAD (\n    -- OpenMP thread labels\n\n    id                          INTEGER   NOT NULL   PRIMARY KEY,      -- Enum numerical value.\n    name                        TEXT,                                  -- Enum symbol name.\n    label                       TEXT                                   -- Enum human name.\n)",
+    "columns": [
+      {
+        "cid": 0,
+        "name": "id",
+        "type": "INTEGER",
+        "notnull": 1,
+        "dflt_value": null,
+        "pk": 1
+      },
+      {
+        "cid": 1,
+        "name": "name",
+        "type": "TEXT",
+        "notnull": 0,
+        "dflt_value": null,
+        "pk": 0
+      },
+      {
+        "cid": 2,
+        "name": "label",
+        "type": "TEXT",
+        "notnull": 0,
+        "dflt_value": null,
+        "pk": 0
+      }
+    ],
+    "count": 4
+  },
+  "ENUM_OPENMP_DISPATCH": {
+    "sql": "CREATE TABLE ENUM_OPENMP_DISPATCH (\n    -- OpenMP dispatch labels\n\n    id                          INTEGER   NOT NULL   PRIMARY KEY,      -- Enum numerical value.\n    name                        TEXT,                                  -- Enum symbol name.\n    label                       TEXT                                   -- Enum human name.\n)",
+    "columns": [
+      {
+        "cid": 0,
+        "name": "id",
+        "type": "INTEGER",
+        "notnull": 1,
+        "dflt_value": null,
+        "pk": 1
+      },
+      {
+        "cid": 1,
+        "name": "name",
+        "type": "TEXT",
+        "notnull": 0,
+        "dflt_value": null,
+        "pk": 0
+      },
+      {
+        "cid": 2,
+        "name": "label",
+        "type": "TEXT",
+        "notnull": 0,
+        "dflt_value": null,
+        "pk": 0
+      }
+    ],
+    "count": 2
+  },
+  "ENUM_OPENMP_SYNC_REGION": {
+    "sql": "CREATE TABLE ENUM_OPENMP_SYNC_REGION (\n    -- OpenMP sync region labels\n\n    id                          INTEGER   NOT NULL   PRIMARY KEY,      -- Enum numerical value.\n    name                        TEXT,                                  -- Enum symbol name.\n    label                       TEXT                                   -- Enum human name.\n)",
+    "columns": [
+      {
+        "cid": 0,
+        "name": "id",
+        "type": "INTEGER",
+        "notnull": 1,
+        "dflt_value": null,
+        "pk": 1
+      },
+      {
+        "cid": 1,
+        "name": "name",
+        "type": "TEXT",
+        "notnull": 0,
+        "dflt_value": null,
+        "pk": 0
+      },
+      {
+        "cid": 2,
+        "name": "label",
+        "type": "TEXT",
+        "notnull": 0,
+        "dflt_value": null,
+        "pk": 0
+      }
+    ],
+    "count": 7
+  },
+  "ENUM_OPENMP_WORK": {
+    "sql": "CREATE TABLE ENUM_OPENMP_WORK (\n    -- OpenMP work labels\n\n    id                          INTEGER   NOT NULL   PRIMARY KEY,      -- Enum numerical value.\n    name                        TEXT,                                  -- Enum symbol name.\n    label                       TEXT                                   -- Enum human name.\n)",
+    "columns": [
+      {
+        "cid": 0,
+        "name": "id",
+        "type": "INTEGER",
+        "notnull": 1,
+        "dflt_value": null,
+        "pk": 1
+      },
+      {
+        "cid": 1,
+        "name": "name",
+        "type": "TEXT",
+        "notnull": 0,
+        "dflt_value": null,
+        "pk": 0
+      },
+      {
+        "cid": 2,
+        "name": "label",
+        "type": "TEXT",
+        "notnull": 0,
+        "dflt_value": null,
+        "pk": 0
+      }
+    ],
+    "count": 7
+  },
+  "ENUM_OPENMP_MUTEX": {
+    "sql": "CREATE TABLE ENUM_OPENMP_MUTEX (\n    -- OpenMP mutex labels\n\n    id                          INTEGER   NOT NULL   PRIMARY KEY,      -- Enum numerical value.\n    name                        TEXT,                                  -- Enum symbol name.\n    label                       TEXT                                   -- Enum human name.\n)",
+    "columns": [
+      {
+        "cid": 0,
+        "name": "id",
+        "type": "INTEGER",
+        "notnull": 1,
+        "dflt_value": null,
+        "pk": 1
+      },
+      {
+        "cid": 1,
+        "name": "name",
+        "type": "TEXT",
+        "notnull": 0,
+        "dflt_value": null,
+        "pk": 0
+      },
+      {
+        "cid": 2,
+        "name": "label",
+        "type": "TEXT",
+        "notnull": 0,
+        "dflt_value": null,
+        "pk": 0
+      }
+    ],
+    "count": 7
+  },
+  "ENUM_OPENMP_TASK_FLAG": {
+    "sql": "CREATE TABLE ENUM_OPENMP_TASK_FLAG (\n    -- OpenMP task flags labels\n\n    id                          INTEGER   NOT NULL   PRIMARY KEY,      -- Enum numerical value.\n    name                        TEXT,                                  -- Enum symbol name.\n    label                       TEXT                                   -- Enum human name.\n)",
+    "columns": [
+      {
+        "cid": 0,
+        "name": "id",
+        "type": "INTEGER",
+        "notnull": 1,
+        "dflt_value": null,
+        "pk": 1
+      },
+      {
+        "cid": 1,
+        "name": "name",
+        "type": "TEXT",
+        "notnull": 0,
+        "dflt_value": null,
+        "pk": 0
+      },
+      {
+        "cid": 2,
+        "name": "label",
+        "type": "TEXT",
+        "notnull": 0,
+        "dflt_value": null,
+        "pk": 0
+      }
+    ],
+    "count": 9
+  },
+  "ENUM_OPENMP_TASK_STATUS": {
+    "sql": "CREATE TABLE ENUM_OPENMP_TASK_STATUS (\n    -- OpenMP task status labels\n\n    id                          INTEGER   NOT NULL   PRIMARY KEY,      -- Enum numerical value.\n    name                        TEXT,                                  -- Enum symbol name.\n    label                       TEXT                                   -- Enum human name.\n)",
+    "columns": [
+      {
+        "cid": 0,
+        "name": "id",
+        "type": "INTEGER",
+        "notnull": 1,
+        "dflt_value": null,
+        "pk": 1
+      },
+      {
+        "cid": 1,
+        "name": "name",
+        "type": "TEXT",
+        "notnull": 0,
+        "dflt_value": null,
+        "pk": 0
+      },
+      {
+        "cid": 2,
+        "name": "label",
+        "type": "TEXT",
+        "notnull": 0,
+        "dflt_value": null,
+        "pk": 0
+      }
+    ],
+    "count": 7
+  },
+  "ENUM_SLI_TRANSER": {
+    "sql": "CREATE TABLE ENUM_SLI_TRANSER (\n    -- OpenMP task status labels\n\n    id                          INTEGER   NOT NULL   PRIMARY KEY,      -- Enum numerical value.\n    name                        TEXT,                                  -- Enum symbol name.\n    label                       TEXT                                   -- Enum human name.\n)",
+    "columns": [
+      {
+        "cid": 0,
+        "name": "id",
+        "type": "INTEGER",
+        "notnull": 1,
+        "dflt_value": null,
+        "pk": 1
+      },
+      {
+        "cid": 1,
+        "name": "name",
+        "type": "TEXT",
+        "notnull": 0,
+        "dflt_value": null,
+        "pk": 0
+      },
+      {
+        "cid": 2,
+        "name": "label",
+        "type": "TEXT",
+        "notnull": 0,
+        "dflt_value": null,
+        "pk": 0
+      }
+    ],
+    "count": 6
+  },
+  "ENUM_DXGI_FORMAT": {
+    "sql": "CREATE TABLE ENUM_DXGI_FORMAT (\n    -- DXGI image format labels\n\n    id                          INTEGER   NOT NULL   PRIMARY KEY,      -- Enum numerical value.\n    name                        TEXT,                                  -- Enum symbol name.\n    label                       TEXT                                   -- Enum human name.\n)",
+    "columns": [
+      {
+        "cid": 0,
+        "name": "id",
+        "type": "INTEGER",
+        "notnull": 1,
+        "dflt_value": null,
+        "pk": 1
+      },
+      {
+        "cid": 1,
+        "name": "name",
+        "type": "TEXT",
+        "notnull": 0,
+        "dflt_value": null,
+        "pk": 0
+      },
+      {
+        "cid": 2,
+        "name": "label",
+        "type": "TEXT",
+        "notnull": 0,
+        "dflt_value": null,
+        "pk": 0
+      }
+    ],
+    "count": 121
+  },
+  "ENUM_NVDRIVER_EVENT_ID": {
+    "sql": "CREATE TABLE ENUM_NVDRIVER_EVENT_ID (\n    -- NV-Driver event it labels\n\n    id                          INTEGER   NOT NULL   PRIMARY KEY,      -- Enum numerical value.\n    name                        TEXT,                                  -- Enum symbol name.\n    label                       TEXT                                   -- Enum human name.\n)",
+    "columns": [
+      {
+        "cid": 0,
+        "name": "id",
+        "type": "INTEGER",
+        "notnull": 1,
+        "dflt_value": null,
+        "pk": 1
+      },
+      {
+        "cid": 1,
+        "name": "name",
+        "type": "TEXT",
+        "notnull": 0,
+        "dflt_value": null,
+        "pk": 0
+      },
+      {
+        "cid": 2,
+        "name": "label",
+        "type": "TEXT",
+        "notnull": 0,
+        "dflt_value": null,
+        "pk": 0
+      }
+    ],
+    "count": 4
+  },
+  "ENUM_WDDM_PAGING_QUEUE_TYPE": {
+    "sql": "CREATE TABLE ENUM_WDDM_PAGING_QUEUE_TYPE (\n    -- WDDM paging queue type labels\n\n    id                          INTEGER   NOT NULL   PRIMARY KEY,      -- Enum numerical value.\n    name                        TEXT,                                  -- Enum symbol name.\n    label                       TEXT                                   -- Enum human name.\n)",
+    "columns": [
+      {
+        "cid": 0,
+        "name": "id",
+        "type": "INTEGER",
+        "notnull": 1,
+        "dflt_value": null,
+        "pk": 1
+      },
+      {
+        "cid": 1,
+        "name": "name",
+        "type": "TEXT",
+        "notnull": 0,
+        "dflt_value": null,
+        "pk": 0
+      },
+      {
+        "cid": 2,
+        "name": "label",
+        "type": "TEXT",
+        "notnull": 0,
+        "dflt_value": null,
+        "pk": 0
+      }
+    ],
+    "count": 4
+  },
+  "ENUM_WDDM_PACKET_TYPE": {
+    "sql": "CREATE TABLE ENUM_WDDM_PACKET_TYPE (\n    -- WDDM packet type labels\n\n    id                          INTEGER   NOT NULL   PRIMARY KEY,      -- Enum numerical value.\n    name                        TEXT,                                  -- Enum symbol name.\n    label                       TEXT                                   -- Enum human name.\n)",
+    "columns": [
+      {
+        "cid": 0,
+        "name": "id",
+        "type": "INTEGER",
+        "notnull": 1,
+        "dflt_value": null,
+        "pk": 1
+      },
+      {
+        "cid": 1,
+        "name": "name",
+        "type": "TEXT",
+        "notnull": 0,
+        "dflt_value": null,
+        "pk": 0
+      },
+      {
+        "cid": 2,
+        "name": "label",
+        "type": "TEXT",
+        "notnull": 0,
+        "dflt_value": null,
+        "pk": 0
+      }
+    ],
+    "count": 8
+  },
+  "ENUM_WDDM_ENGINE_TYPE": {
+    "sql": "CREATE TABLE ENUM_WDDM_ENGINE_TYPE (\n    -- WDDM engine type labels\n\n    id                          INTEGER   NOT NULL   PRIMARY KEY,      -- Enum numerical value.\n    name                        TEXT,                                  -- Enum symbol name.\n    label                       TEXT                                   -- Enum human name.\n)",
+    "columns": [
+      {
+        "cid": 0,
+        "name": "id",
+        "type": "INTEGER",
+        "notnull": 1,
+        "dflt_value": null,
+        "pk": 1
+      },
+      {
+        "cid": 1,
+        "name": "name",
+        "type": "TEXT",
+        "notnull": 0,
+        "dflt_value": null,
+        "pk": 0
+      },
+      {
+        "cid": 2,
+        "name": "label",
+        "type": "TEXT",
+        "notnull": 0,
+        "dflt_value": null,
+        "pk": 0
+      }
+    ],
+    "count": 9
+  },
+  "ENUM_WDDM_INTERRUPT_TYPE": {
+    "sql": "CREATE TABLE ENUM_WDDM_INTERRUPT_TYPE (\n    -- WDDM DMA interrupt type labels\n\n    id                          INTEGER   NOT NULL   PRIMARY KEY,      -- Enum numerical value.\n    name                        TEXT,                                  -- Enum symbol name.\n    label                       TEXT                                   -- Enum human name.\n)",
+    "columns": [
+      {
+        "cid": 0,
+        "name": "id",
+        "type": "INTEGER",
+        "notnull": 1,
+        "dflt_value": null,
+        "pk": 1
+      },
+      {
+        "cid": 1,
+        "name": "name",
+        "type": "TEXT",
+        "notnull": 0,
+        "dflt_value": null,
+        "pk": 0
+      },
+      {
+        "cid": 2,
+        "name": "label",
+        "type": "TEXT",
+        "notnull": 0,
+        "dflt_value": null,
+        "pk": 0
+      }
+    ],
+    "count": 17
+  },
+  "ENUM_WDDM_VIDMM_OP_TYPE": {
+    "sql": "CREATE TABLE ENUM_WDDM_VIDMM_OP_TYPE (\n    -- WDDM VidMm operation type labels\n\n    id                          INTEGER   NOT NULL   PRIMARY KEY,      -- Enum numerical value.\n    name                        TEXT,                                  -- Enum symbol name.\n    label                       TEXT                                   -- Enum human name.\n)",
+    "columns": [
+      {
+        "cid": 0,
+        "name": "id",
+        "type": "INTEGER",
+        "notnull": 1,
+        "dflt_value": null,
+        "pk": 1
+      },
+      {
+        "cid": 1,
+        "name": "name",
+        "type": "TEXT",
+        "notnull": 0,
+        "dflt_value": null,
+        "pk": 0
+      },
+      {
+        "cid": 2,
+        "name": "label",
+        "type": "TEXT",
+        "notnull": 0,
+        "dflt_value": null,
+        "pk": 0
+      }
+    ],
+    "count": 32
+  },
+  "ENUM_NET_LINK_TYPE": {
+    "sql": "CREATE TABLE ENUM_NET_LINK_TYPE (\n    -- NIC link layer labels\n\n    id                          INTEGER   NOT NULL   PRIMARY KEY,      -- Enum numerical value.\n    name                        TEXT,                                  -- Enum symbol name.\n    label                       TEXT                                   -- Enum human name.\n)",
+    "columns": [
+      {
+        "cid": 0,
+        "name": "id",
+        "type": "INTEGER",
+        "notnull": 1,
+        "dflt_value": null,
+        "pk": 1
+      },
+      {
+        "cid": 1,
+        "name": "name",
+        "type": "TEXT",
+        "notnull": 0,
+        "dflt_value": null,
+        "pk": 0
+      },
+      {
+        "cid": 2,
+        "name": "label",
+        "type": "TEXT",
+        "notnull": 0,
+        "dflt_value": null,
+        "pk": 0
+      }
+    ],
+    "count": 3
+  },
+  "ENUM_NET_DEVICE_ID": {
+    "sql": "CREATE TABLE ENUM_NET_DEVICE_ID (\n    -- NIC PCIe device id labels\n\n    id                          INTEGER   NOT NULL   PRIMARY KEY,      -- Enum numerical value.\n    name                        TEXT,                                  -- Enum symbol name.\n    label                       TEXT                                   -- Enum human name.\n)",
+    "columns": [
+      {
+        "cid": 0,
+        "name": "id",
+        "type": "INTEGER",
+        "notnull": 1,
+        "dflt_value": null,
+        "pk": 1
+      },
+      {
+        "cid": 1,
+        "name": "name",
+        "type": "TEXT",
+        "notnull": 0,
+        "dflt_value": null,
+        "pk": 0
+      },
+      {
+        "cid": 2,
+        "name": "label",
+        "type": "TEXT",
+        "notnull": 0,
+        "dflt_value": null,
+        "pk": 0
+      }
+    ],
+    "count": 45
+  },
+  "ENUM_NET_VENDOR_ID": {
+    "sql": "CREATE TABLE ENUM_NET_VENDOR_ID (\n    -- NIC PCIe vendor id labels\n\n    id                          INTEGER   NOT NULL   PRIMARY KEY,      -- Enum numerical value.\n    name                        TEXT,                                  -- Enum symbol name.\n    label                       TEXT                                   -- Enum human name.\n)",
+    "columns": [
+      {
+        "cid": 0,
+        "name": "id",
+        "type": "INTEGER",
+        "notnull": 1,
+        "dflt_value": null,
+        "pk": 1
+      },
+      {
+        "cid": 1,
+        "name": "name",
+        "type": "TEXT",
+        "notnull": 0,
+        "dflt_value": null,
+        "pk": 0
+      },
+      {
+        "cid": 2,
+        "name": "label",
+        "type": "TEXT",
+        "notnull": 0,
+        "dflt_value": null,
+        "pk": 0
+      }
+    ],
+    "count": 1
+  },
+  "ENUM_ETW_MEMORY_TRANSFER_TYPE": {
+    "sql": "CREATE TABLE ENUM_ETW_MEMORY_TRANSFER_TYPE (\n    -- memory transfer type labels\n\n    id                          INTEGER   NOT NULL   PRIMARY KEY,      -- Enum numerical value.\n    name                        TEXT,                                  -- Enum symbol name.\n    label                       TEXT                                   -- Enum human name.\n)",
+    "columns": [
+      {
+        "cid": 0,
+        "name": "id",
+        "type": "INTEGER",
+        "notnull": 1,
+        "dflt_value": null,
+        "pk": 1
+      },
+      {
+        "cid": 1,
+        "name": "name",
+        "type": "TEXT",
+        "notnull": 0,
+        "dflt_value": null,
+        "pk": 0
+      },
+      {
+        "cid": 2,
+        "name": "label",
+        "type": "TEXT",
+        "notnull": 0,
+        "dflt_value": null,
+        "pk": 0
+      }
+    ],
+    "count": 8
+  },
+  "ENUM_PMU_EVENT_SOURCE": {
+    "sql": "CREATE TABLE ENUM_PMU_EVENT_SOURCE (\n    -- PMU event source labels\n\n    id                          INTEGER   NOT NULL   PRIMARY KEY,      -- Enum numerical value.\n    name                        TEXT,                                  -- Enum symbol name.\n    label                       TEXT                                   -- Enum human name.\n)",
+    "columns": [
+      {
+        "cid": 0,
+        "name": "id",
+        "type": "INTEGER",
+        "notnull": 1,
+        "dflt_value": null,
+        "pk": 1
+      },
+      {
+        "cid": 1,
+        "name": "name",
+        "type": "TEXT",
+        "notnull": 0,
+        "dflt_value": null,
+        "pk": 0
+      },
+      {
+        "cid": 2,
+        "name": "label",
+        "type": "TEXT",
+        "notnull": 0,
+        "dflt_value": null,
+        "pk": 0
+      }
+    ],
+    "count": 4
+  },
+  "ENUM_PMU_UNIT_TYPE": {
+    "sql": "CREATE TABLE ENUM_PMU_UNIT_TYPE (\n    -- PMU unit type labels\n\n    id                          INTEGER   NOT NULL   PRIMARY KEY,      -- Enum numerical value.\n    name                        TEXT,                                  -- Enum symbol name.\n    label                       TEXT                                   -- Enum human name.\n)",
+    "columns": [
+      {
+        "cid": 0,
+        "name": "id",
+        "type": "INTEGER",
+        "notnull": 1,
+        "dflt_value": null,
+        "pk": 1
+      },
+      {
+        "cid": 1,
+        "name": "name",
+        "type": "TEXT",
+        "notnull": 0,
+        "dflt_value": null,
+        "pk": 0
+      },
+      {
+        "cid": 2,
+        "name": "label",
+        "type": "TEXT",
+        "notnull": 0,
+        "dflt_value": null,
+        "pk": 0
+      }
+    ],
+    "count": 3
+  },
+  "ENUM_VIDEO_ENGINE_TYPE": {
+    "sql": "CREATE TABLE ENUM_VIDEO_ENGINE_TYPE (\n    -- Video engine type id labels\n\n    id                          INTEGER   NOT NULL   PRIMARY KEY,      -- Enum numerical value.\n    name                        TEXT,                                  -- Enum symbol name.\n    label                       TEXT                                   -- Enum human name.\n)",
+    "columns": [
+      {
+        "cid": 0,
+        "name": "id",
+        "type": "INTEGER",
+        "notnull": 1,
+        "dflt_value": null,
+        "pk": 1
+      },
+      {
+        "cid": 1,
+        "name": "name",
+        "type": "TEXT",
+        "notnull": 0,
+        "dflt_value": null,
+        "pk": 0
+      },
+      {
+        "cid": 2,
+        "name": "label",
+        "type": "TEXT",
+        "notnull": 0,
+        "dflt_value": null,
+        "pk": 0
+      }
+    ],
+    "count": 4
+  },
+  "ENUM_VIDEO_ENGINE_CODEC": {
+    "sql": "CREATE TABLE ENUM_VIDEO_ENGINE_CODEC (\n    -- Video engine codec labels\n\n    id                          INTEGER   NOT NULL   PRIMARY KEY,      -- Enum numerical value.\n    name                        TEXT,                                  -- Enum symbol name.\n    label                       TEXT                                   -- Enum human name.\n)",
+    "columns": [
+      {
+        "cid": 0,
+        "name": "id",
+        "type": "INTEGER",
+        "notnull": 1,
+        "dflt_value": null,
+        "pk": 1
+      },
+      {
+        "cid": 1,
+        "name": "name",
+        "type": "TEXT",
+        "notnull": 0,
+        "dflt_value": null,
+        "pk": 0
+      },
+      {
+        "cid": 2,
+        "name": "label",
+        "type": "TEXT",
+        "notnull": 0,
+        "dflt_value": null,
+        "pk": 0
+      }
+    ],
+    "count": 8
+  },
+  "ENUM_DIAGNOSTIC_SEVERITY_LEVEL": {
+    "sql": "CREATE TABLE ENUM_DIAGNOSTIC_SEVERITY_LEVEL (\n    -- Diagnostic message severity level labels\n\n    id                          INTEGER   NOT NULL   PRIMARY KEY,      -- Enum numerical value.\n    name                        TEXT,                                  -- Enum symbol name.\n    label                       TEXT                                   -- Enum human name.\n)",
+    "columns": [
+      {
+        "cid": 0,
+        "name": "id",
+        "type": "INTEGER",
+        "notnull": 1,
+        "dflt_value": null,
+        "pk": 1
+      },
+      {
+        "cid": 1,
+        "name": "name",
+        "type": "TEXT",
+        "notnull": 0,
+        "dflt_value": null,
+        "pk": 0
+      },
+      {
+        "cid": 2,
+        "name": "label",
+        "type": "TEXT",
+        "notnull": 0,
+        "dflt_value": null,
+        "pk": 0
+      }
+    ],
+    "count": 5
+  },
+  "ENUM_DIAGNOSTIC_SOURCE_TYPE": {
+    "sql": "CREATE TABLE ENUM_DIAGNOSTIC_SOURCE_TYPE (\n    -- Diagnostic message source type labels\n\n    id                          INTEGER   NOT NULL   PRIMARY KEY,      -- Enum numerical value.\n    name                        TEXT,                                  -- Enum symbol name.\n    label                       TEXT                                   -- Enum human name.\n)",
+    "columns": [
+      {
+        "cid": 0,
+        "name": "id",
+        "type": "INTEGER",
+        "notnull": 1,
+        "dflt_value": null,
+        "pk": 1
+      },
+      {
+        "cid": 1,
+        "name": "name",
+        "type": "TEXT",
+        "notnull": 0,
+        "dflt_value": null,
+        "pk": 0
+      },
+      {
+        "cid": 2,
+        "name": "label",
+        "type": "TEXT",
+        "notnull": 0,
+        "dflt_value": null,
+        "pk": 0
+      }
+    ],
+    "count": 4
+  },
+  "ENUM_DIAGNOSTIC_TIMESTAMP_SOURCE": {
+    "sql": "CREATE TABLE ENUM_DIAGNOSTIC_TIMESTAMP_SOURCE (\n    -- Diagnostic message timestamp source lables\n\n    id                          INTEGER   NOT NULL   PRIMARY KEY,      -- Enum numerical value.\n    name                        TEXT,                                  -- Enum symbol name.\n    label                       TEXT                                   -- Enum human name.\n)",
+    "columns": [
+      {
+        "cid": 0,
+        "name": "id",
+        "type": "INTEGER",
+        "notnull": 1,
+        "dflt_value": null,
+        "pk": 1
+      },
+      {
+        "cid": 1,
+        "name": "name",
+        "type": "TEXT",
+        "notnull": 0,
+        "dflt_value": null,
+        "pk": 0
+      },
+      {
+        "cid": 2,
+        "name": "label",
+        "type": "TEXT",
+        "notnull": 0,
+        "dflt_value": null,
+        "pk": 0
+      }
+    ],
+    "count": 3
+  },
+  "ENUM_NET_IB_DEVICE_TYPE": {
+    "sql": "CREATE TABLE ENUM_NET_IB_DEVICE_TYPE (\n    -- network device types\n\n    id                          INTEGER   NOT NULL   PRIMARY KEY,      -- Enum numerical value.\n    name                        TEXT,                                  -- Enum symbol name.\n    label                       TEXT                                   -- Enum human name.\n)",
+    "columns": [
+      {
+        "cid": 0,
+        "name": "id",
+        "type": "INTEGER",
+        "notnull": 1,
+        "dflt_value": null,
+        "pk": 1
+      },
+      {
+        "cid": 1,
+        "name": "name",
+        "type": "TEXT",
+        "notnull": 0,
+        "dflt_value": null,
+        "pk": 0
+      },
+      {
+        "cid": 2,
+        "name": "label",
+        "type": "TEXT",
+        "notnull": 0,
+        "dflt_value": null,
+        "pk": 0
+      }
+    ],
+    "count": 2
+  },
+  "META_DATA_CAPTURE": {
+    "sql": "CREATE TABLE META_DATA_CAPTURE (\n    -- information about nsys capture parameters\n\n    name                        TEXT      NOT NULL,                    -- Name of meta-data record\n    value                       TEXT                                   -- Value of meta-data record\n)",
+    "columns": [
+      {
+        "cid": 0,
+        "name": "name",
+        "type": "TEXT",
+        "notnull": 1,
+        "dflt_value": null,
+        "pk": 0
+      },
+      {
+        "cid": 1,
+        "name": "value",
+        "type": "TEXT",
+        "notnull": 0,
+        "dflt_value": null,
+        "pk": 0
+      }
+    ],
+    "count": 156
+  },
+  "META_DATA_EXPORT": {
+    "sql": "CREATE TABLE META_DATA_EXPORT (\n    -- information about nsys export process\n\n    name                        TEXT      NOT NULL,                    -- Name of meta-data record\n    value                       TEXT                                   -- Value of meta-data record\n)",
+    "columns": [
+      {
+        "cid": 0,
+        "name": "name",
+        "type": "TEXT",
+        "notnull": 1,
+        "dflt_value": null,
+        "pk": 0
+      },
+      {
+        "cid": 1,
+        "name": "value",
+        "type": "TEXT",
+        "notnull": 0,
+        "dflt_value": null,
+        "pk": 0
+      }
+    ],
+    "count": 29
+  }
+}

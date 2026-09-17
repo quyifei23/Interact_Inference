@@ -1,0 +1,67 @@
+{
+  "-1": {
+    "id": -1,
+    "name": "UnknownGpuCtxswTag",
+    "label": "Unknown"
+  },
+  "0": {
+    "id": 0,
+    "name": "SOF",
+    "label": "SO"
+  },
+  "1": {
+    "id": 1,
+    "name": "REQ_BY_HOST",
+    "label": "Request by host"
+  },
+  "2": {
+    "id": 2,
+    "name": "FE_ACK",
+    "label": "Front-end ACK"
+  },
+  "3": {
+    "id": 3,
+    "name": "FE_ACK_WFI",
+    "label": "Front-end ACK WFI"
+  },
+  "4": {
+    "id": 4,
+    "name": "FE_ACK_GFXP",
+    "label": "Front-end ACK GFXP"
+  },
+  "5": {
+    "id": 5,
+    "name": "FE_ACK_CTAP",
+    "label": "Front-end ACK CTAP"
+  },
+  "6": {
+    "id": 6,
+    "name": "FE_ACK_CILP",
+    "label": "Front-end ACK CILP"
+  },
+  "7": {
+    "id": 7,
+    "name": "SAVE_END",
+    "label": "Save end"
+  },
+  "8": {
+    "id": 8,
+    "name": "RESTORE_START",
+    "label": "Restore start"
+  },
+  "9": {
+    "id": 9,
+    "name": "CONTEXT_START",
+    "label": "Context start"
+  },
+  "10": {
+    "id": 10,
+    "name": "INVALID_TIMESTAMP",
+    "label": "Invalid timestamp"
+  },
+  "11": {
+    "id": 11,
+    "name": "ENGINE_RESET",
+    "label": "Engine reset"
+  }
+}

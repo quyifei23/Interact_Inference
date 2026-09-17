@@ -1,3 +1,4 @@
+#include "diagnostic_trace.h"
 #include "rm_control.h"
 #include "control_events.h"
 #include "rm_observation.h"
@@ -232,6 +233,7 @@ void save_control_journal(){
     // The already-published mmap records remain the primary crash evidence.
     try{if(c.journaling)c.journal.save(c.journal_path);}
     catch(const std::exception& e){std::fprintf(stderr,"CONTROL_LOG_EXPORT_FAILED: %s; retain binary journal\n",e.what());}
+    try{diagnostic_save();}catch(const std::exception& e){std::fprintf(stderr,"DIAGNOSTIC_EXPORT_FAILED: %s\n",e.what());}
 }
 std::string capture_inventory(){auto& c=capture();std::lock_guard<std::recursive_mutex> lock(c.mutex);return c.objects.inventory();}
 namespace {

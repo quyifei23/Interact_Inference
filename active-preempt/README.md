@@ -1,4 +1,6 @@
-# Active preemption prototype — phase 6 paired group PREEMPT
+# Active preemption prototype — Phase 7 closed
+
+**Phase 7：DIAGNOSTIC_ASSOCIATION_OBSERVED（限定关联范围）。** Nsight Systems 2024.6.2 的 D0/D1 各一次诊断均完成，实际采集到双方的 context-switch 原始事件。D1 的一次同步 PREEMPT 被接受；其 NVTX ioctl 外围区间内出现 BG `SAVE_END`、INT `RESTORE_START`、INT kernel start，之后有 BG `RESTORE_START` 与原始工作完成。双方 reference、BG 同 context/stream 短计算及 cleanup 通过。原始 CSV 的 ordering 仍为 ambiguous；不把关联升级为 INT-next、精确 context-save 或单次因果证明。见 [Phase 7 诊断](../docs/phase7_diagnostic.md) 与 [原型最终边界](../docs/prototype_final.md)。
 
 **阶段六已完成获授权的 10 对匹配实验。** 新 `group-bound-none` 与 B 共用 group 绑定、GET_INFO 和锁内控制准备；20 个 run 全部完成，10 次 PREEMPT 均被接受。entry 9/10 对较短（1 对慢 0.448 μs），done 10/10 对较短；所有 treatment 的顺序仍为 ambiguous。完整逐对值、计数、限制见 [phase6_paired_preempt](../docs/phase6_paired_preempt.md)，不能据此宣称 p99、instruction-level preemption 或硬件完成时刻。
 
@@ -17,7 +19,7 @@ ctest --test-dir active-preempt/build --output-on-failure
 
 默认仍依赖同级 NVIDIA submodule 的 550.120 commit `5e52edb2034de7db4d8ae368dbc7c26b416bfa16`、CUDA Toolkit、C++17、CMake 3.22、Linux x86-64。控制 ABI 使用所选 profile 的官方头文件。工作量针对 A100/sm_80；其他 GPU 的 CUDA probe 可独立尝试，主调度 workload 仍限制 A100。
 
-9 个 CTest：保留原 ABI/errno、注册表/mode/恢复、profile/transport、group 生命周期/GET_INFO、Python 分析/runner/schema；包括 group PREEMPT 的精确绑定凭据、阶段/授权/owner/FD/scope/失效拒绝、一次同步请求、错误/超时 journal 和双进程命令测试。阶段六另增加共用 preparation/no-op 权限及配对计划/预算/整数统计测试（16 项 Python unittest）。550/595 独立构建各 9/9 通过。所有 synthetic 数据只在临时目录，不是 GPU measurements。
+10 个 CTest：保留原 ABI/errno、注册表/mode/恢复、profile/transport、group 生命周期/GET_INFO、Python 分析/runner/schema；包括 group PREEMPT 的精确绑定凭据、阶段/授权/owner/FD/scope/失效拒绝、一次同步请求、错误/超时 journal 和双进程命令测试。另有共用 preparation/no-op、配对契约（16 项 Python unittest）和诊断契约（8 项 Python unittest）。550/595 最终独立构建各 10/10 通过；一次550并行回归的既有超时子进程检查失败也保留，独立重跑通过，原因未确定（见Phase7报告）。所有 synthetic 数据只在临时目录，不是 GPU measurements。
 
 595 使用独立构建；`NVIDIA_595_SOURCE` 应指向已检出的、未修改的 **db0c4e65c8e34c678d745ddb1317f53f90d1072b**。不能将 550 submodule 切到该 tag，也不能复用同一个 build 混入不同头文件：
 
@@ -212,3 +214,30 @@ active-preempt/build/event_dump RUN/bg_control_events.bin RUN/bg_control_events.
 ```
 
 错误时先保存证据，再尝试 owner-side enable/demote/timeslice restore；runner 对整棵进程组做有界退出，强杀会明确标记恢复未确认并停止后续测试。有限计算不保证永久 deschedule 后自行完成；没有 GPU reset 或 context destruction 充当正常抢占。
+
+## Phase 7 最小诊断复现
+
+只用一个后端：已安装的 Nsight Systems 2024.6.2。`--diagnostic-trace` 添加主机 NVTX 标记，并令 `run_kind=diagnostic`；它与改变 workload 的 `--diagnostic-progress` 独立，不启用后者。未开启时不初始化 NVTX、不写诊断文件。NVTX headers 可用时由 CMake 编译，缺失时诊断明确拒绝，普通路径仍可构建。
+
+下列命令会产生**新的 GPU 工作**，应在已获授权的目标机使用新目录。历史授权或空进程列表不自动授权新实验；本次 Phase 7 的授权和执行已记录。本轮已完成，无需再执行：
+
+```bash
+python3 active-preempt/scripts/probe_diagnostic.py --output results/phase7-new/backend
+python3 active-preempt/scripts/run_diagnostic.py \
+  --build active-preempt/build-595 --gpu GPU-99e4e85f-1945-866c-9e00-130b51df7908 \
+  --condition D0 --output results/phase7-new/D0
+python3 active-preempt/scripts/analyze_diagnostic.py \
+  --run results/phase7-new/D0 --output results/phase7-new/D0/analysis
+# 仅在 D0 backend_ready_for_d1=true，且操作者已明确授权当前主动实验时：
+python3 active-preempt/scripts/run_diagnostic.py \
+  --build active-preempt/build-595 --gpu GPU-99e4e85f-1945-866c-9e00-130b51df7908 \
+  --condition D1 --d0 results/phase7-new/D0 --output results/phase7-new/D1 --test-host-confirmed
+python3 active-preempt/scripts/analyze_diagnostic.py \
+  --run results/phase7-new/D1 --output results/phase7-new/D1/analysis
+```
+
+入口冻结 Phase 6 工作量与 3000 μs 相位，不自动调参、重复、进入性能矩阵或切换 primitive。每个 D0 最多关联一个 D1 invocation，reservation 在启动前落盘；每个 BG owner 原有 once gate 不变。后台原始 report 的生成、退出 0、普通 kernel timeline 都不能代替 D0 事件/关联检查。
+
+脚本显式关闭 CPU sampling/CPU context switch，采用 `--trace=cuda,nvtx --gpuctxsw=true --wait=all --kill=none --duration=0`；不使用 profiler 限时终止 GPU 工作。ctxsw 是该版本不可进一步缩小的 system scope；派生分析只取本实验 PID/选定 GPU，不解匿名其他进程。已观测到 driver 13.2 与工具 12.8 trace 库的兼容性警告，保留且限定结论。
+
+原始 `.nsys-rep`、SQLite、info 保留在本地并默认不进 Git：报告会嵌入环境和系统元数据。D0 原报告含继承的敏感环境；D1 已使用最小环境 allowlist，不能直接发布 D0 原报告。版本化结果是两组 owner 证据、`analysis/actual_schema.json`、`events.csv`、`identities.json`、`marker_links.json`、`timeline.txt` 与原报告指纹。复制到其他机器只可离线分析，绝不能复用捕获的 handle/FD。

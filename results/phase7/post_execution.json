@@ -1,0 +1,14 @@
+{
+  "run_kind": "diagnostic",
+  "process_snapshot": {
+    "call": [
+      "nvidia-smi",
+      "--query-compute-apps=pid,process_name,gpu_uuid",
+      "--format=csv,noheader"
+    ],
+    "returncode": 0,
+    "stdout": "2235325, VLLM::EngineCore, GPU-fb294fda-c72e-d6f4-1686-9c46ca6e3173\n",
+    "stderr": ""
+  },
+  "scope": "snapshot only; not a general exclusivity proof"
+}
