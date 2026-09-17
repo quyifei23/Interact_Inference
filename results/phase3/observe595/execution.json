@@ -1,0 +1,18 @@
+{
+  "command": [
+    "/home/quyifei/multimodal/workspace/Interception/active-preempt/build-595/int_worker",
+    "--probe-rm-observe",
+    "--run-dir",
+    "/home/quyifei/multimodal/workspace/Interception/results/phase3/observe595"
+  ],
+  "returncode": 77,
+  "timed_out": false,
+  "termination": [],
+  "recovery": "inspect_owner_recovery_logs",
+  "utc": "2026-09-17T05:56:59.329689+00:00",
+  "environment": {
+    "CUDA_VISIBLE_DEVICES": "GPU-99e4e85f-1945-866c-9e00-130b51df7908",
+    "LD_PRELOAD": "/home/quyifei/multimodal/workspace/Interception/active-preempt/build-595/librm_control.so"
+  },
+  "stage": "observe-only"
+}

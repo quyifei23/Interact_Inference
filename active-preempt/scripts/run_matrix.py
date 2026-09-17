@@ -140,7 +140,7 @@ def main():
         processes=next((r for r in readiness['commands'] if r['call'][0]=='nvidia-smi' and '--query-compute-apps=pid,process_name,gpu_uuid' in r['call']),None)
         if processes and processes.get('returncode')==0 and processes.get('stdout','').strip():
             (a.output/'summary.md').write_text('Active tests skipped: other GPU compute processes reported. GPU trials = 0.\n');return 77
-        for stage in ('identity','readonly'):
+        for stage in ('observe','identity','readonly'):
             name='probe-rm-'+stage;out=a.output/name
             r=run(name,[str(a.build/'int_worker'),'--probe-rm-'+stage,'--run-dir',str(out)],45)
             if r['returncode']:

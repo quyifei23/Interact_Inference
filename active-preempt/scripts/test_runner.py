@@ -11,7 +11,7 @@ import time
 import unittest
 from unittest.mock import patch
 from run_matrix import canonical,run_process_group,validate_admission
-from preflight import command
+from preflight import command,collect
 from test_analysis import row,write_rows
 
 def options(**extra):
@@ -35,6 +35,13 @@ class RunnerTest(unittest.TestCase):
     def test_preflight_missing_tool_has_call_and_errno(self):
         r=command(['/definitely-not-an-ap-tool'])
         self.assertIsNone(r['returncode']);self.assertEqual(r['errno'],2);self.assertIn('call',r)
+    def test_missing_device_keeps_stop_reason(self):
+        with (patch('preflight.command',side_effect=lambda argv,*a,**kw:dict(call=argv,returncode=77,stdout='',stderr='synthetic CUDA_ERROR_NO_DEVICE')),
+             patch('preflight.os.open',side_effect=FileNotFoundError(2,'synthetic missing device')),
+             patch('preflight.ctypes.CDLL',side_effect=OSError('synthetic unavailable'))):
+            r=collect(Path('/synthetic/no-cuda'))
+        self.assertEqual(r['readiness'],'DEVICE_ACCESS_BLOCKED');self.assertFalse(r['cuda_usable'])
+        self.assertIn('CUDA_ERROR_NO_DEVICE',r['cuda_probe']['stderr']);self.assertEqual(r['scheduling_controls_issued'],0)
     def test_matching_smoke_freezes_work_and_rejects_configuration_changes(self):
         with tempfile.TemporaryDirectory(prefix='ap-synthetic-admission-') as d:
             p=Path(d);(p/'status.txt').write_text('COMPLETED: synthetic fixture, not GPU evidence\n')

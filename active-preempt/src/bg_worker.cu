@@ -10,19 +10,20 @@ int main(int argc,char** argv){
         ap::stop_requested=0;
         std::ofstream f(run_dir+"/bg_recovery.txt",std::ios::app);
         bool restored=!rm||recovery.restore(*rm,f);f<<(restored?"CONFIGURATION_RESTORED":"RECOVERY_FAILED")<<std::endl;
-        ap::save_control_journal();return restored;
+        ap::save_control_journal();ap::save_rm_observation(run_dir,"bg_");return restored;
     };
     try{
         auto o=ap::parse(argc,argv);run_dir=o.run_dir;auto plan=ap::mode_plan(o.mode);
+        ap::configure_rm(plan.identity?ap::RmStage::Active:ap::RmStage::Disabled,o.test_host);
         std::signal(SIGTERM,ap::on_stop);std::signal(SIGINT,ap::on_stop);
         if(o.shared_path.empty())throw std::runtime_error("bg_worker needs controller shared mapping");
         mapping=std::make_unique<ap::Mapping>(o.shared_path.c_str());auto& s=*mapping->shared;
         if(prctl(PR_SET_PDEATHSIG,SIGTERM)!=0)throw std::runtime_error("PR_SET_PDEATHSIG failed");
         if(getppid()!=pid_t(s.host.controller_pid))throw std::runtime_error("Controller exited before BG startup");
         ap::open_control_journal(run_dir,"bg");
-        if(plan.identity&&!ap::baseline_driver_loaded())throw std::runtime_error("ABI_UNVERIFIED: active RM profile is 550.120");
         gpu=std::make_unique<ap::GpuWorker>(s.bg,o.bg_us,o.waves,o.heartbeat_ns,o.graph,o.bg_iterations,o.diagnostic);
         gpu->cleanup_log=run_dir+"/bg_cuda_cleanup.log";
+        ap::note_cuda_ready(gpu->prop.major,gpu->prop.minor);
         gpu->calibrate_observation(run_dir+"/bg_calibration_before.csv");
         std::ofstream(run_dir+"/bg_capture.txt")<<ap::capture_inventory();
         if(plan.identity)rm=std::make_unique<ap::RmControl>(ap::discover_owned_compute_group());

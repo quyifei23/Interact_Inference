@@ -1,6 +1,6 @@
-# Active preemption prototype — phase 2
+# Active preemption prototype — phase 3 bring-up
 
-在原 prototype 上修复对象生命周期、增加分阶段 probe、对照模式、Graph entry/main 区分和异常证据保存。**CUDA/GPU 抢占尚未实机验证，当前 GPU trials=0。** 本轮只允许固定 550.120 RM profile；CUDA-only probe/baseline 不被该版本门槛阻止。595.58.03 的静态对照与未适配缺口见 [runtime_readiness](../docs/runtime_readiness.md)。
+保留第二阶段的 generation/原 FD、对照模式、Graph markers、schema 2 与恢复日志。**本次 CUDA 最小 workload 已在 A100/595.58.03 成功；595 observe-only 捕获到同一 TSG 下 8 个 compute channel，绑定按约束拒绝。项目 GET/调度 controls=0，benchmark trials=0。** 真实证据与唯一下一步见 [phase3_bringup](../docs/phase3_bringup.md)。
 
 ## 构建与离线检查
 
@@ -13,9 +13,21 @@ cmake --build active-preempt/build -j4
 ctest --test-dir active-preempt/build --output-on-failure
 ```
 
-依赖同级 NVIDIA submodule 的 550.120 commit `5e52edb2034de7db4d8ae368dbc7c26b416bfa16`、CUDA Toolkit、C++17、CMake 3.22、Linux x86-64。控制 ABI 使用官方头文件。工作量针对 A100/sm_80；其他 GPU 的 CUDA probe 可独立尝试，主调度 workload 仍限制 A100。
+默认仍依赖同级 NVIDIA submodule 的 550.120 commit `5e52edb2034de7db4d8ae368dbc7c26b416bfa16`、CUDA Toolkit、C++17、CMake 3.22、Linux x86-64。控制 ABI 使用所选 profile 的官方头文件。工作量针对 A100/sm_80；其他 GPU 的 CUDA probe 可独立尝试，主调度 workload 仍限制 A100。
 
-5 个 CTest：原 ABI/errno/空身份、注册表与 mode/恢复/async gate、Python 分析、runner admission/进程树、实际 C++ CSV/journal 与 Python parser 集成。所有 synthetic 数据只在临时目录，测试结果不是 GPU measurements。
+6 个 CTest：原 ABI/errno/空身份、注册表与 mode/恢复/async gate、profile/transport/授权门槛、Python 分析、runner admission/进程树、实际 C++ CSV/journal 与 Python parser 集成。所有 synthetic 数据只在临时目录，测试结果不是 GPU measurements。
+
+595 使用独立构建；`NVIDIA_595_SOURCE` 应指向已检出的、未修改的 **db0c4e65c8e34c678d745ddb1317f53f90d1072b**。不能将 550 submodule 切到该 tag，也不能复用同一个 build 混入不同头文件：
+
+```bash
+cmake -S active-preempt -B active-preempt/build-595 \
+  -DAP_RM_PROFILE=595.58.03 -DNVIDIA_SOURCE="$NVIDIA_595_SOURCE" \
+  -DCMAKE_BUILD_TYPE=RelWithDebInfo -DCMAKE_CUDA_ARCHITECTURES=80
+cmake --build active-preempt/build-595 -j4
+ctest --test-dir active-preempt/build-595 --output-on-failure
+```
+
+实验 adapter 将 `static_abi_reviewed / observation_enabled / binding_observed / readonly_verified / active_experiment_authorized / active_result_measured` 分开记录。build profile 在编译时固定；运行阶段在第一次 CUDA 调用前显式选择。未知版本不解码 payload，FINN/未知布局阻止绑定。静态通过不授权 active；首次 active 不要求已有 active 成功结果，但仍要求本次有效对象、GET_INFO、workload GPU 范围与操作者确认。
 
 ## 分阶段探测
 
@@ -34,6 +46,18 @@ LD_PRELOAD="$PWD/active-preempt/build/librm_control.so" \
 ```
 
 CUDA probe 不先检查 550.120，不依赖 nvidia-smi 成功；最小 workload 有限。RM probe 使用 1 CTA / 256 iterations，不先校准 80 ms BG。GET_INFO 成功后，GET_TIMESLICE / GR_GET_CTXSW_MODES 的可选错误分别保存。没有 reliable binding 则拒绝 active controls，不向 stock driver 发 GPreempt QUERY_GROUP。
+
+595 先使用匹配 build 的 `--probe-rm-observe`，它**不追加任何项目 RM control**。`observed_ioctls.jsonl` 是 libcuda 正常调用的包络元数据；项目 controls 单独计数。成功建立唯一候选后，才在新的进程重新绑定并做 readonly，不能从旧文件读 handle 使用：
+
+```bash
+LD_PRELOAD="$PWD/active-preempt/build-595/librm_control.so" \
+  active-preempt/build-595/int_worker --probe-rm-observe --run-dir results/observe-new
+# 仅在 observe 通过后；同一进程内重新捕获、GET_INFO，再读可选 getter
+LD_PRELOAD="$PWD/active-preempt/build-595/librm_control.so" \
+  active-preempt/build-595/int_worker --probe-rm-readonly --run-dir results/readonly-new
+```
+
+**当前真实 observe 因多 compute channel 拒绝；本轮没有运行上述 readonly 命令或下述 benchmark 矩阵。** 不删除唯一性检查，不擅自选择一个 channel，不填写 `--test-host-confirmed`；下一步先审阅 [TSG/channel 绑定范围方案](../docs/phase3_bringup.md)。
 
 [对象绑定](../docs/object_binding.md) 解释原 FD、generation、父子关系、唯一候选、捕获不完整与 hidden ioctl 的限制。普通 CUDA `none/int-only` 不要求捕获成功；主动模式必须验证本进程对象，同 GPU UUID、不同 process/context 与 hardware TSG ID。CUPTI channel ID 从未当作 RM handle。
 

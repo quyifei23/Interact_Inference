@@ -1,5 +1,7 @@
 # RM 对象绑定与生命周期（阶段二）
 
+阶段三补充：独立 595 adapter 已实际捕获对象，但同一 graphics TSG 下发现 8 个 compute channel，仍按本文件的唯一性条件拒绝绑定；没有 GET_INFO 成功记录。原限制没有放宽，证据和后续 TSG 级绑定提案见 [phase3_bringup](phase3_bringup.md)。以下保留阶段二设计说明。
+
 **适用代码 profile：550.120 / Linux x86-64。当前只有离线测试通过；没有实机捕获成功记录。** 本轮基于 Interact_Inference `9d578f24fdaa102ad94e6db2093ec14386416138` 修复；实现见 `active-preempt/src/object_registry.{h,cpp}`、`rm_control.cpp` 的 `observe`、`remember`、`discover_owned_compute_group`、`issue`。
 
 ## 绑定方法和证据边界

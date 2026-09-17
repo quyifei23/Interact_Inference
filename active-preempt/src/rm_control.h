@@ -3,6 +3,7 @@
 #include <string>
 #include <vector>
 #include "object_registry.h"
+#include "driver_profile.h"
 
 namespace ap {
 struct AsyncPreemptGate {
@@ -19,7 +20,7 @@ struct ControlResult {
     uint32_t rm_status = 0xffffffff;
     uint64_t begin_ns = 0, end_ns = 0;
     uint64_t operation_seq = 0;
-    enum class Rejection:uint32_t {None,Device,Abi,Binding,Incomplete,PendingAsync,LogFull} rejection=Rejection::None;
+    enum class Rejection:uint32_t {None,Device,Abi,Binding,Incomplete,PendingAsync,LogFull,Stage,Authorization,Readonly,GpuScope} rejection=Rejection::None;
     bool ok() const { return attempted && syscall_result == 0 && rm_status == 0; }
     std::string describe() const;
     const char* category() const;
@@ -35,6 +36,7 @@ struct Identity {
 // Discovery accepts only allocations observed in this process. No externally
 // supplied hClient/hObject, QUERY_GROUP, global enumeration, or privilege bypass.
 Identity discover_owned_compute_group();
+Binding inspect_owned_compute_group(); // observation only, never issues GET_INFO
 std::string capture_inventory();
 bool baseline_driver_loaded();
 bool profile_matches(const std::string& version_text);

@@ -73,26 +73,45 @@ void snapshot(ap::TrialRecord& r,const ap::Shared& s,const Observer* observer){
     if(r.bg_present){if(ap::acquire(&s.bg.started))r.bg_main_gpu=s.bg.start_gpu_ns;if(ap::acquire(&s.bg.done))r.bg_done_gpu=s.bg.done_gpu_ns;r.overflow=s.bg.overflow;}
 }
 int probe_rm(const ap::Options& o){
+    std::unique_ptr<ap::Telemetry> telemetry;
+    std::unique_ptr<ap::GpuWorker> gpu;
     try{
-        if(!ap::baseline_driver_loaded())throw std::runtime_error("ABI_UNVERIFIED: RM identity/readonly requires reviewed 550.120 profile; CUDA probe remains independent");
-        if(access("/dev/nvidiactl",R_OK|W_OK))throw std::runtime_error("DEVICE_NOT_ACCESSIBLE: /dev/nvidiactl errno="+std::to_string(errno));
-        ap::open_control_journal(o.run_dir,"probe");
-        auto telemetry=std::make_unique<ap::Telemetry>();
-        ap::GpuWorker gpu(*telemetry,300,1,0,false,256,false,true); // no 80-ms calibration
-        gpu.cleanup_log=o.run_dir+"/probe_cuda_cleanup.log";
-        std::ofstream(o.run_dir+"/capture.txt")<<ap::capture_inventory();
-        ap::RmControl rm(ap::discover_owned_compute_group());
-        std::ofstream identity(o.run_dir+"/identity.txt");ap::write_identity(identity,gpu,&rm);
-        if(o.probe==ap::Probe::Readonly){
-            std::ofstream getters(o.run_dir+"/getters.jsonl");
-            uint64_t ts=0;auto r=rm.get_timeslice(ts);getters<<"{\"getter\":\"GET_TIMESLICE\",\"result\":"<<ap::json_string(r.describe())<<",\"value\":"<<(r.ok()?std::to_string(ts):"null")<<"}\n";
-            uint32_t mode=0xffffffff;r=rm.get_preemption_mode(mode);getters<<"{\"getter\":\"GR_GET_CTXSW_MODES\",\"result\":"<<ap::json_string(r.describe())<<",\"value\":"<<(r.ok()?std::to_string(mode):"null")<<"}\n";
-            // GET_INFO is the required ownership/object check. Other getters
-            // are optional and their errors do not erase that successful path.
+        ap::configure_rm(o.probe==ap::Probe::Observe?ap::RmStage::Observe:ap::RmStage::Readonly);
+        int device_fd=open("/dev/nvidiactl",O_RDWR|O_CLOEXEC);
+        if(device_fd<0)throw std::runtime_error("DEVICE_ACCESS_BLOCKED: /dev/nvidiactl errno="+std::to_string(errno));
+        close(device_fd); // access check only; this FD is NEVER used for RM controls
+        if(o.probe!=ap::Probe::Observe)ap::open_control_journal(o.run_dir,"probe");
+        telemetry=std::make_unique<ap::Telemetry>();
+        gpu=std::make_unique<ap::GpuWorker>(*telemetry,300,1,0,false,256,false,true);
+        gpu->cleanup_log=o.run_dir+"/probe_cuda_cleanup.log";
+        gpu->launch();if(!gpu->correct())throw std::runtime_error("CORRECTNESS_FAILURE: minimal current-context workload");
+        ap::note_cuda_ready(gpu->prop.major,gpu->prop.minor);
+        ap::save_rm_observation(o.run_dir,"before_binding_");
+        auto binding=ap::inspect_owned_compute_group(); // NO project ioctl
+        std::ofstream candidate(o.run_dir+"/candidate.json");
+        candidate<<"{\"pid\":"<<getpid()<<",\"client\":"<<binding.client<<",\"fd\":"<<binding.fd
+            <<",\"client_generation\":"<<binding.client_generation<<",\"group\":"<<binding.group.handle<<",\"group_generation\":"<<binding.group.generation
+            <<",\"compute_channel\":"<<binding.compute_channel.handle<<",\"channel_generation\":"<<binding.compute_channel.generation
+            <<",\"fd_source\":\"dup of original allocating nvidiactl open file\",\"authenticated_by_GET_INFO\":false}\n";
+        candidate.close();
+        std::ofstream identity(o.run_dir+"/identity.txt");
+        if(o.probe==ap::Probe::Observe){ap::write_identity(identity,*gpu);}
+        else{
+            ap::RmControl rm(ap::discover_owned_compute_group());
+            ap::write_identity(identity,*gpu,&rm);
+            if(o.probe==ap::Probe::Readonly){
+                std::ofstream getters(o.run_dir+"/getters.jsonl");
+                uint64_t ts=0;auto r=rm.get_timeslice(ts);getters<<"{\"getter\":\"GET_TIMESLICE\",\"result\":"<<ap::json_string(r.describe())<<",\"value\":"<<(r.ok()?std::to_string(ts):"null")<<"}\n";
+                uint32_t mode=0xffffffff;r=rm.get_preemption_mode(mode);getters<<"{\"getter\":\"GR_GET_CTXSW_MODES\",\"result\":"<<ap::json_string(r.describe())<<",\"value\":"<<(r.ok()?std::to_string(mode):"null")<<"}\n";
+            }
         }
-        ap::save_control_journal();if(!gpu.shutdown())throw std::runtime_error("CUDA_CLEANUP_FAILURE");std::ofstream(o.run_dir+"/probe_status.txt")<<"IDENTITY_VERIFIED; inspect optional getter statuses; scheduling_effect=unverified\n";return 0;
+        ap::save_control_journal();ap::save_rm_observation(o.run_dir,"before_cleanup_");
+        if(!gpu->shutdown())throw std::runtime_error("CUDA_CLEANUP_FAILURE");
+        ap::save_rm_observation(o.run_dir);
+        std::ofstream(o.run_dir+"/probe_status.txt")<<(o.probe==ap::Probe::Observe?"CANDIDATE_OBSERVED; project controls=0; readonly/active unverified":"READONLY_VERIFIED_BY_GET_INFO; inspect optional getter statuses; active unverified")<<'\n';return 0;
     }catch(const std::exception& e){
-        std::ofstream(o.run_dir+"/capture.txt")<<ap::capture_inventory();
+        ap::record_rm_stop_reason(e.what());
+        ap::save_rm_observation(o.run_dir);
         std::ofstream(o.run_dir+"/probe_status.txt")<<e.what()<<'\n';ap::save_control_journal();std::cerr<<e.what()<<'\n';return 77;
     }
 }
@@ -107,7 +126,7 @@ int main(int argc,char** argv){
         std::ofstream f(run_dir+"/int_recovery.txt",std::ios::app);bool ok=true;
         if(possibly_disabled&&child&&child->pid>0){try{auto r=child->command(ap::Command::Enable);f<<"BG_ENABLE "<<r.describe()<<'\n';possibly_disabled=!r.ok();ok&=r.ok();}catch(const std::exception& e){f<<"RECOVERY_UNCONFIRMED "<<e.what()<<'\n';ok=false;}}
         if(rm)ok&=recovery.restore(*rm,f);
-        f<<(ok?"CONFIGURATION_RESTORED":"RECOVERY_FAILED")<<std::endl;ap::save_control_journal();return ok;
+        f<<(ok?"CONFIGURATION_RESTORED":"RECOVERY_FAILED")<<std::endl;ap::save_control_journal();ap::save_rm_observation(run_dir,"int_");return ok;
     };
     try{
         auto o=ap::parse(argc,argv);run_dir=o.run_dir;auto plan=ap::mode_plan(o.mode);
@@ -121,7 +140,7 @@ int main(int argc,char** argv){
             if(std::filesystem::exists(run_dir+"/"+name))throw std::runtime_error("Evidence already exists; use a new run directory");
         evidence_writable=true;
         if(o.probe!=ap::Probe::None)return probe_rm(o);
-        if(plan.identity&&!ap::baseline_driver_loaded())throw std::runtime_error("ABI_UNVERIFIED: modifying RM modes require 550.120; none/int-only and --probe-cuda are independent");
+        ap::configure_rm(plan.identity?ap::RmStage::Active:ap::RmStage::Disabled,o.test_host);
         // Before any fork: verify CUDA availability in a separate probe process
         // through the runner. Workers still check cuInit directly below.
         std::signal(SIGTERM,ap::on_stop);std::signal(SIGINT,ap::on_stop);
@@ -140,6 +159,7 @@ int main(int argc,char** argv){
         ap::open_control_journal(run_dir,"int");
         gpu=std::make_unique<ap::GpuWorker>(s.interactive,o.int_us,1,o.heartbeat_ns,o.graph,o.int_iterations,o.diagnostic);
         gpu->cleanup_log=run_dir+"/int_cuda_cleanup.log";
+        ap::note_cuda_ready(gpu->prop.major,gpu->prop.minor);
         gpu->calibrate_observation(run_dir+"/int_calibration_before.csv");
         std::ofstream(run_dir+"/int_capture.txt")<<ap::capture_inventory();
         if(plan.identity)rm=std::make_unique<ap::RmControl>(ap::discover_owned_compute_group());
@@ -159,7 +179,7 @@ int main(int argc,char** argv){
         configuration<<"{\"schema_version\":2,\"mode\":"<<ap::json_string(o.mode)
             <<",\"run_kind\":"<<ap::json_string(o.diagnostic?"diagnostic":"performance")
             <<",\"gpu_uuid\":"<<ap::json_string(ap::uuid_string(gpu->prop.uuid))
-            <<",\"driver_profile\":"<<ap::json_string(plan.identity?"550.120":"CUDA_BASELINE_NO_RM_PROFILE")
+            <<",\"driver_profile\":"<<ap::json_string(plan.identity?ap::build_profile().version:"CUDA_BASELINE_NO_RM_PROFILE")
             <<",\"graph\":"<<o.graph<<",\"force\":"<<o.force<<",\"bypass\":"<<o.bypass
             <<",\"cta_waves\":"<<o.waves<<",\"heartbeat_ns\":"<<o.heartbeat_ns<<",\"timeslice_us\":"<<o.timeslice_us
             <<",\"bg_target_us\":"<<o.bg_us<<",\"int_target_us\":"<<o.int_us
@@ -207,6 +227,7 @@ int main(int argc,char** argv){
                 if(rm)rm->mark_work_drained();
                 if(child){ap::wait_value(&s.bg.done,1,"BG completion");child->command(ap::Command::Drain,trial);row.bg_correct=s.host.bg_correct;if(o.diagnostic)row.progress_correct&=s.host.bg_progress_correct;}
                 observer->finish();snapshot(row,s,observer.get());row.complete=true;row.write(raw);
+                if(row.control.attempted)ap::note_active_result_measured();
                 for(size_t i=0;i<observer->data.heartbeat.size();++i)heartbeats<<2<<','<<trial<<','<<i<<','<<observer->data.heartbeat[i].first<<','<<observer->data.heartbeat[i].second<<'\n';
                 if(child)for(unsigned b=0;b<s.host.bg_blocks;++b)ctas<<2<<','<<trial<<','<<b<<','<<s.bg.cta_start_gpu_ns[b]<<','<<s.bg.cta_end_gpu_ns[b]<<'\n';
                 ap::save_control_journal();
@@ -227,7 +248,7 @@ int main(int argc,char** argv){
         if(evidence_writable&&!run_dir.empty()&&std::filesystem::is_directory(run_dir)){
             // Before cleanup or context destructors: save the first failure and all
             // returned controls. mmap journals remain recoverable after SIGKILL.
-            std::ofstream(run_dir+"/failure.txt")<<e.what()<<'\n';std::ofstream(run_dir+"/int_capture.txt")<<ap::capture_inventory();
+            ap::record_rm_stop_reason(e.what());std::ofstream(run_dir+"/failure.txt")<<e.what()<<'\n';std::ofstream(run_dir+"/int_capture.txt")<<ap::capture_inventory();
             try{cleanup();}catch(const std::exception& r){std::ofstream(run_dir+"/recovery_failure.txt")<<r.what()<<'\n';}
         }
         if(child)child->stop();if(!shared_path.empty())unlink(shared_path.c_str());return 1;

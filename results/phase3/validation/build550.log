@@ -1,0 +1,33 @@
+Consolidate compiler generated dependencies of target preflight_cuda
+Consolidate compiler generated dependencies of target rm_control
+[ 10%] Built target preflight_cuda
+[ 15%] Building CXX object CMakeFiles/rm_control.dir/src/object_registry.cpp.o
+[ 20%] Building CXX object CMakeFiles/rm_control.dir/src/rm_control.cpp.o
+[ 25%] Building CXX object CMakeFiles/rm_control.dir/src/control_events.cpp.o
+[ 30%] Building CXX object CMakeFiles/rm_control.dir/src/driver_profile.cpp.o
+[ 35%] Building CXX object CMakeFiles/rm_control.dir/src/rm_observation.cpp.o
+[ 40%] Linking CXX shared library librm_control.so
+[ 40%] Built target rm_control
+Consolidate compiler generated dependencies of target event_dump
+Consolidate compiler generated dependencies of target bg_worker
+Consolidate compiler generated dependencies of target int_worker
+Consolidate compiler generated dependencies of target phase2_contract_test
+[ 45%] Building CXX object CMakeFiles/event_dump.dir/src/event_dump.cpp.o
+[ 50%] Building CXX object CMakeFiles/phase2_contract_test.dir/src/phase2_contract_test.cpp.o
+[ 55%] Building CUDA object CMakeFiles/bg_worker.dir/src/bg_worker.cu.o
+[ 60%] Building CUDA object CMakeFiles/int_worker.dir/src/int_worker.cu.o
+[ 65%] Linking CXX executable event_dump
+[ 65%] Built target event_dump
+Consolidate compiler generated dependencies of target rm_contract_test
+[ 70%] Building CXX object CMakeFiles/rm_contract_test.dir/src/rm_contract_test.cpp.o
+[ 75%] Linking CXX executable rm_contract_test
+[ 75%] Built target rm_contract_test
+[ 80%] Building CXX object CMakeFiles/phase3_profile_test.dir/src/phase3_profile_test.cpp.o
+[ 85%] Linking CXX executable phase2_contract_test
+[ 85%] Built target phase2_contract_test
+[ 90%] Linking CXX executable phase3_profile_test
+[ 90%] Built target phase3_profile_test
+[ 95%] Linking CUDA executable bg_worker
+[ 95%] Built target bg_worker
+[100%] Linking CUDA executable int_worker
+[100%] Built target int_worker

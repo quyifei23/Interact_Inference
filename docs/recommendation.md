@@ -1,5 +1,7 @@
 # 推荐：先验证 B/C 的增量作用，保留 timeslice 对照
 
+阶段三进展：CUDA 已在实际 A100/595.58.03 可达；experimental adapter 已执行 observe-only，停于同一 TSG 下 8 个 compute channel 的绑定歧义。项目 GET/主动 controls 仍为 0；下一步是审阅 TSG 级绑定范围，而不是比较性能。详见 [phase3_bringup](phase3_bringup.md)。下文的不可达描述为阶段二时点。
+
 **没有实测性能 winner。** 对“CPU 收到交互后使独立 INT 尽早运行、BG context 保持有效”的意图，550.120 `MAKE_REALTIME(INT) + RESTART_RUNLIST(INT channel)` 有最明确的 realtime-next 契约；`PREEMPT(BG)` 是更直接、没有额外 NICE access-right 要求的触发器。B 不包含持久 hold 或指定下一个 context 的参数，C 也仍受 runnable 状态、runlist/policy、其他 realtime 工作、粒度与 firmware 支持制约。[固定版本源码证据](source_archaeology.md)
 
 阶段二的决定性对照是 **PREEMPT vs none（M3/M1）**、**realtime-restart vs realtime-only（M5/M4）**。M5 对 M1 的总体改善不能全部归因于主动 restart。timeslice 初始化可能避免每次交互的 RM/GSP 往返，因此不因“被动”而提前淘汰；请求/读回 timeslice 不等于真实 hardware quantum。D 的持续 disable/enable 契约仍有价值，但本轮排在恢复责任审查之后，不是默认试验。

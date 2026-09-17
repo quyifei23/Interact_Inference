@@ -44,8 +44,9 @@ void mode_tests(){
     auto c=ap::mode_plan("realtime");need(c.name=="realtime-restart","alias");rejects([&]{c.trigger(true,false);});
     need(c.trigger(true,true)==ap::Trigger::Restart,"restart route");
     for(auto name:{"timeslice","preempt-wait","preempt-async","realtime-only","realtime-restart","disable","disable-split"})rejects([&]{ap::mode_plan(name).trigger(false,true);});
-    need(ap::profile_matches("Kernel Module  550.120\n"),"profile rejected");
-    for(auto version:{"595.58.03","550.120.1","1550.120",""})need(!ap::profile_matches(version),"unverified profile accepted");
+    need(ap::version_matches("Kernel Module  550.120\n","550.120"),"550 profile rejected");
+    need(ap::profile_matches(std::string("Kernel Module ")+ap::build_profile().version),"build profile rejected");
+    for(auto version:{"615.71.09","550.120.1","595.58.03.1","1550.120",""})need(!ap::profile_matches(version),"unverified profile accepted");
     char exe[]="test",cuda[]="--probe-cuda",active[]="--mode",mode[]="preempt-wait";char* args[]={exe,cuda,active,mode};
     need(ap::parse(4,args).probe==ap::Probe::Cuda,"CUDA probe depended on RM/host admission");
     ap::AsyncPreemptGate async;need(async.may_issue(),"initial async state");async.submitted();need(!async.may_issue(),"repeat async allowed without completion");async.drained();need(async.may_issue(),"drained async cannot resume");

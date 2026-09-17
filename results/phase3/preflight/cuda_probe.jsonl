@@ -1,0 +1,167 @@
+{"call":"dladdr(cuInit)","returncode":0,"detail":"/lib/x86_64-linux-gnu/libcuda.so.1"}
+{"call":"compile_versions","returncode":0,"detail":"CUDA_VERSION=12080 CUDART_VERSION=12080"}
+{"call":"cuDriverGetVersion","returncode":0,"detail":"CUDA_SUCCESS: no error"}
+{"call":"driver_api_version","returncode":0,"detail":"13020"}
+{"call":"cudaRuntimeGetVersion","returncode":0,"detail":"cudaSuccess: no error"}
+{"call":"runtime_version","returncode":0,"detail":"12080"}
+{"call":"cuInit(0)","returncode":0,"detail":"CUDA_SUCCESS: no error"}
+{"call":"cuDeviceGetCount","returncode":0,"detail":"CUDA_SUCCESS: no error"}
+{"call":"device_count","returncode":0,"detail":"8"}
+{"call":"loaded_library_mapping","returncode":0,"detail":"7f2a22200000-7f2a222ad000 r-xp 00000000 103:04 5769154                   /usr/local/cuda-12.8/targets/x86_64-linux/lib/libcudart.so.12.8.57"}
+{"call":"loaded_library_mapping","returncode":0,"detail":"7f2a222ad000-7f2a224ad000 ---p 000ad000 103:04 5769154                   /usr/local/cuda-12.8/targets/x86_64-linux/lib/libcudart.so.12.8.57"}
+{"call":"loaded_library_mapping","returncode":0,"detail":"7f2a224ad000-7f2a224b1000 r--p 000ad000 103:04 5769154                   /usr/local/cuda-12.8/targets/x86_64-linux/lib/libcudart.so.12.8.57"}
+{"call":"loaded_library_mapping","returncode":0,"detail":"7f2a224b1000-7f2a224b2000 rw-p 000b1000 103:04 5769154                   /usr/local/cuda-12.8/targets/x86_64-linux/lib/libcudart.so.12.8.57"}
+{"call":"loaded_library_mapping","returncode":0,"detail":"7f2a2269f000-7f2a22801000 r--p 00000000 103:04 5411939                   /usr/lib/x86_64-linux-gnu/libcuda.so.595.58.03"}
+{"call":"loaded_library_mapping","returncode":0,"detail":"7f2a22801000-7f2a238da000 r-xp 00162000 103:04 5411939                   /usr/lib/x86_64-linux-gnu/libcuda.so.595.58.03"}
+{"call":"loaded_library_mapping","returncode":0,"detail":"7f2a238da000-7f2a27c7a000 r--p 0123b000 103:04 5411939                   /usr/lib/x86_64-linux-gnu/libcuda.so.595.58.03"}
+{"call":"loaded_library_mapping","returncode":0,"detail":"7f2a27c7a000-7f2a27db2000 r--p 055da000 103:04 5411939                   /usr/lib/x86_64-linux-gnu/libcuda.so.595.58.03"}
+{"call":"loaded_library_mapping","returncode":0,"detail":"7f2a27db2000-7f2a27db7000 rw-p 05712000 103:04 5411939                   /usr/lib/x86_64-linux-gnu/libcuda.so.595.58.03"}
+{"call":"cuDeviceGet","returncode":0,"detail":"CUDA_SUCCESS: no error"}
+{"call":"cuDeviceGetName","returncode":0,"detail":"CUDA_SUCCESS: no error"}
+{"call":"device_name","returncode":0,"detail":"NVIDIA A100-PCIE-40GB"}
+{"call":"cuDeviceGetUuid","returncode":0,"detail":"CUDA_SUCCESS: no error"}
+{"call":"gpu_uuid","returncode":0,"detail":"99e4e85f1945866c9e00130b51df7908"}
+{"call":"compute_capability_major","returncode":0,"detail":"CUDA_SUCCESS: no error"}
+{"call":"compute_capability_major","returncode":0,"detail":"8"}
+{"call":"compute_capability_minor","returncode":0,"detail":"CUDA_SUCCESS: no error"}
+{"call":"compute_capability_minor","returncode":0,"detail":"0"}
+{"call":"can_map_host_memory","returncode":0,"detail":"CUDA_SUCCESS: no error"}
+{"call":"can_map_host_memory","returncode":0,"detail":"1"}
+{"call":"host_native_atomic_supported","returncode":0,"detail":"CUDA_SUCCESS: no error"}
+{"call":"host_native_atomic_supported","returncode":0,"detail":"0"}
+{"call":"compute_mode","returncode":0,"detail":"CUDA_SUCCESS: no error"}
+{"call":"compute_mode","returncode":0,"detail":"0"}
+{"call":"multiprocessor_count","returncode":0,"detail":"CUDA_SUCCESS: no error"}
+{"call":"multiprocessor_count","returncode":0,"detail":"108"}
+{"call":"cuDeviceGet","returncode":0,"detail":"CUDA_SUCCESS: no error"}
+{"call":"cuDeviceGetName","returncode":0,"detail":"CUDA_SUCCESS: no error"}
+{"call":"device_name","returncode":0,"detail":"NVIDIA A100-PCIE-40GB"}
+{"call":"cuDeviceGetUuid","returncode":0,"detail":"CUDA_SUCCESS: no error"}
+{"call":"gpu_uuid","returncode":0,"detail":"8ab7238ca5f5d99f731eec9ac4232bb9"}
+{"call":"compute_capability_major","returncode":0,"detail":"CUDA_SUCCESS: no error"}
+{"call":"compute_capability_major","returncode":0,"detail":"8"}
+{"call":"compute_capability_minor","returncode":0,"detail":"CUDA_SUCCESS: no error"}
+{"call":"compute_capability_minor","returncode":0,"detail":"0"}
+{"call":"can_map_host_memory","returncode":0,"detail":"CUDA_SUCCESS: no error"}
+{"call":"can_map_host_memory","returncode":0,"detail":"1"}
+{"call":"host_native_atomic_supported","returncode":0,"detail":"CUDA_SUCCESS: no error"}
+{"call":"host_native_atomic_supported","returncode":0,"detail":"0"}
+{"call":"compute_mode","returncode":0,"detail":"CUDA_SUCCESS: no error"}
+{"call":"compute_mode","returncode":0,"detail":"0"}
+{"call":"multiprocessor_count","returncode":0,"detail":"CUDA_SUCCESS: no error"}
+{"call":"multiprocessor_count","returncode":0,"detail":"108"}
+{"call":"cuDeviceGet","returncode":0,"detail":"CUDA_SUCCESS: no error"}
+{"call":"cuDeviceGetName","returncode":0,"detail":"CUDA_SUCCESS: no error"}
+{"call":"device_name","returncode":0,"detail":"NVIDIA A100-PCIE-40GB"}
+{"call":"cuDeviceGetUuid","returncode":0,"detail":"CUDA_SUCCESS: no error"}
+{"call":"gpu_uuid","returncode":0,"detail":"fb294fdac72ed6f416869c46ca6e3173"}
+{"call":"compute_capability_major","returncode":0,"detail":"CUDA_SUCCESS: no error"}
+{"call":"compute_capability_major","returncode":0,"detail":"8"}
+{"call":"compute_capability_minor","returncode":0,"detail":"CUDA_SUCCESS: no error"}
+{"call":"compute_capability_minor","returncode":0,"detail":"0"}
+{"call":"can_map_host_memory","returncode":0,"detail":"CUDA_SUCCESS: no error"}
+{"call":"can_map_host_memory","returncode":0,"detail":"1"}
+{"call":"host_native_atomic_supported","returncode":0,"detail":"CUDA_SUCCESS: no error"}
+{"call":"host_native_atomic_supported","returncode":0,"detail":"0"}
+{"call":"compute_mode","returncode":0,"detail":"CUDA_SUCCESS: no error"}
+{"call":"compute_mode","returncode":0,"detail":"0"}
+{"call":"multiprocessor_count","returncode":0,"detail":"CUDA_SUCCESS: no error"}
+{"call":"multiprocessor_count","returncode":0,"detail":"108"}
+{"call":"cuDeviceGet","returncode":0,"detail":"CUDA_SUCCESS: no error"}
+{"call":"cuDeviceGetName","returncode":0,"detail":"CUDA_SUCCESS: no error"}
+{"call":"device_name","returncode":0,"detail":"NVIDIA A100-PCIE-40GB"}
+{"call":"cuDeviceGetUuid","returncode":0,"detail":"CUDA_SUCCESS: no error"}
+{"call":"gpu_uuid","returncode":0,"detail":"fe6b2bbb6d406af4d79cd7ac14bd9378"}
+{"call":"compute_capability_major","returncode":0,"detail":"CUDA_SUCCESS: no error"}
+{"call":"compute_capability_major","returncode":0,"detail":"8"}
+{"call":"compute_capability_minor","returncode":0,"detail":"CUDA_SUCCESS: no error"}
+{"call":"compute_capability_minor","returncode":0,"detail":"0"}
+{"call":"can_map_host_memory","returncode":0,"detail":"CUDA_SUCCESS: no error"}
+{"call":"can_map_host_memory","returncode":0,"detail":"1"}
+{"call":"host_native_atomic_supported","returncode":0,"detail":"CUDA_SUCCESS: no error"}
+{"call":"host_native_atomic_supported","returncode":0,"detail":"0"}
+{"call":"compute_mode","returncode":0,"detail":"CUDA_SUCCESS: no error"}
+{"call":"compute_mode","returncode":0,"detail":"0"}
+{"call":"multiprocessor_count","returncode":0,"detail":"CUDA_SUCCESS: no error"}
+{"call":"multiprocessor_count","returncode":0,"detail":"108"}
+{"call":"cuDeviceGet","returncode":0,"detail":"CUDA_SUCCESS: no error"}
+{"call":"cuDeviceGetName","returncode":0,"detail":"CUDA_SUCCESS: no error"}
+{"call":"device_name","returncode":0,"detail":"NVIDIA A100-PCIE-40GB"}
+{"call":"cuDeviceGetUuid","returncode":0,"detail":"CUDA_SUCCESS: no error"}
+{"call":"gpu_uuid","returncode":0,"detail":"c12f8126444f33b993703004faee0125"}
+{"call":"compute_capability_major","returncode":0,"detail":"CUDA_SUCCESS: no error"}
+{"call":"compute_capability_major","returncode":0,"detail":"8"}
+{"call":"compute_capability_minor","returncode":0,"detail":"CUDA_SUCCESS: no error"}
+{"call":"compute_capability_minor","returncode":0,"detail":"0"}
+{"call":"can_map_host_memory","returncode":0,"detail":"CUDA_SUCCESS: no error"}
+{"call":"can_map_host_memory","returncode":0,"detail":"1"}
+{"call":"host_native_atomic_supported","returncode":0,"detail":"CUDA_SUCCESS: no error"}
+{"call":"host_native_atomic_supported","returncode":0,"detail":"0"}
+{"call":"compute_mode","returncode":0,"detail":"CUDA_SUCCESS: no error"}
+{"call":"compute_mode","returncode":0,"detail":"0"}
+{"call":"multiprocessor_count","returncode":0,"detail":"CUDA_SUCCESS: no error"}
+{"call":"multiprocessor_count","returncode":0,"detail":"108"}
+{"call":"cuDeviceGet","returncode":0,"detail":"CUDA_SUCCESS: no error"}
+{"call":"cuDeviceGetName","returncode":0,"detail":"CUDA_SUCCESS: no error"}
+{"call":"device_name","returncode":0,"detail":"NVIDIA A100-PCIE-40GB"}
+{"call":"cuDeviceGetUuid","returncode":0,"detail":"CUDA_SUCCESS: no error"}
+{"call":"gpu_uuid","returncode":0,"detail":"ce61d4a1288f1edbb44280a29ce57b9c"}
+{"call":"compute_capability_major","returncode":0,"detail":"CUDA_SUCCESS: no error"}
+{"call":"compute_capability_major","returncode":0,"detail":"8"}
+{"call":"compute_capability_minor","returncode":0,"detail":"CUDA_SUCCESS: no error"}
+{"call":"compute_capability_minor","returncode":0,"detail":"0"}
+{"call":"can_map_host_memory","returncode":0,"detail":"CUDA_SUCCESS: no error"}
+{"call":"can_map_host_memory","returncode":0,"detail":"1"}
+{"call":"host_native_atomic_supported","returncode":0,"detail":"CUDA_SUCCESS: no error"}
+{"call":"host_native_atomic_supported","returncode":0,"detail":"0"}
+{"call":"compute_mode","returncode":0,"detail":"CUDA_SUCCESS: no error"}
+{"call":"compute_mode","returncode":0,"detail":"0"}
+{"call":"multiprocessor_count","returncode":0,"detail":"CUDA_SUCCESS: no error"}
+{"call":"multiprocessor_count","returncode":0,"detail":"108"}
+{"call":"cuDeviceGet","returncode":0,"detail":"CUDA_SUCCESS: no error"}
+{"call":"cuDeviceGetName","returncode":0,"detail":"CUDA_SUCCESS: no error"}
+{"call":"device_name","returncode":0,"detail":"NVIDIA A100-PCIE-40GB"}
+{"call":"cuDeviceGetUuid","returncode":0,"detail":"CUDA_SUCCESS: no error"}
+{"call":"gpu_uuid","returncode":0,"detail":"295e036809f286da2a329f307548f7f7"}
+{"call":"compute_capability_major","returncode":0,"detail":"CUDA_SUCCESS: no error"}
+{"call":"compute_capability_major","returncode":0,"detail":"8"}
+{"call":"compute_capability_minor","returncode":0,"detail":"CUDA_SUCCESS: no error"}
+{"call":"compute_capability_minor","returncode":0,"detail":"0"}
+{"call":"can_map_host_memory","returncode":0,"detail":"CUDA_SUCCESS: no error"}
+{"call":"can_map_host_memory","returncode":0,"detail":"1"}
+{"call":"host_native_atomic_supported","returncode":0,"detail":"CUDA_SUCCESS: no error"}
+{"call":"host_native_atomic_supported","returncode":0,"detail":"0"}
+{"call":"compute_mode","returncode":0,"detail":"CUDA_SUCCESS: no error"}
+{"call":"compute_mode","returncode":0,"detail":"0"}
+{"call":"multiprocessor_count","returncode":0,"detail":"CUDA_SUCCESS: no error"}
+{"call":"multiprocessor_count","returncode":0,"detail":"108"}
+{"call":"cuDeviceGet","returncode":0,"detail":"CUDA_SUCCESS: no error"}
+{"call":"cuDeviceGetName","returncode":0,"detail":"CUDA_SUCCESS: no error"}
+{"call":"device_name","returncode":0,"detail":"NVIDIA A100-PCIE-40GB"}
+{"call":"cuDeviceGetUuid","returncode":0,"detail":"CUDA_SUCCESS: no error"}
+{"call":"gpu_uuid","returncode":0,"detail":"7a41a4cdbae6ecf70d562441824a2ac7"}
+{"call":"compute_capability_major","returncode":0,"detail":"CUDA_SUCCESS: no error"}
+{"call":"compute_capability_major","returncode":0,"detail":"8"}
+{"call":"compute_capability_minor","returncode":0,"detail":"CUDA_SUCCESS: no error"}
+{"call":"compute_capability_minor","returncode":0,"detail":"0"}
+{"call":"can_map_host_memory","returncode":0,"detail":"CUDA_SUCCESS: no error"}
+{"call":"can_map_host_memory","returncode":0,"detail":"1"}
+{"call":"host_native_atomic_supported","returncode":0,"detail":"CUDA_SUCCESS: no error"}
+{"call":"host_native_atomic_supported","returncode":0,"detail":"0"}
+{"call":"compute_mode","returncode":0,"detail":"CUDA_SUCCESS: no error"}
+{"call":"compute_mode","returncode":0,"detail":"0"}
+{"call":"multiprocessor_count","returncode":0,"detail":"CUDA_SUCCESS: no error"}
+{"call":"multiprocessor_count","returncode":0,"detail":"108"}
+{"call":"cudaSetDevice(0)","returncode":0,"detail":"cudaSuccess: no error"}
+{"call":"cudaMalloc","returncode":0,"detail":"cudaSuccess: no error"}
+{"call":"cudaStreamCreateWithFlags","returncode":0,"detail":"cudaSuccess: no error"}
+{"call":"cudaEventCreateWithFlags","returncode":0,"detail":"cudaSuccess: no error"}
+{"call":"minimal<<<1,32>>> launch","returncode":0,"detail":"cudaSuccess: no error"}
+{"call":"cudaEventRecord","returncode":0,"detail":"cudaSuccess: no error"}
+{"call":"cudaEventQuery_not_ready_count","returncode":0,"detail":"0"}
+{"call":"cudaEventQuery final","returncode":0,"detail":"cudaSuccess: no error"}
+{"call":"cudaMemcpy","returncode":0,"detail":"cudaSuccess: no error"}
+{"call":"minimal_kernel_correctness","returncode":0,"detail":"PASS: fixed integer reference"}
+{"call":"cudaEventDestroy","returncode":0,"detail":"cudaSuccess: no error"}
+{"call":"cudaStreamDestroy","returncode":0,"detail":"cudaSuccess: no error"}
+{"call":"cudaFree","returncode":0,"detail":"cudaSuccess: no error"}

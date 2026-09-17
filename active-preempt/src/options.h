@@ -6,7 +6,7 @@
 #include <iostream>
 #include <string>
 namespace ap {
-enum class Probe {None,Cuda,Identity,Readonly};
+enum class Probe {None,Cuda,Observe,Identity,Readonly};
 struct Options {
     std::string mode="none",run_dir,shared_path;
     unsigned trials=1,waves=1;
@@ -23,10 +23,11 @@ inline Options parse(int argc,char** argv){
         else if(key=="--allow-extended")o.extended=true;
         else if(key=="--graph-evidence-reviewed")o.graph_reviewed=true;
         else if(key=="--probe"||key=="--probe-cuda")o.probe=Probe::Cuda;
+        else if(key=="--probe-rm-observe")o.probe=Probe::Observe;
         else if(key=="--probe-rm-identity")o.probe=Probe::Identity;
         else if(key=="--probe-rm-readonly")o.probe=Probe::Readonly;
         else if(key=="--help"){
-            std::cout<<"int_worker --probe-cuda | --probe-rm-identity | --probe-rm-readonly [--run-dir DIR]\n"
+            std::cout<<"int_worker --probe-cuda | --probe-rm-observe | --probe-rm-identity | --probe-rm-readonly [--run-dir DIR]\n"
                      <<"int_worker --run-dir DIR --mode int-only|none|timeslice|preempt-wait|preempt-async|realtime-only|realtime-restart|realtime|disable|disable-split\n"
                      <<"[--trials 1] [--cta-waves 1..16] [--bg-iterations N] [--int-iterations N] [--bg-us 80000] [--int-us 300]\n"
                      <<"[--heartbeat-ns 2000] [--timeslice-us 1] [--force 0|1] [--bypass 0|1] [--diagnostic-progress]\n"

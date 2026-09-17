@@ -1,5 +1,7 @@
 # 分阶段运行准备与版本边界
 
+**阶段三更新：** 本次新 preflight 已能访问 8 张 A100，CUDA 最小 workload 成功。独立 experimental 595 adapter 已编译并执行 observe-only，但真实对象图含 8 个 compute channel / 同一 graphics TSG，故未进入 GET_INFO。项目 RM controls=0，benchmark trials=0。阶段三记录及交接命令见 [phase3_bringup](phase3_bringup.md)。下列设备不可访问结果保留为阶段二的历史时点，不代表当前会话。
+
 阶段二基线为 Interact_Inference `9d578f24fdaa102ad94e6db2093ec14386416138`，启动时工作区干净，见 [initial_state.json](../results/phase2/initial_state.json)。本轮开始前的新增 preflight 文件已保留并接入；没有重建研究仓库或修改 upstream 550.120 工作树。
 
 ## 三个入口
@@ -32,8 +34,8 @@ RM identity / readonly 在 profile 门槛报告 **ABI_UNVERIFIED**；没有执�
 
 | Profile | 源码 commit | 执行状态 |
 |---|---|---|
-| 550.120 artifact 对照 | `5e52edb2034de7db4d8ae368dbc7c26b416bfa16` | 唯一允许的 RM 编译/运行 profile；静态审查与离线测试，不表示实机已验证 |
-| 595.58.03 宿主源码对照 | `db0c4e65c8e34c678d745ddb1317f53f90d1072b` | 单独 detached worktree，已做 ABI/metadata/路径对照；**未启用为 supported runtime adapter** |
+| 550.120 artifact 对照 | `5e52edb2034de7db4d8ae368dbc7c26b416bfa16` | 默认独立 build；阶段三 6/6 CTest 通过，无 550 实机验证 |
+| 595.58.03 宿主源码对照 | `db0c4e65c8e34c678d745ddb1317f53f90d1072b` | 阶段三独立 experimental build；6/6 CTest，实际 observe 已执行；**readonly / active 未验证** |
 
 `audit_profiles.py` 对两个 checkout 实际编译 x86-64 `sizeof/alignof/offsetof/member-size` 程序。结果 [version_audit.json](evidence/phase2/version_audit.json) 中 **13 个参数结构体及使用字段、10 个 control ID 无差异**，包括 NVOS00/21/64/54、group allocation、PREEMPT、MAKE_REALTIME、RESTART、timeslice、GET_INFO、BIND、CTXSW_MODES 和 DISABLE。不能从这个结果推出语义/权限不变。
 
@@ -51,7 +53,7 @@ RM identity / readonly 在 profile 门槛报告 **ABI_UNVERIFIED**；没有执�
 
 595 `rmapi/resource.c:rmresControl_Prologue_IMPL` 使用 IS_FW_CLIENT + routed flags，进入 NV_RM_RPC_CONTROL；RPC 源码移动至 `src/nvidia/src/kernel/vgpu/rpc.c:rpcRmApiControl_GSP`，存在 FINN 序列化及 `_issueRpcAndWaitLarge`，普通路径仍 `_issueRpcAndWait`，传输 status 与 GSP control status 分离。不能通过相同宏名声称相同 transport 开销。PREEMPT / MAKE_REALTIME / RESTART 物理 GSP handler 仍不是本轮已验证的公开调度实现。
 
-绑定器仍只解码 550 profile 的未序列化 NVOS21/NVOS64/BIND。缺口是 595 实际 libcuda 的完整 allocation/control transport、对象创建方式与所用 class 的运行核对，以及新版权限/firmware 前置条件的负例验证；本机连 cuInit 都未通过。因此没有简单删除版本检查，也没有把静态布局相同视作新 adapter 已完成。支持 595 需要单独 adapter 和其可达性记录；无需为 CUDA probe 升降级驱动。
+阶段二时绑定器只解码 550 的未序列化 NVOS21/NVOS64/BIND，尚缺 595 实际 transport / 对象与权限核对。阶段三沿用上述对照，实现分别使用各自 pinned headers 的 adapter；状态码改用各自 `nvstatus.h` 定义，新增私有包络观察与分层 gate。真实 595 observe 仅出现 flags=0 的已解码 alloc/control，没有 FINN 路径；这不证明其他运行方式也无 FINN 或 hidden syscall。最早新阻塞为多 compute channel 绑定歧义；ownership、GET 和 firmware 调度支持仍未验证。版本门槛没有删除。
 
 ## 实机准入
 

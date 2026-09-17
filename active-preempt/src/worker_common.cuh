@@ -189,7 +189,7 @@ inline void write_identity(std::ostream& out,const GpuWorker& w,const RmControl*
     out<<"pid="<<getpid()<<" context="<<reinterpret_cast<uintptr_t>(w.context)<<" gpu_uuid="<<uuid_string(w.prop.uuid)<<" device="<<w.prop.name<<"\n";
     if(rm){auto& i=rm->identity();out<<"client_generation="<<i.binding.client_generation<<" group_generation="<<i.binding.group.generation<<" hDevice="<<i.device<<"\n";
     out<<"hClient="<<i.client<<" hTSG="<<i.group<<" tsgID="<<i.tsg_id<<" engine="<<i.engine<<" subdevice="<<i.subdevice<<" compute_channel="<<i.compute_channel<<" channels=";
-    for(auto ch:i.channels)out<<ch<<',';out<<"\n";}else out<<"rm_identity=not_required_for_CUDA_baseline\n";
+    for(auto ch:i.channels)out<<ch<<',';out<<"\n";}else out<<"rm_identity=not_bound (baseline or observe-only)\n";
     out<<"hardware_channel_id=unknown runlist=unknown scheduling_policy=unknown MPS_MIG_virtualization=see_preflight\n";
     out<<"block=256 shared_dynamic=65536 registers="<<w.attributes.numRegs<<" shared_static="<<w.attributes.sharedSizeBytes<<" active_blocks_per_sm_estimate="<<w.active_blocks_per_sm<<" occupancy_is_estimate=1 diagnostic_progress="<<w.diagnostic<<"\n";
     out<<"iterations="<<w.iterations<<" blocks="<<w.blocks<<" solo_us="<<w.solo_us<<" uninstrumented_us="<<w.uninstrumented_us<<"\n";

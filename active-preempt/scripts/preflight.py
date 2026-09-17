@@ -58,7 +58,7 @@ def collect(binary):
     result['cuda_usable']=result['cuda_probe'].get('returncode')==0
     ctl=next(x for x in result['nodes'] if x['path']=='/dev/nvidiactl')
     result['rm_device_accessible']=ctl.get('open_returncode')==0
-    result['readiness']='CUDA_PROBE_PASSED_BINDING_STILL_REQUIRED' if result['cuda_usable'] else 'DEVICE_NOT_ACCESSIBLE'
+    result['readiness']='CUDA_PROBE_PASSED_BINDING_STILL_REQUIRED' if result['cuda_usable'] else 'DEVICE_ACCESS_BLOCKED'
     return result
 
 def main():

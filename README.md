@@ -4,6 +4,7 @@
 
 * [最小用户态 prototype 与运行方法](active-preempt/README.md)
 * [阶段二实际修改与测试](docs/phase2_changes.md)
+* [阶段三真实 GPU bring-up 与当前阻塞](docs/phase3_bringup.md)
 * [分阶段运行准备及 550/595 版本边界](docs/runtime_readiness.md)
 * [RM 对象绑定与生命周期](docs/object_binding.md)
 * [测量口径与无法观测的边界](active-preempt/docs/measurement.md)

@@ -10,7 +10,7 @@
 #include <unistd.h>
 namespace ap {
 namespace {
-struct Header {uint64_t magic=0x41504556454e5432ull;uint32_t schema=2,capacity=event_capacity,count=0,overflow=0;char owner[32]{},run_id[192]{};};
+struct Header {uint64_t magic=0x41504556454e5432ull;uint32_t schema=2,capacity=event_capacity,count=0,overflow=0;char owner[32]{},run_id[192]{},profile[32]{},source_commit[64]{};};
 constexpr size_t event_offset=4096;
 void dump(const void* data,size_t length,const std::string& path){
     const auto& h=*static_cast<const Header*>(data);
@@ -20,7 +20,7 @@ void dump(const void* data,size_t length,const std::string& path){
     for(size_t i=0;i<std::min<size_t>(__atomic_load_n(&h.count,__ATOMIC_ACQUIRE),event_capacity);++i){
         const auto& e=events[i];uint32_t state=__atomic_load_n(&e.state,__ATOMIC_ACQUIRE);if(!state)continue;
         f<<"{\"schema_version\":2,\"run_id\":"<<json_string(h.run_id)<<",\"owner\":"<<json_string(h.owner)<<",\"pid\":"<<e.pid<<",\"trial_id\":"<<e.trial<<",\"operation_seq\":"<<e.sequence
-         <<",\"driver_profile\":\"550.120\",\"command\":"<<e.command<<",\"params_size\":"<<e.size<<",\"params_hex\":\"";
+         <<",\"driver_profile\":"<<json_string(h.profile[0]?h.profile:"550.120")<<",\"source_commit\":"<<json_string(h.source_commit)<<",\"command\":"<<e.command<<",\"params_size\":"<<e.size<<",\"params_hex\":\"";
         for(unsigned j=0;j<e.size&&j<event_param_capacity;++j)f<<std::hex<<std::setw(2)<<std::setfill('0')<<unsigned(e.params[j]);
         f<<std::dec<<"\",\"target\":{\"hClient\":"<<e.client<<",\"hDevice\":"<<e.device<<",\"hSubdevice\":"<<e.subdevice<<",\"hTSG\":"<<e.group<<",\"hChannel\":"<<e.channel<<",\"hObject\":"<<e.object<<",\"fd\":"<<e.fd<<",\"client_generation\":"<<e.client_generation<<",\"group_generation\":"<<e.group_generation<<",\"target_generation\":"<<e.target_generation<<"}";
         f<<",\"hardware_tsg_id\":";if(e.tsg_id!=0xffffffff)f<<e.tsg_id;else f<<"null";
@@ -47,6 +47,7 @@ void ControlJournal::open(const std::string& path,const std::string& owner){
     if(data_==MAP_FAILED){data_=nullptr;throw std::runtime_error("Cannot map control journal");}
     std::memset(data_,0,length_);auto* h=new(data_) Header{};
     std::strncpy(h->owner,owner.c_str(),sizeof(h->owner)-1);std::strncpy(h->run_id,path.substr(0,path.find_last_of('/')).c_str(),sizeof(h->run_id)-1);
+    std::strncpy(h->profile,build_profile().version,sizeof(h->profile)-1);std::strncpy(h->source_commit,build_profile().source_commit,sizeof(h->source_commit)-1);
 }
 ControlEvent* ControlJournal::begin(const Identity* id,uint32_t object,uint32_t cmd,const void* params,uint32_t size,int64_t trial){
     if(!data_)return nullptr;

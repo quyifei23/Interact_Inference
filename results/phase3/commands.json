@@ -1,0 +1,136 @@
+[
+  {
+    "command": [
+      "python3",
+      "active-preempt/scripts/preflight.py",
+      "--output",
+      "results/phase3/preflight"
+    ],
+    "returncode": 0
+  },
+  {
+    "command": [
+      "cmake",
+      "-S",
+      "active-preempt",
+      "-B",
+      "active-preempt/build-595",
+      "-DAP_RM_PROFILE=595.58.03",
+      "-DNVIDIA_SOURCE=/tmp/interact-inference-nvidia-595.58.03",
+      "-DCMAKE_BUILD_TYPE=RelWithDebInfo",
+      "-DCMAKE_CUDA_ARCHITECTURES=80"
+    ],
+    "returncode": 0,
+    "log": "results/phase3/validation/configure595.log"
+  },
+  {
+    "command": [
+      "cmake",
+      "--build",
+      "active-preempt/build-595",
+      "-j4"
+    ],
+    "returncode": 0,
+    "log": "results/phase3/validation/build595.log"
+  },
+  {
+    "command": [
+      "ctest",
+      "--test-dir",
+      "active-preempt/build-595",
+      "--output-on-failure"
+    ],
+    "returncode": 0,
+    "log": "results/phase3/validation/ctest595.log"
+  },
+  {
+    "command": [
+      "cmake",
+      "-S",
+      "active-preempt",
+      "-B",
+      "active-preempt/build",
+      "-DAP_RM_PROFILE=550.120"
+    ],
+    "returncode": 0,
+    "log": "results/phase3/validation/configure550.log"
+  },
+  {
+    "command": [
+      "cmake",
+      "--build",
+      "active-preempt/build",
+      "-j4"
+    ],
+    "returncode": 0,
+    "log": "results/phase3/validation/build550.log"
+  },
+  {
+    "command": [
+      "ctest",
+      "--test-dir",
+      "active-preempt/build",
+      "--output-on-failure"
+    ],
+    "returncode": 0,
+    "log": "results/phase3/validation/ctest550.log"
+  },
+  {
+    "command": [
+      "/home/quyifei/multimodal/workspace/Interception/active-preempt/build-595/int_worker",
+      "--probe-rm-observe",
+      "--run-dir",
+      "/home/quyifei/multimodal/workspace/Interception/results/phase3/observe595"
+    ],
+    "returncode": 77,
+    "timed_out": false,
+    "termination": [],
+    "recovery": "inspect_owner_recovery_logs",
+    "utc": "2026-09-17T05:56:59.329689+00:00",
+    "environment": {
+      "CUDA_VISIBLE_DEVICES": "GPU-99e4e85f-1945-866c-9e00-130b51df7908",
+      "LD_PRELOAD": "/home/quyifei/multimodal/workspace/Interception/active-preempt/build-595/librm_control.so"
+    },
+    "stage": "observe-only"
+  },
+  {
+    "command": [
+      "cmake",
+      "--build",
+      "active-preempt/build-595",
+      "-j4"
+    ],
+    "returncode": 0,
+    "log": "results/phase3/validation/final_build595.log"
+  },
+  {
+    "command": [
+      "ctest",
+      "--test-dir",
+      "active-preempt/build-595",
+      "--output-on-failure"
+    ],
+    "returncode": 0,
+    "log": "results/phase3/validation/final_ctest595.log"
+  },
+  {
+    "command": [
+      "cmake",
+      "--build",
+      "active-preempt/build",
+      "-j4"
+    ],
+    "returncode": 0,
+    "log": "results/phase3/validation/final_build550.log"
+  },
+  {
+    "command": [
+      "ctest",
+      "--test-dir",
+      "active-preempt/build",
+      "--output-on-failure"
+    ],
+    "returncode": 0,
+    "log": "results/phase3/validation/final_ctest550.log"
+  }
+]

@@ -1,0 +1,18 @@
+Internal ctest changing into directory: /home/quyifei/multimodal/workspace/Interception/active-preempt/build-595
+Test project /home/quyifei/multimodal/workspace/Interception/active-preempt/build-595
+    Start 1: rm_contract_test
+1/6 Test #1: rm_contract_test .................   Passed    0.00 sec
+    Start 2: phase2_contract_test
+2/6 Test #2: phase2_contract_test .............   Passed    0.04 sec
+    Start 3: phase3_profile_test
+3/6 Test #3: phase3_profile_test ..............   Passed    0.00 sec
+    Start 4: analysis_contract_test
+4/6 Test #4: analysis_contract_test ...........   Passed    0.07 sec
+    Start 5: runner_contract_test
+5/6 Test #5: runner_contract_test .............   Passed    0.86 sec
+    Start 6: schema_integration_test
+6/6 Test #6: schema_integration_test ..........   Passed    0.08 sec
+
+100% tests passed, 0 tests failed out of 6
+
+Total Test time (real) =   1.05 sec
